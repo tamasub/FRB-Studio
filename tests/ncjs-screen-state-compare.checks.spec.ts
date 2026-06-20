@@ -265,4 +265,7 @@ test('画面状態JSONをExpectedと比較してDiffを保存できる', async (
   });
 
   expect(emphasizedDiff.status).toBe('pass');
+
 });
+
+
