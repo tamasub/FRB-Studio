@@ -1,7 +1,7 @@
 {
   "app": {
     "name": "No-Code JSON Studio",
-    "version": "0.3-draft-relation-test-axis-011"
+    "version": "0.3-draft-relation-generic-012"
   },
   "dataSources": {
     "constraints": "ai_constraint_spec_aggregated_v0_6_footer_chat.json",
@@ -10,10 +10,49 @@
     "relations": "constraint_trace_relations_v0_1.json"
   },
   "virtualData": {
-    "builder": "test_pattern_trace_cards",
+    "builder": "relation_axis_cards",
     "targetPath": "$.test_pattern_trace_cards",
-    "relationsPath": "$.relations",
-    "note": "relations JSON + テストパターンJSON + 最新diff JSONから、テストパターン軸の表示カードを保存せずに一時生成する。"
+    "axis": {
+      "source": "tests",
+      "adapter": "testPatterns",
+      "nodeType": "test_pattern",
+      "idField": "test_pattern_id",
+      "titleField": "title"
+    },
+    "linked": {
+      "source": "constraints",
+      "adapter": "constraints",
+      "nodeType": "constraint",
+      "idField": "constraint_id",
+      "titleField": "constraint_title"
+    },
+    "relation": {
+      "source": "relations",
+      "path": "$.relations",
+      "name": "verified_by",
+      "direction": "incoming",
+      "includeViaCheck": true,
+      "containsCheckRelation": "contains_check"
+    },
+    "diff": {
+      "source": "diff",
+      "testNodeType": "test_pattern"
+    },
+    "outputs": {
+      "idField": "test_pattern_id",
+      "titleField": "test_pattern_title",
+      "linkedItemsField": "related_constraints",
+      "impactedItemsField": "impacted_constraints",
+      "linkedCountField": "linked_constraints_count",
+      "primaryCountField": "primary_constraints_count",
+      "secondaryCountField": "secondary_constraints_count",
+      "requiredCountField": "required_constraints_count",
+      "failLinkedCountField": "fail_constraints_count",
+      "relatedDiffsField": "related_diffs",
+      "failedChecksField": "failed_checks",
+      "evidenceEdgesField": "evidence_edges"
+    },
+    "note": "汎用 relation_axis_cards によって、テストパターンを軸に relation JSON と最新diff JSON から表示用カードを保存せず一時生成する。"
   },
   "views": [
     {
