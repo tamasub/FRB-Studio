@@ -1,8 +1,9 @@
 # Studioくん憲法 レビュー記録
 
-- 出力日時: 2026/6/21 14:33:10
+- 出力日時: 2026/6/21 14:46:16
 - 対象: CODING_CONSTRAINTS.md / Studio Architecture Constraints
 - schema_version: coding_constraints_review_data_v0_1
+- status: ceremony_review_draft_with_change_history
 - 件数: 23
 
 ## 基本情報
@@ -11,6 +12,7 @@
 - 対象: CODING_CONSTRAINTS.md / Studio Architecture Constraints
 - Schema Version: coding_constraints_review_data_v0_1
 - Document Type: studio_constitution_review
+- 状態: ceremony_review_draft_with_change_history
 - 元ドキュメント: CODING_CONSTRAINTS_ja.md
 - Source Version: 0.1-draft
 - レビュー条文数: 23
@@ -37,6 +39,10 @@ Studio は、JSON を「体験」に変換するためのプラットフォー�
 今後、Studio のコードを変更する人間および AI は、まずこの文書を読むこと。
 
 ---
+
+### 変更履歴方針
+
+レビューで条文・仕様を変更した場合は、対象行の change_history に変更前・変更後・理由・会話を保存する。変更後だけを残さず、修正元を追体験できる状態にする。
 
 ## 条文レビュー一覧
 
@@ -111,6 +117,9 @@ FFT、AI会話、テストパターン、MIDI、Markdown、差分、制約。
 Studioくん憲法 第1条「建国宣言」を承認する。
 
 #### 条文レビュー会話
+
+
+#### 仕様変更履歴
 
 
 ### 第2条：基本構造
@@ -215,6 +224,9 @@ Studioくん憲法 第2条「基本構造」を承認する。
 #### 条文レビュー会話
 
 
+#### 仕様変更履歴
+
+
 ### 第3条：戦略的設計パターン
 - 分類: 設計パターン
 - 優先度: high
@@ -276,6 +288,9 @@ Studioくん憲法 第3条「戦略的設計パターン」を承認する。
 #### 条文レビュー会話
 
 
+#### 仕様変更履歴
+
+
 ### 第4条：Data First
 - 分類: Data
 - 優先度: high
@@ -312,6 +327,9 @@ UI を書き始める前に、次を確認する。
 Studioくん憲法 第4条「Data First」を承認する。
 
 #### 条文レビュー会話
+
+
+#### 仕様変更履歴
 
 
 ### 第5条：ViewDef First
@@ -375,6 +393,12 @@ Studioくん憲法 第5条「ViewDef First」を承認する。
 
 #### 条文レビュー会話
 
+
+#### 仕様変更履歴
+
+| History ID | Revision | 変更日 | 変更者 | 変更種別 | 対象フィールド | 変更前タイトル | 変更後タイトル | 変更理由 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| hist_20260621_005_001 | v0.2 | 2026-06-21 | ChatGPT | metadata_correction | category,title | Replay Ready | ViewDef First | 本文と ceremony_phrase は ViewDef First の内容だったが、category/title が Replay Ready になっていたため、メタ情報を補正した。 |
 
 ### 第6条：Action Separation
 - 分類: Action
@@ -479,6 +503,12 @@ actionRegistry.execute("PlayMidi", context); は固定文字列指定なのでNG
 
 第6条の修正案として、Action は ViewDef で宣言し、Runtime は actionId を変数として扱う方針に更新。主役操作は toolbar.executeButton に定義し、ActionRegistry が実装へ委譲する形を条文へ反映した。
 
+#### 仕様変更履歴
+
+| History ID | Revision | 変更日 | 変更者 | 変更種別 | 対象フィールド | 変更前タイトル | 変更後タイトル | 変更理由 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| hist_20260621_006_001 | v0.2 | 2026-06-21 | tamasub + ChatGPT | spec_revision | summary,body,user_comment,ai_response,user_reply,ai_followup_response,notes | Action Separation | Action Separation | 汎用Runtime側に actionRegistry.execute("PlayMidi", context) のような固定文字列が出るのは、ポリモーフィズムの思想に反するため修正した。 |
+
 ### 第7条：Replay Ready
 - 分類: Replay
 - 優先度: medium
@@ -521,6 +551,9 @@ Studioくん憲法 第7条「Replay Ready」を承認する。
 #### 条文レビュー会話
 
 
+#### 仕様変更履歴
+
+
 ### 第8条：Diff First
 - 分類: Diff
 - 優先度: medium
@@ -559,6 +592,9 @@ Studio は、差分を見える形にすることを重視する。
 Studioくん憲法 第8条「Diff First」を承認する。
 
 #### 条文レビュー会話
+
+
+#### 仕様変更履歴
 
 
 ### 第9条：Constraint First
@@ -602,6 +638,9 @@ AI には、制約を渡して協働する。
 Studioくん憲法 第9条「Constraint First」を承認する。
 
 #### 条文レビュー会話
+
+
+#### 仕様変更履歴
 
 
 ### 第10条：小さな変更の原則
@@ -666,6 +705,12 @@ Studioくん憲法 第10条「小さな変更の原則」を承認する。
 #### 条文レビュー会話
 
 
+#### 仕様変更履歴
+
+| History ID | Revision | 変更日 | 変更者 | 変更種別 | 対象フィールド | 変更前タイトル | 変更後タイトル | 変更理由 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| hist_20260621_010_001 | v0.3 | 2026-06-21 | tamasub + ChatGPT | rule_addition | body | 小さな変更の原則 | 小さな変更の原則 | レビューで仕様を変更した場合、その修正元を必ず残すルールを憲法に明記するため。 |
+
 ### 第11条：既存機能保護
 - 分類: 品質保護
 - 優先度: high
@@ -707,6 +752,9 @@ Studio の既存機能を壊してはならない。
 Studioくん憲法 第11条「既存機能保護」を承認する。
 
 #### 条文レビュー会話
+
+
+#### 仕様変更履歴
 
 
 ### 第12条：固定フィールド名の原則禁止
@@ -826,6 +874,12 @@ Chat View 限定ではなく、Studio 全体の原則として固定フィール
 
 第12条の修正案として、タイトルを『固定フィールド名の原則禁止』へ変更し、Chat View 限定ではなく Studio 全体の制約に昇格。例外は仕様根拠と tamasub との協議承認を必要とする条文に更新した。
 
+#### 仕様変更履歴
+
+| History ID | Revision | 変更日 | 変更者 | 変更種別 | 対象フィールド | 変更前タイトル | 変更後タイトル | 変更理由 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| hist_20260621_012_001 | v0.2 | 2026-06-21 | tamasub + ChatGPT | spec_revision | category,title,summary,body,ceremony_phrase,user_comment,ai_response,user_reply,ai_followup_response,notes | Chat View は可変であること | 固定フィールド名の原則禁止 | 固定フィールド名禁止は Chat View だけではなく Studio 全体の原則であるため、条文の対象範囲を拡張した。 |
+
 ### 第13条：Studio は単なるエディターではない
 - 分類: 理念
 - 優先度: high
@@ -870,6 +924,9 @@ Studioくん憲法 第13条「Studio は単なるエディターではない」�
 #### 条文レビュー会話
 
 
+#### 仕様変更履歴
+
+
 ### 第14条：ReadOnly モードは第一級である
 - 分類: ReadOnly
 - 優先度: medium
@@ -909,6 +966,9 @@ ReadOnly モードは、読者が思考過程を追体験するための入口�
 Studioくん憲法 第14条「ReadOnly モードは第一級である」を承認する。
 
 #### 条文レビュー会話
+
+
+#### 仕様変更履歴
 
 
 ### 第15条：URL 起動対応
@@ -954,6 +1014,9 @@ Studioくん憲法 第15条「URL 起動対応」を承認する。
 #### 条文レビュー会話
 
 
+#### 仕様変更履歴
+
+
 ### 第16条：AIテスト物語との互換性
 - 分類: AIテスト物語
 - 優先度: medium
@@ -993,6 +1056,9 @@ Studio は AIテスト物語の流れを支える。
 Studioくん憲法 第16条「AIテスト物語との互換性」を承認する。
 
 #### 条文レビュー会話
+
+
+#### 仕様変更履歴
 
 
 ### 第17条：キャラクター化は認知支援である
@@ -1040,6 +1106,9 @@ Studioくん憲法 第17条「キャラクター化は認知支援である」�
 #### 条文レビュー会話
 
 
+#### 仕様変更履歴
+
+
 ### 第18条：命名方針
 - 分類: 命名
 - 優先度: medium
@@ -1083,6 +1152,9 @@ Studioくん憲法 第17条「キャラクター化は認知支援である」�
 Studioくん憲法 第18条「命名方針」を承認する。
 
 #### 条文レビュー会話
+
+
+#### 仕様変更履歴
 
 
 ### 第19条：ファイル分割方針
@@ -1142,6 +1214,9 @@ Studioくん憲法 第19条「ファイル分割方針」を承認する。
 #### 条文レビュー会話
 
 
+#### 仕様変更履歴
+
+
 ### 第20条：AI協働ルール
 - 分類: AI協働
 - 優先度: high
@@ -1176,6 +1251,9 @@ AI が Studio のコードを変更する場合、AI は次を守る。
 Studioくん憲法 第20条「AI協働ルール」を承認する。
 
 #### 条文レビュー会話
+
+
+#### 仕様変更履歴
 
 
 ### 第21条：人間協働ルール
@@ -1217,6 +1295,9 @@ Studioくん憲法 第21条「人間協働ルール」を承認する。
 #### 条文レビュー会話
 
 
+#### 仕様変更履歴
+
+
 ### 第22条：Studio憲法
 - 分類: 憲法
 - 優先度: high
@@ -1254,6 +1335,9 @@ AI は変わるかもしれない。
 Studioくん憲法 第22条「Studio憲法」を承認する。
 
 #### 条文レビュー会話
+
+
+#### 仕様変更履歴
 
 
 ### 第23条：まとめ
@@ -1305,6 +1389,9 @@ Studio の使命は、見えないものを、見えるものへ、構造化さ�
 Studioくん憲法 第23条「まとめ」を承認する。
 
 #### 条文レビュー会話
+
+
+#### 仕様変更履歴
 
 ---
 
@@ -1359,7 +1446,7 @@ TSV:
 
 ```json
 {
-  "view_def": "coding_constraints_review_view_def_v0_1.json",
+  "view_def": "coding_constraints_review_view_def_v0_2_change_history.json",
   "data_file": "coding_constraints_review_data_v0_3.json",
   "section": "Studioくん憲法 条文レビュー / 承認セレモニー",
   "row_count": 23,
