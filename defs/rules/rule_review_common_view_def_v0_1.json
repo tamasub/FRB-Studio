@@ -586,7 +586,7 @@
               "field": "source_heading",
               "caption": "見出し",
               "type": "text",
-              "readonly": true,
+              "readonly": false,
               "grid": {
                 "visible": false,
                 "width": 260
