@@ -19,6 +19,7 @@ let draftRow = null;
 const DEFAULT_COMMON_TYPES_FILE = 'common_types_v0_1.json';
 const fieldTypeRegistryCache = new Map();
 let launchRuntime = { fromUrl: false, mode: '', readonly: false, dataParam: '', viewParam: '', fileParam: '' };
+let currentAppInfo = null;
 
 const $ = (id) => document.getElementById(id);
 

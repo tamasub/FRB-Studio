@@ -78,7 +78,7 @@ function buildGenericMarkdown() {
   const hd = headerDef();
   const rows = Array.isArray(currentRows) ? currentRows : [];
   const cfg = markdownConfig();
-  const title = cfg.title || sourceData?.title || mainView()?.caption || gd?.caption || 'No-Code JSON Studio Export';
+  const title = cfg.title || sourceData?.title || mainView()?.caption || gd?.caption || 'JSON Object Studio Export';
   const lines = [];
   lines.push(`# ${title}`);
   lines.push('');
@@ -447,7 +447,7 @@ function buildGenericSectionsMarkdown() {
   const cfg = markdownConfig();
   const gd = gridDef();
   const rows = Array.isArray(currentRows) ? currentRows : [];
-  const title = cfg.title || sourceData?.title || mainView()?.caption || gd?.caption || 'No-Code JSON Studio Export';
+  const title = cfg.title || sourceData?.title || mainView()?.caption || gd?.caption || 'JSON Object Studio Export';
   const lines = [];
 
   lines.push(`# ${title}`);

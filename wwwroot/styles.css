@@ -50,8 +50,26 @@ body {
   margin-bottom: 3px;
 }
 .app-kicker.dark { color: var(--accent); }
-.app-header h1 { margin: 0 0 4px; font-size: 21px; line-height: 1.1; }
-.app-header h1 span { color:#bfdbfe; font-weight: 650; }
+.app-header h1 {
+  margin: 0 0 4px;
+  font-size: 21px;
+  line-height: 1.1;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.app-header h1 .app-product-name {
+  color: #ffffff;
+  font-weight: 860;
+  letter-spacing: 0.01em;
+}
+.app-header h1 .app-version {
+  color: #bfdbfe;
+  font-size: 0.58em;
+  font-weight: 650;
+  opacity: 0.78;
+}
 .app-header p { margin: 0; color: #cbd5e1; font-size: 12px; }
 main { padding: 14px; }
 

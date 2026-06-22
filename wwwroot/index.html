@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>No-Code JSON Studio v0.3-draft</title>
-  <link rel="stylesheet" href="styles.css?v=action-execute-006" />
+  <title>FRB Studio - JSON Object Studio v0.4-r001</title>
+  <link rel="stylesheet" href="styles.css?v=json-object-studio-009" />
 <!--shinobi1--><script type="text/javascript" src="//xa.shinobi.jp/ufo/192297900"></script><noscript><a href="//xa.shinobi.jp/bin/gg?192297900" target="_blank"><img src="//xa.shinobi.jp/bin/ll?192297900" border="0"></a><br><span style="font-size:9px"><img style="margin:0;vertical-align:text-bottom;" src="//img.shinobi.jp/tadaima/fj.gif" width="19" height="11"> </span></noscript><!--shinobi2-->
 
   <style>
@@ -64,9 +64,9 @@
 <body>
   <header class="app-header" id="appHeader">
     <div class="brand-block">
-      <div class="app-kicker">FRB Studio Lab</div>
-      <h1>No-Code JSON Studio<span>v0.3-draft</span></h1>
-      <p>1画面1グリッド / Header Form + Search Form + Grid + Detail Dialog</p>
+      <div class="app-kicker" id="appBrand">FRB Studio</div>
+      <h1><span id="appProductName" class="app-product-name">JSON Object Studio</span><span id="appDisplayVersion" class="app-version">v0.4-r001</span></h1>
+      <p id="appTagline">JSONで思考を構造化し、AIとの文脈を育てる。</p>
     </div>
 
     <section class="loader-panel" aria-label="JSON読み込み">
@@ -167,7 +167,7 @@
   <script src="js/core/field_types.js?v=action-execute-006"></script>
   <script src="js/core/viewdef_resolver.js?v=action-execute-006"></script>
   <script src="js/core/loaders.js?v=action-execute-006"></script>
-  <script src="js/ui/page_setup.js?v=action-execute-006"></script>
+  <script src="js/ui/page_setup.js?v=json-object-studio-009"></script>
   <script src="js/ui/file_tree_picker.js?v=folder-tree-010"></script>
   <script src="js/core/data_utils.js?v=action-execute-006"></script>
   <script src="js/renderers/renderer_registry.js?v=action-execute-006"></script>
@@ -178,12 +178,12 @@
   <script src="js/renderers/field_controls.js?v=action-execute-006"></script>
   <script src="js/renderers/grid_detail.js?v=action-execute-006"></script>
   <script src="js/markdown/markdown_registry.js?v=action-execute-006"></script>
-  <script src="js/markdown/data_markdown.js?v=action-execute-006"></script>
+  <script src="js/markdown/data_markdown.js?v=json-object-studio-009"></script>
   <script src="js/markdown/viewdef_markdown.js?v=action-execute-006"></script>
   <script src="js/runtime/detail_save.js?v=action-execute-006"></script>
   <script src="js/runtime/load_runtime.js?v=url-launch-008"></script>
   <script src="js/actions/action_registry.js?v=action-execute-006"></script>
   <script src="js/actions/action_toolbar.js?v=action-execute-006"></script>
-  <script src="app.js?v=url-launch-008"></script>
+  <script src="app.js?v=json-object-studio-009"></script>
 </body>
 </html>
