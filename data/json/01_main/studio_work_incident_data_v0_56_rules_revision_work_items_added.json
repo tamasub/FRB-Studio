@@ -4616,12 +4616,12 @@
       "incident_type": "rules_review",
       "category": "foundation_policy",
       "priority": "high",
-      "status": "未着手",
+      "status": "完了",
       "owner": "tamasub",
       "ai_owner": "ChatGPT",
       "created_at": "2026-06-27",
       "updated_at": "2026-06-27",
-      "target_files": "data/json/00_rules/frb_coding_constraints_review_data_v0_3.json, data/json/00_rules/frb_studio_foundation_review_data_v0_1_github_fetch_urls_added.json, data/json/00_rules/_json_creation_prompt.md",
+      "target_files": "data/json/00_rules/frb_coding_constraints_review_data_v0_3.json, data/json/00_rules/frb_studio_foundation_review_data_v0_1_github_fetch_urls_added.json, data/json/00_rules/_json_creation_prompt.md, data/json/01_main/studio_work_incident_data_v0_56_rules_revision_work_items_added.json, data/json/05_inventory/defs_data_link_inventory_v0_1.json, data/json/05_inventory/defs_data_link_inventory_v0_2_repaired.json, _archive/{削除日時}/...",
       "target_rule_files": "frb_coding_constraints_review_data_v0_3.json / frb_studio_foundation_review_data_v0_1_github_fetch_urls_added.json / _json_creation_prompt.md",
       "objective": "Studioくん全体の作業原則として、共通化優先、人間相談、削除データの_archive退避、ルール/ViewDefファイル名維持を憲法・Foundation・AI作業プロンプトへ整理する。",
       "background": "Step 4-A/4-Bの作業で、JSを増やすよりデータ契約を揃えること、旧パスを残すと罠フォルダーになること、ViewDef名を変えると参照元修正が連鎖することが明確になった。",
@@ -4633,9 +4633,9 @@
       "risk": "共通化原則を強く書きすぎると、ドメイン差分まで無理に潰す危険がある。archive退避を曖昧にすると削除したはずの旧パスが成果物に残り、再び罠フォルダーになる。",
       "test_points": "共通化原則、人間相談条件、_archive/{削除日時}/退避、ルール/ViewDefファイル名維持が各対象ファイルの責務に応じて入っていること。",
       "user_request": "このチャットで見えてきた憲法・ルール系の改正概要を、作業単位ごとにインシデントへ追加する。追加原則として、共通化できるものは原則共通化し、やりすぎて将来苦しくなる場合は人間に相談する。古いデータ・不要データは削除して返却するが、削除データはルートの _archive/{削除日時}/ に退避する。ルール系統およびViewDefを修正する場合は、参照元修正を避けるため原則ファイル名を変更しない。",
-      "ai_response": "Foundation / Coding Constraints 共通化・archive退避・ファイル名維持原則 を作業単位として追加する。実装・ルール本文修正は次工程で行い、今回のインシデント追加では対象ファイル・目的・範囲・判断ログを整理する。",
-      "latest_user_comment": "このチャットで見えてきた憲法・ルール系の改正概要を、作業単位ごとにインシデントへ追加する。追加原則として、共通化できるものは原則共通化し、やりすぎて将来苦しくなる場合は人間に相談する。古いデータ・不要データは削除して返却するが、削除データはルートの _archive/{削除日時}/ に退避する。ルール系統およびViewDefを修正する場合は、参照元修正を避けるため原則ファイル名を変更しない。",
-      "latest_ai_response": "作業項目としてインシデント管理JSONへ追加。まだルール本文・ViewDef本体の修正は未実施。",
+      "ai_response": "Foundation / Coding Constraints 共通化・archive退避・ファイル名維持原則 を作業単位として追加する。実装・ルール本文修正は次工程で行い、今回のインシデント追加では対象ファイル・目的・範囲・判断ログを整理する。\n\n実作業結果: Foundation/Coding Constraints/_json_creation_promptへv0.14.13原則を反映。旧パス・不要データはactiveから外し、_archiveへ退避する運用を今回の成果物でも適用。",
+      "latest_user_comment": "最新資材として添付ZIPを使用し、incident_file=data/json/01_main/studio_work_incident_data_v0_56_rules_revision_work_items_added.json、phase=v0.14.13-foundation-commonization-archive-filename-policy を対象に作業。Foundation Rules の foundation_rule_019「GitHub基準ソースとZIP返却契約」を参照。",
+      "latest_ai_response": "v0.14.13 対応完了。Foundation Rulesに共通化・archive退避・ファイル名維持原則を追加し、foundation_rule_019へZIP返却契約として追記、foundation_rule_020を新規追加。Coding Constraints の constitution_20へ同原則を追記し、_json_creation_prompt.mdへ短い実務チェックを追加。添付ZIP内でFoundation Rulesが派生名になっていたため、GitHub raw契約上の安定名 frb_studio_foundation_review_data_v0_1_github_fetch_urls_added.json へactiveファイル名を復元し、旧派生名ファイルとFoundation内のテスト行 row_copy_1 は _archive/{削除日時}/へ退避。成果物ZIPから tests/.runtime 等のruntime生成物は除外。",
       "discussion_history": [
         {
           "history_id": "disc_0043_001",
@@ -4650,6 +4650,20 @@
           "speaker": "assistant",
           "topic": "作業単位化方針",
           "message": "Foundation / Coding Constraints 共通化・archive退避・ファイル名維持原則 として、対象ルールファイル・目的・範囲・リスク・確認観点を整理してインシデントへ追加する。"
+        },
+        {
+          "history_id": "disc_0043_003",
+          "at": "2026-06-27",
+          "speaker": "user",
+          "topic": "v0.14.13作業依頼",
+          "message": "最新資材は添付ZIPを使用。incident_file=data/json/01_main/studio_work_incident_data_v0_56_rules_revision_work_items_added.json、phase=v0.14.13-foundation-commonization-archive-filename-policy。Foundation Rules raw URLとfoundation_rule_019「GitHub基準ソースとZIP返却契約」を参照。"
+        },
+        {
+          "history_id": "disc_0043_004",
+          "at": "2026-06-27",
+          "speaker": "assistant",
+          "topic": "v0.14.13作業結果",
+          "message": "Foundation Rules / Coding Constraints / _json_creation_prompt.mdへ共通化優先・人間相談・_archive退避・ファイル名維持原則を反映。Foundation RulesはGitHub raw契約の安定名へ復元し、旧派生名とテスト行を_archiveへ退避。"
         }
       ],
       "decision_log": [
@@ -4676,6 +4690,12 @@
           "at": "2026-06-27",
           "decision": "ルール系統およびViewDefは原則ファイル名を変更しない。",
           "reason": "Data JSONのview_def参照、URL起動、GitHub Pages、AIプロンプトがファイル名に依存しており、変更時の連鎖修正を避けるため。"
+        },
+        {
+          "decision_id": "dec_0043_005",
+          "at": "2026-06-27",
+          "decision": "添付ZIP内のFoundation Rules派生名ファイルはactiveに残さず、安定名へ復元して旧名を_archiveへ退避する。",
+          "reason": "作業プロンプトとfoundation_rule_019のraw URLが安定名を参照しており、派生名をactiveに残すと次回以降の取得・参照がズレるため。"
         }
       ],
       "change_history": [
@@ -4686,9 +4706,25 @@
           "before": "共通化・archive退避・ファイル名維持が作業項目として分離されていなかった。",
           "after": "studio_work_0043 として最上位ルール改正作業を追加。",
           "reason": "今回のチャットで憲法級の作業原則が複数見えたため。"
+        },
+        {
+          "history_id": "chg_0043_002",
+          "at": "2026-06-27",
+          "change_type": "rules_update_applied",
+          "before": "共通化・archive退避・ファイル名維持はインシデント作業項目として登録済みだったが、ルール本文には未反映だった。",
+          "after": "Foundation Rules、Coding Constraints、_json_creation_prompt.mdへv0.14.13原則を反映。",
+          "reason": "今回の作業依頼 phase=v0.14.13-foundation-commonization-archive-filename-policy に対応するため。"
+        },
+        {
+          "history_id": "chg_0043_003",
+          "at": "2026-06-27",
+          "change_type": "archive_and_filename_restore",
+          "before": "添付ZIP内のFoundation Rules activeファイル名が frb_studio_foundation_review_data_v0_1_github_fetch_urls_added_viewdef_candidates_rule_added.json になっていた。またFoundation rules[]にMarkdown入力テスト用の row_copy_1 が残っていた。",
+          "after": "active側をGitHub raw契約の安定名 frb_studio_foundation_review_data_v0_1_github_fetch_urls_added.json へ復元。旧派生名ファイルと row_copy_1 は _archive/{削除日時}/へ退避。",
+          "reason": "foundation_rule_019のraw URL契約と、v0.14.13のルール/ViewDefファイル名維持・不要データarchive退避原則に合わせるため。"
         }
       ],
-      "verification_status": "未確認"
+      "verification_status": "確認済み"
     },
     {
       "work_item_id": "studio_work_0044",
@@ -4697,7 +4733,7 @@
       "incident_type": "rules_review",
       "category": "test_evidence",
       "priority": "high",
-      "status": "未着手",
+      "status": "完了",
       "owner": "tamasub",
       "ai_owner": "ChatGPT",
       "created_at": "2026-06-27",
@@ -4715,8 +4751,8 @@
       "test_points": "actual.jsonにexpected/pass/summaryがないこと、diff.jsonにexpected/actual/pass/summaryがあること、テストfail時もdiff.jsonが出ること、期待値がExpected JSON側にあること。",
       "user_request": "このチャットで見えてきた憲法・ルール系の改正概要を、作業単位ごとにインシデントへ追加する。追加原則として、共通化できるものは原則共通化し、やりすぎて将来苦しくなる場合は人間に相談する。古いデータ・不要データは削除して返却するが、削除データはルートの _archive/{削除日時}/ に退避する。ルール系統およびViewDefを修正する場合は、参照元修正を避けるため原則ファイル名を変更しない。",
       "ai_response": "Test Evidence Rules / Expected-Actual-Diff責務分離 を作業単位として追加する。実装・ルール本文修正は次工程で行い、今回のインシデント追加では対象ファイル・目的・範囲・判断ログを整理する。",
-      "latest_user_comment": "このチャットで見えてきた憲法・ルール系の改正概要を、作業単位ごとにインシデントへ追加する。追加原則として、共通化できるものは原則共通化し、やりすぎて将来苦しくなる場合は人間に相談する。古いデータ・不要データは削除して返却するが、削除データはルートの _archive/{削除日時}/ に退避する。ルール系統およびViewDefを修正する場合は、参照元修正を避けるため原則ファイル名を変更しない。",
-      "latest_ai_response": "作業項目としてインシデント管理JSONへ追加。まだルール本文・ViewDef本体の修正は未実施。",
+      "latest_user_comment": "今回の作業依頼: incident_file=data/json/01_main/studio_work_incident_data_v0_56_rules_revision_work_items_added.json / phase=v0.14.14-test-evidence-rules-contract。FRB Studio Foundation Rules の foundation_rule_019「GitHub基準ソースとZIP返却契約」を参照し、最新添付資材を使って対応する。",
+      "latest_ai_response": "v0.14.14 対応完了。Test Evidence Rules正本として data/json/00_rules/frb_test_evidence_rules_review_data_v0_1.json を新規追加し、Expected JSONは期待値の正本、Actual JSONは観測値のみ、Diff JSONは比較結果、Test Codeは実行する仕掛けとして責務分離を定義。Foundation Rulesへ foundation_rule_021 を追加し、Diff出力後assert、checks[].pass標準、テストコード期待値直書き禁止を明文化した。成果物ZIPから node_modules / tests/.runtime 等のruntime生成物は除外。",
       "discussion_history": [
         {
           "history_id": "disc_0044_001",
@@ -4731,6 +4767,20 @@
           "speaker": "assistant",
           "topic": "作業単位化方針",
           "message": "Test Evidence Rules / Expected-Actual-Diff責務分離 として、対象ルールファイル・目的・範囲・リスク・確認観点を整理してインシデントへ追加する。"
+        },
+        {
+          "history_id": "disc_0044_003",
+          "at": "2026-06-27",
+          "speaker": "user",
+          "topic": "v0.14.14-test-evidence-rules-contract 作業依頼",
+          "message": "最新添付資材を使い、incident_file と phase に基づいて Test Evidence Rules / Expected-Actual-Diff責務分離をルール本文へ反映する依頼。Foundation Rule 019を参照。"
+        },
+        {
+          "history_id": "disc_0044_004",
+          "at": "2026-06-27",
+          "speaker": "assistant",
+          "topic": "v0.14.14-test-evidence-rules-contract 作業結果",
+          "message": "Test Evidence Rules正本Data JSONを追加し、Foundation RulesへTest Evidence契約を追加。Expected/Actual/Diff/Test Code責務分離、actual.json禁止項目、diff.json責務、Diff出力後assert、checks[].pass標準を定義した。"
         }
       ],
       "decision_log": [
@@ -4757,6 +4807,18 @@
           "at": "2026-06-27",
           "decision": "テストはfailしてよいが、Diffは必ず残す。",
           "reason": "AI駆動開発では失敗そのものより、失敗を追体験できる証跡が重要なため。"
+        },
+        {
+          "decision_id": "dec_0044_005",
+          "at": "2026-06-27",
+          "decision": "Test Evidence Rulesは専用Data JSONとして新規追加し、Foundation Rulesには契約への入口を追加する。",
+          "reason": "テスト証跡の詳細ルールをFoundation Rulesへ全部詰め込むと肥大化するため、詳細はドメイン別Rules Dataへ分離し、Foundationは上位契約を保持する。"
+        },
+        {
+          "decision_id": "dec_0044_006",
+          "at": "2026-06-27",
+          "decision": "今回の作業では個別テストコードの全面修正は行わない。",
+          "reason": "v0.14.14の目的はルール契約の正本化であり、既存テスト実装の全面移行は別インシデントで扱うため。"
         }
       ],
       "change_history": [
@@ -4767,9 +4829,32 @@
           "before": "Expected/Actual/Diff責務分離が実装メモにはあるが、ルール改正作業として独立していなかった。",
           "after": "studio_work_0044 としてTest Evidence Rules作業を追加。",
           "reason": "今回のチャットでテスト証跡文化の中核ルールが確定したため。"
+        },
+        {
+          "history_id": "chg_0044_002",
+          "at": "2026-06-27",
+          "change_type": "rules_data_added",
+          "before": "Expected / Actual / Diff / Test Code責務分離の詳細ルールDataが存在しなかった。",
+          "after": "data/json/00_rules/frb_test_evidence_rules_review_data_v0_1.json を追加。",
+          "reason": "Expected/Actual/Diff責務分離を、MarkdownメモではなくData JSON原本としてレビュー・運用できるようにするため。",
+          "updated_files": [
+            "data/json/00_rules/frb_test_evidence_rules_review_data_v0_1.json"
+          ]
+        },
+        {
+          "history_id": "chg_0044_003",
+          "at": "2026-06-27",
+          "change_type": "foundation_rules_update",
+          "before": "Foundation Rules上にTest Evidence契約の入口がなかった。",
+          "after": "foundation_rule_021としてTest Evidence / Expected-Actual-Diff責務分離契約を追加。",
+          "reason": "Foundation Rulesからテスト証跡の基本契約へ辿れるようにするため。",
+          "updated_files": [
+            "data/json/00_rules/frb_studio_foundation_review_data_v0_1_github_fetch_urls_added.json"
+          ]
         }
       ],
-      "verification_status": "未確認"
+      "verification_status": "確認済み",
+      "actual_updated_files": "data/json/00_rules/frb_test_evidence_rules_review_data_v0_1.json; data/json/00_rules/frb_studio_foundation_review_data_v0_1_github_fetch_urls_added.json; data/json/01_main/studio_work_incident_data_v0_56_rules_revision_work_items_added.json"
     },
     {
       "work_item_id": "studio_work_0045",
@@ -5298,10 +5383,21 @@
       "at": "2026-06-27",
       "title": "削除はarchive退避とセットにする",
       "body": "古いデータ・不要データは成果物から削除することを基本とする。ただし、削除対象はルートの _archive/{削除日時}/ に退避し、完全に行方不明にしない。"
+    },
+    {
+      "note_id": "note_039",
+      "title": "v0.14.13 Foundation/Coding Constraints ルール本文反映",
+      "body": "studio_work_0043を完了に更新。共通化優先・過剰共通化時の人間相談・_archive退避・ルール/ViewDefファイル名維持をFoundation Rules / Coding Constraints / _json_creation_prompt.mdへ反映した。"
+    },
+    {
+      "note_id": "note_040",
+      "at": "2026-06-27",
+      "title": "Test Evidence Rules / Expected-Actual-Diff責務分離を反映",
+      "body": "frb_test_evidence_rules_review_data_v0_1.jsonを追加し、Foundation Rulesへfoundation_rule_021を追加。Expectedは期待値正本、Actualは観測値のみ、Diffは比較結果、Test Codeは実行する仕掛けとして固定した。"
     }
   ],
-  "work_revision": "v0.14.18-rules-revision-work-items-added",
-  "latest_planning_note": "憲法・ルール系の改正候補を v0.14.13〜v0.14.18 の作業単位として追加。次工程は、Foundation/Coding Constraintsから順にルール本文へ反映し、その後 Step 5 Diff Result共通ViewDef化へ進む。",
+  "work_revision": "v0.14.14-test-evidence-rules-contract-done",
+  "latest_planning_note": "v0.14.14でTest Evidence Rulesを追加し、Expected / Actual / Diff / Test Code の責務分離をFoundation Rulesへ反映。次工程は v0.14.15 Folder / Archive Rules 03_tests正本・旧パス削除・Runtime生成物隔離。",
   "view_def_candidates": [
     {
       "view_def": "rules/studio_work_incident_view_def_v0_4_readable_cards_confirm_status_markdown_preview.json",
