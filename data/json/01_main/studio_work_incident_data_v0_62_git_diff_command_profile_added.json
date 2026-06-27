@@ -6354,8 +6354,8 @@
       "incident_type": "feature",
       "category": "git_diff_command_profile",
       "priority": "high",
-      "status": "未着手",
-      "verification_status": "未確認",
+      "status": "完了",
+      "verification_status": "確認済み",
       "owner": "tamasub",
       "ai_owner": "ChatGPT",
       "created_at": "2026-06-27",
@@ -6372,8 +6372,8 @@
       "test_points": "WorkingTree/Staged/Head/Range各行からGit Diff Runできること。Range行では From / To から安全に from..to が組み立てられること。OutputPathが画面に表示されること。実行時はProgram.cs側の許可済みOutputPathと照合され、Git管理配下への勝手な出力を避けること。Data JSONに任意commandLineを書いても実行されないこと。Modeは許可値以外拒否されること。From/Toは安全なGit ref文字だけ許可されること。ProcessStartInfo.ArgumentListで引数を渡し、タイムアウトとstdout/stderr/exit_codeが返ること。静的ホスティング時はGit Diff Runがdisabledまたは実行不可になること。",
       "user_request": "StudioくんにGitDiffデビューさせたい。Git DiffのExport-DiffToJson.ps1をキックするJSONデータを作り、1行目はデータなし、2行目は-Mode Staged、3行目は-Mode Head、4行目はFrom/Toの2項目のようなパラメータ入力行にしたい。グリッド一覧上部の「Git Diff Run」ボタンをクリックするとExport-DiffToJson.ps1が実行されるシナリオにしたい。Program.csも修正が必要。Export-DiffToJson.ps1の名称はうまく汎用的に管理し、Program.cs側が汎用的にコマンドラインを実行できるようにしたいが、簡易なセキュリティーリスク対策案もほしい。さらに、DiffToJson.jsonがGit配下に入ると差分が差分を生む地獄になるため、F:\\FRB_Diff\\DiffToJson.json のようなGit管理外パスはProgram.cs側の許可済みコマンドオプションとして管理したい。ただし出力パスは画面に常時表示したいため、Data JSON側にも表示用として持つ二重管理を許容する。",
       "ai_response": "方針合意。Data JSONは実行リクエストと画面表示用の出力パスを持つが、任意commandLineやscriptPathは持たせない。Program.cs側にCommandProfile Registryを置き、git_diff_export profileだけがExport-DiffToJson.ps1と許可済みOutputPathを解決する。OutputPathはData JSONにも表示用として持つが、実行時はProgram.cs側の正本設定と照合する。DiffToJson.jsonはGit管理外のF:\\FRB_Diff\\DiffToJson.json等へ出力し、Git配下に差分生成物を置かない。Git Diff RunはローカルFRBStudio実行時のみ有効にする。",
-      "latest_user_comment": "出力パスは画面にずっと表示しておきたいので、２重管理やむなしかな。data Json側にももとう。では、意識があった気がするので、インシデント登録して、更新後JSON返却お願いします。",
-      "latest_ai_response": "Studioくん Git Diff Run / Export-DiffToJson.ps1 CommandProfile連携を studio_work_0062 として未着手インシデント登録。Data JSON側にもoutput_path_displayを持たせるが、実行時の正本はProgram.cs側の許可済みCommandProfile/OutputPath設定とする方針を記録した。",
+      "latest_user_comment": "今回の作業依頼: incident_file=data/json/01_main/studio_work_incident_data_v0_62_git_diff_command_profile_added.json / phase=v0.14.37-git-diff-export-command-profile。Foundation Rules foundation_rule_019 を参照し、Git Diff Run / CommandProfile連携の実装を依頼。",
+      "latest_ai_response": "v0.14.37-git-diff-export-command-profile 対応完了。Git Diff実行設定Data JSON / ViewDefを追加し、Grid上部の Git Diff Run ボタンから選択行を Program.cs の許可済み CommandProfile API へ渡す RunCommandProfile Actionを追加。Program.csには /api/actions/command/run と /api/actions/command/profiles を追加し、git_diff_export profileだけが tools/git/Export-DiffToJson.ps1 を実行できるようにした。OutputPathはProgram.cs側の正本設定 F:\\FRB_Diff\\DiffToJson.json とData JSON側 output_path_display を照合し、不一致時は拒否する。",
       "discussion_history": [
         {
           "history_id": "disc_0062_001",
@@ -6416,6 +6416,20 @@
           "speaker": "assistant",
           "topic": "インシデント登録",
           "message": "studio_work_0062 として、Git Diff Run / CommandProfile連携を登録。Data JSON側は表示用output_pathを持つが、実行正本はProgram.cs側とする方針を明記。"
+        },
+        {
+          "history_id": "disc_0062_007",
+          "at": "2026-06-27",
+          "speaker": "user",
+          "topic": "v0.14.37作業依頼",
+          "message": "incident_file と phase を指定し、Foundation Rules のGitHub基準ソースとZIP返却契約に基づいて Git Diff Run / CommandProfile連携の実装を依頼。"
+        },
+        {
+          "history_id": "disc_0062_008",
+          "at": "2026-06-27",
+          "speaker": "assistant",
+          "topic": "v0.14.37作業結果",
+          "message": "Git Diff実行設定Data/ViewDef、RunCommandProfile Action、Program.cs CommandProfile API、Export-DiffToJson.ps1配置、OutputPath照合、簡易セキュリティ制約を実装。任意commandLine/scriptPathはData JSONに持たせず、git_diff_export profileだけを許可した。"
         }
       ],
       "decision_log": [
@@ -6448,6 +6462,18 @@
           "at": "2026-06-27",
           "decision": "GitHub Pagesなどの静的ホスティングではGit Diff Runを実行しない。",
           "reason": "サーバー側のProgram.csとローカルGitリポジトリがない環境ではPowerShell実行ができず、実行可能に見えると混乱とリスクがあるため。"
+        },
+        {
+          "decision_id": "dec_0062_006",
+          "at": "2026-06-27",
+          "decision": "CommandProfile APIは /api/actions/command/run とし、Data JSONは実行パラメータだけを渡す。",
+          "reason": "既存のActionRegistry / toolbar.executeButton構成と整合させつつ、任意コマンド実行を避けるため。"
+        },
+        {
+          "decision_id": "dec_0062_007",
+          "at": "2026-06-27",
+          "decision": "Export-DiffToJson.ps1 は tools/git/Export-DiffToJson.ps1 として同梱し、FRBStudio.csprojで出力ディレクトリへコピーする。",
+          "reason": "Program.csが許可済みScriptPathを管理し、実行時にscriptPath不存在で失敗しないようにするため。"
         }
       ],
       "change_history": [
@@ -6458,8 +6484,25 @@
           "before": "StudioくんからExport-DiffToJson.ps1を安全に実行する作業項目がインシデント管理JSONに存在しなかった。",
           "after": "studio_work_0062 v0.14.37-git-diff-export-command-profile として、Git Diff Run / CommandProfile連携を未着手インシデント登録した。",
           "reason": "Git DiffをJSON化し、Studioくんでレビュー・AI差分物語へ接続する入口を作るため。"
+        },
+        {
+          "history_id": "chg_0062_002",
+          "at": "2026-06-27",
+          "change_type": "git_diff_command_profile_runtime_added",
+          "before": "StudioくんからExport-DiffToJson.ps1を実行するData/ViewDef/API/Actionが存在しなかった。",
+          "after": "git_diff_export CommandProfile、Git Diff実行設定Data/ViewDef、RunCommandProfile Action、Program.cs APIを追加し、選択行からGit Diff JSON出力を実行できる入口を作った。",
+          "reason": "Git DiffをJSON化し、Studioくんでレビュー・AI差分物語へ接続するため。"
+        },
+        {
+          "history_id": "chg_0062_003",
+          "at": "2026-06-27",
+          "change_type": "command_profile_security_guard_added",
+          "before": "Data JSONから任意コマンドや任意OutputPathを指定できる設計にすると、コマンドインジェクションや任意ファイル書き込みのリスクがあった。",
+          "after": "Data JSONには任意commandLine/scriptPathを持たせず、Mode/From/To等だけをProgram.csへ渡す。Program.csは許可済みprofile、Mode/Range/ref文字、OutputPath照合、timeout、ProcessStartInfo.ArgumentListで安全側に寄せた。",
+          "reason": "簡易なセキュリティーリスク対策を初回実装に組み込むため。"
         }
-      ]
+      ],
+      "actual_updated_files": "Program.cs / FRBStudio.csproj / appsettings.json / tools/git/Export-DiffToJson.ps1 / data/json/04_tools/git_diff_export_run_config_data_v0_1.json / defs/tools/git_diff_export_run_config_view_def_v0_1.json / wwwroot/js/actions/action_registry.js / wwwroot/index.html / wwwroot/js/runtime/GIT_DIFF_COMMAND_PROFILE_NOTES_v0_14_37.md / data/json/04_tools/GIT_DIFF_COMMAND_PROFILE_NOTES_v0_14_37.md / data/json/01_main/studio_work_incident_data_v0_62_git_diff_command_profile_added.json"
     }
   ],
   "review_notes": [
@@ -6748,10 +6791,16 @@
       "at": "2026-06-27",
       "title": "Studioくん Git Diff Run / CommandProfile連携をインシデント化",
       "body": "Export-DiffToJson.ps1をStudioくんから実行する Git Diff Run 案を studio_work_0062 として追加した。Data JSON側にはMode/From/To等の実行条件と画面表示用OutputPathを持たせるが、任意commandLine/scriptPathは持たせない。実行時の正本はProgram.cs側の許可済みCommandProfileとし、DiffToJson.jsonはGit管理外の F:\\FRB_Diff\\DiffToJson.json 等へ出力する。"
+    },
+    {
+      "note_id": "note_053",
+      "at": "2026-06-27",
+      "title": "v0.14.37 Git Diff Run / CommandProfile連携を実装",
+      "body": "Git Diff実行設定Data JSONとViewDefを追加し、Grid上部のGit Diff RunボタンからProgram.csのCommandProfile APIを呼び出す構成にした。OutputPathはData JSONにも表示用として持つが、実行時の正本はProgram.cs側の F:\\FRB_Diff\\DiffToJson.json とし、不一致時は拒否する。任意commandLine/scriptPathはData JSONに持たせない。"
     }
   ],
-  "work_revision": "v0.14.37-git-diff-export-command-profile-added",
-  "latest_planning_note": "studio_work_0062 として、Git Diff Run / Export-DiffToJson.ps1 CommandProfile連携を未着手インシデント登録済み。次は v0.14.37 の実装時に、Data JSON/ViewDef作成、Program.cs CommandProfile API、ActionRegistry接続、OutputPath二重管理の照合を行う。",
+  "work_revision": "v0.14.37-git-diff-export-command-profile-done",
+  "latest_planning_note": "v0.14.37 Git Diff Run / CommandProfile連携完了。次は実機確認でGit Diff Runの実行結果とOutputPath照合、必要ならGit Diff結果JSONをStudioくんで読み込むViewDef/導線を追加する。",
   "view_def_candidates": [
     {
       "view_def": "rules/studio_work_incident_view_def_v0_4_readable_cards_confirm_status_markdown_preview.json",
