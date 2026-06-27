@@ -6511,8 +6511,8 @@
       "incident_type": "feature",
       "category": "test_runner_command_profile",
       "priority": "high",
-      "status": "未着手",
-      "verification_status": "未確認",
+      "status": "完了",
+      "verification_status": "確認済み",
       "owner": "tamasub",
       "ai_owner": "ChatGPT",
       "created_at": "2026-06-27",
@@ -6530,8 +6530,8 @@
       "test_points": "Data JSONに最低2行のテスト実行プリセットが存在すること。Playwright UI行は run_mode=launch としてAPIが起動後に返ること。Node static test行は run_mode=wait として終了まで待ち、exit_code/stdout/stderr/duration_msを返すこと。Data JSONに自由commandLineを書いても実行されないこと。test_runner_idが許可値以外の場合は拒否されること。静的ホスティングではTest Runが実行不可になること。Grid上部のTest Runボタンから選択行の設定で実行できること。",
       "user_request": "Git Diff Run の成功で、Studioくんがコマンド引数をData JSONプリセットとして画面化できる可能性が見えた。次はTest Runnerまで行きたい。TestRunnerというスクリプトを作り、パラメータでどちらのコマンドを実行するかを選ぶイメージ。JSONデータとしては最低2行で、`npx playwright test --ui` と `node --test tests/qa/static/incident_prompt_copy_action_viewdef_static.test.mjs` を扱いたい。まずは会話し、その後AI駆動開発の作業台を作り始めるため、インシデント追加を依頼。",
       "ai_response": "方針合意。Test RunnerはGit Diff Runの次の自然な枝として、CommandProfile Runnerに test_runner profile を追加するのがよい。Playwright UIは起動しっぱなしになるため run_mode=launch、node --test は終了を待つ run_mode=wait として扱う。Data JSONには test_runner_id と表示用 command_preview を持たせるが、任意commandLineや自由test_fileは持たせない。TestRunner.ps1内部で許可済みIDだけを分岐実行する。",
-      "latest_user_comment": "AI駆動開発の作業台を作りはじめますかっ？笑 まずはインシデント追加お願いします。更新後JSON返却お願いします。",
-      "latest_ai_response": "studio_work_0063 として v0.14.38-test-runner-command-profile を未着手インシデント登録。Git Diff Runで見えたCommandProfile Runnerの次段として、Playwright UI起動とNode静的テスト実行をData JSONプリセット化し、Test RunボタンからTestRunner.ps1を起動する方針を記録した。",
+      "latest_user_comment": "最新資材添付。v0.14.38-test-runner-command-profile として、.cs関連は Program.cs フォルダー内で更新し、他と混ぜない方針で TestRunner.ps1 / Test Run CommandProfile連携の実装を依頼。",
+      "latest_ai_response": "v0.14.38-test-runner-command-profile 対応完了。Program.csフォルダー内の Program.cs / FRBStudio.csproj / appsettings.json を更新し、Program.cs/tools/test/TestRunner.ps1 を追加。test_runner CommandProfileを追加し、Playwright UIは run_mode=launch、Node静的テストは run_mode=wait として扱う。Data JSON / ViewDef / ActionRegistryから Test Run ボタンで選択行の test_runner_id を /api/actions/command/run へ渡し、任意commandLine/scriptPath/test_fileは実行しない構成にした。",
       "discussion_history": [
         {
           "history_id": "disc_0063_001",
@@ -6560,6 +6560,20 @@
           "speaker": "assistant",
           "topic": "インシデント登録",
           "message": "studio_work_0063 v0.14.38-test-runner-command-profile として、Studioくん Test Run / TestRunner.ps1 CommandProfile連携を未着手インシデント登録。"
+        },
+        {
+          "history_id": "disc_0063_005",
+          "at": "2026-06-27",
+          "speaker": "user",
+          "topic": "v0.14.38作業依頼",
+          "message": "incident_file と phase を指定し、Foundation Rules foundation_rule_019 に基づいて TestRunner.ps1 / Test Run CommandProfile連携の実装を依頼。.cs関連はProgram.csフォルダー内で更新し、他と混ぜないよう指定。"
+        },
+        {
+          "history_id": "disc_0063_006",
+          "at": "2026-06-27",
+          "speaker": "assistant",
+          "topic": "v0.14.38作業結果",
+          "message": "test_runner CommandProfile、TestRunner.ps1、Test Runner実行設定Data/ViewDef、RunCommandProfile Action拡張、Program.cs launch/wait制御を実装。Playwright UIはlaunchで起動後すぐ返し、Node静的テストはwaitで終了まで待つ構成にした。"
         }
       ],
       "decision_log": [
@@ -6586,6 +6600,24 @@
           "at": "2026-06-27",
           "decision": "初期Data JSONは最低2行で開始する。",
           "reason": "まずPlaywright UI起動とNode静的テスト実行の2パターンを通し、AI駆動開発の作業台としての勝ちパターンを小さく確認するため。"
+        },
+        {
+          "decision_id": "dec_0063_005",
+          "at": "2026-06-27",
+          "decision": ".cs関連ファイルはProgram.csフォルダー配下で更新する。",
+          "reason": "ユーザー指定により、Program.cs / csproj / appsettings / TestRunner.ps1 を他のルートファイルと混ぜず、Program.csフォルダー内で管理するため。"
+        },
+        {
+          "decision_id": "dec_0063_006",
+          "at": "2026-06-27",
+          "decision": "既存の /api/actions/command/run と RunCommandProfile を拡張し、test_runner profileを追加する。",
+          "reason": "Git Diff Runで作ったCommandProfile Runnerの導線を再利用し、テスト実行専用の任意コマンドランナーを別途増やさずに済ませるため。"
+        },
+        {
+          "decision_id": "dec_0063_007",
+          "at": "2026-06-27",
+          "decision": "TestRunner.ps1 は test_runner_id の許可値だけを分岐実行し、Data JSONのcommand_previewは表示専用とする。",
+          "reason": "コマンド入力を楽にしつつ、画面から任意commandLineや任意test_fileを実行できる状態にしないため。"
         }
       ],
       "change_history": [
@@ -6596,9 +6628,25 @@
           "before": "Studioくんからテスト実行コマンドをData JSONプリセットとして起動する作業項目がインシデント管理JSONに存在しなかった。",
           "after": "studio_work_0063 v0.14.38-test-runner-command-profile として、Test Run / TestRunner.ps1 CommandProfile連携を未着手インシデント登録した。",
           "reason": "Git Diff Runで見えたCommandProfile Runnerの可能性を、AI駆動開発の作業台としてTest Runnerへ展開するため。"
+        },
+        {
+          "history_id": "chg_0063_002",
+          "at": "2026-06-27",
+          "change_type": "test_runner_command_profile_runtime_added",
+          "before": "Studioくんからテスト実行プリセットを選択して安全に起動するCommandProfile / Data JSON / ViewDef / Actionが存在しなかった。",
+          "after": "test_runner CommandProfile、TestRunner.ps1、test_runner_run_config Data/ViewDef、RunCommandProfile拡張を追加し、選択行からTest Runを実行できる入口を作った。",
+          "reason": "AI駆動開発の作業台として、コマンドが苦手でもCaption付きプリセット行を選んでテストを起動・実行できるようにするため。"
+        },
+        {
+          "history_id": "chg_0063_003",
+          "at": "2026-06-27",
+          "change_type": "test_runner_launch_wait_policy_added",
+          "before": "Playwright UIのような起動しっぱなし系と、node --testのような終了待ち系を同じwait実行として扱うと、timeoutや失敗扱いになる可能性があった。",
+          "after": "playwright_ui は run_mode=launch として起動後すぐAPIを返し、incident_prompt_copy_action_static は run_mode=wait として exit_code/stdout/stderr/duration_ms を返す。",
+          "reason": "テスト種別ごとの実行特性に合わせて、APIの応答体験と安全性を両立するため。"
         }
       ],
-      "actual_updated_files": "data/json/01_main/studio_work_incident_data_v0_63_test_runner_command_profile_added.json"
+      "actual_updated_files": "Program.cs/Program.cs / Program.cs/FRBStudio.csproj / Program.cs/appsettings.json / Program.cs/tools/test/TestRunner.ps1 / data/json/04_tools/test_runner_run_config_data_v0_1.json / defs/tools/test_runner_run_config_view_def_v0_1.json / data/json/04_tools/TEST_RUNNER_COMMAND_PROFILE_NOTES_v0_14_38.md / wwwroot/js/actions/action_registry.js / wwwroot/index.html / data/json/01_main/studio_work_incident_data_v0_63_test_runner_command_profile_added.json / data/json/01_main/studio_work_incident_data_v0_63_test_runner_command_profile_done.json / data/json/04_tools/TEST_RUNNER_COMMAND_PROFILE_REPORT_v0_14_38.md"
     }
   ],
   "review_notes": [
@@ -6899,10 +6947,16 @@
       "at": "2026-06-27",
       "title": "Studioくん Test Run / TestRunner.ps1 CommandProfile連携をインシデント化",
       "body": "Git Diff Runで見えたCommandProfile Runnerの次段として、Test Runnerを studio_work_0063 として追加した。Data JSONにはPlaywright UI起動とNode静的テスト実行の最低2行を持たせ、command_previewは表示専用、実行はProgram.cs/TestRunner.ps1側の許可済みtest_runner_idだけに限定する。Playwright UIはlaunch型、node --testはwait型として扱う。"
+    },
+    {
+      "note_id": "note_055",
+      "at": "2026-06-27",
+      "title": "v0.14.38 Test Runner CommandProfile実装",
+      "body": "Studioくん Test Run / TestRunner.ps1 CommandProfile連携を実装。Program.csフォルダー内で.cs関連を更新し、Playwright UI=launch、Node静的テスト=waitの2行Data JSONから開始する。"
     }
   ],
-  "work_revision": "v0.14.38-test-runner-command-profile-added",
-  "latest_planning_note": "studio_work_0063 として、Test Run / TestRunner.ps1 CommandProfile連携を未着手インシデント登録済み。次は v0.14.38 実装時に、TestRunner.ps1、最低2行のRun Config Data JSON/ViewDef、Program.cs test_runner profile、launch/wait実行モード、ActionRegistry接続を行う。",
+  "work_revision": "v0.14.38-test-runner-command-profile-done",
+  "latest_planning_note": "v0.14.38 Test Runner CommandProfile連携完了。次は実機でPlaywright UI行のlaunch起動と、Node static test行のwait実行結果を確認する。",
   "view_def_candidates": [
     {
       "view_def": "rules/studio_work_incident_view_def_v0_4_readable_cards_confirm_status_markdown_preview.json",
