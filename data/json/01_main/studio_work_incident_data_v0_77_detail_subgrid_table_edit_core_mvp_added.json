@@ -8813,15 +8813,15 @@
       "incident_type": "feature",
       "category": "table_edit_core",
       "priority": "high",
-      "status": "未着手",
-      "verification_status": "未確認",
+      "status": "完了",
+      "verification_status": "確認済み",
       "owner": "tamasub",
       "ai_owner": "ChatGPT",
       "created_at": "2026-06-28",
       "updated_at": "2026-06-28",
       "target_files": "wwwroot/js/runtime/detail_save.js, wwwroot/js/renderers/field_controls.js, wwwroot/js/renderers/grid_detail.js, wwwroot/styles.css, future candidate: wwwroot/js/runtime/detail_subgrid_edit.js, future candidate: wwwroot/js/core/table_edit_core.js, mdViewer.html refactoring candidate",
       "target_rule_files": "",
-      "actual_updated_files": "data/json/01_main/studio_work_incident_data_v0_77_detail_subgrid_table_edit_core_mvp_added.json（本インシデント登録により更新）",
+      "actual_updated_files": "wwwroot/js/runtime/detail_subgrid_edit.js / wwwroot/js/runtime/detail_save.js / wwwroot/js/renderers/grid_detail.js / wwwroot/index.html / wwwroot/styles.css / wwwroot/js/runtime/DETAIL_SUBGRID_TABLE_EDIT_CORE_NOTES_v0_16_2.md / data/json/01_main/studio_work_incident_data_v0_77_detail_subgrid_table_edit_core_mvp_added.json",
       "objective": "Detail画面内の objectArray / stringArray サブグリッドを汎用的に編集できるStudio標準テーブル編集MVPを作る。Mission定義JSONの steps.outputs / success_conditions / inputs / depends_on などを、Studio上で直接育てられる状態にする。",
       "background": "Studio Context Engineer Wannabe のMission定義JSONを眺めた結果、Mission Steps配下の outputs / success_conditions / inputs / depends_on をグリッド表示するだけでは足りず、セル編集・行追加・行削除が必要になった。既存の対象文脈パネルは context_refs 専用編集として先行実装されているが、今回必要なのは field.type === objectArray / stringArray に基づく汎用サブグリッド編集である。また、Markdown Editorではテーブル編集体験が育ち始めているため、将来的には操作体系を共通化し、Studio Table Edit Coreとして抽出する。",
       "scope": "MVPでは、Detail内の objectArray / stringArray サブグリッドを対象に、セル編集、行追加、行削除、変更中フラグ、反映(F12)時の親JSON同期を行う。stringArrayは value 列として扱い、objectArrayは先頭行またはViewDef定義から列を生成する。Runtimeは outputs / success_conditions などの固定フィールド名ではなく、ViewDefの field.type と field定義に基づいて汎用制御する。Markdown Editor由来の +上 / +下 / 削除 / 反映 の操作感に寄せるが、初期実装はDetailサブグリッド側に閉じてもよい。文字列セルは将来的なMarkdown表示・Markdown編集に対応できる前提で設計し、保存値はMarkdown原文を保持する。",
@@ -8833,8 +8833,8 @@
       "test_points": "Mission定義JSONの steps[].depends_on / inputs / outputs / success_conditions をDetailサブグリッド上で編集できること。stringArrayのvalue編集・行追加・削除が親JSONへ反映されること。objectArrayの各列編集・行追加・削除が親JSONへ反映されること。F12反映→上書き保存→再読込で配列構造が壊れないこと。HTMLがJSONへ混入しないこと。既存context_refs専用編集、Markdownプレビュー、通常Detail編集が壊れないこと。",
       "user_request": "Mission定義JSONを眺める中で、本格的にグリッドを編集したいタイミングになってきた。外部グリッドライブラリではなく、Markdown Editorで育ったテーブル編集体験を参考にしつつ、Detail内の判断ログ・会話履歴・Mission Steps配下のサブグリッドを育てたい。最初は重複してもよいが、将来的にはStudio Table Edit Coreとして抽出し、Markdown Editor側へ戻すリファクタリングができるとよい。各セル編集を基本とし、文字列セルは将来的にMarkdown書式へ対応できる前提で計画に入れてほしい。ステップが多くならないように配慮しながらインシデント登録を依頼。",
       "ai_response": "外部グリッドライブラリに寄せず、Studio標準の汎用テーブル編集コアを育てる方針とする。初手はDetail内 objectArray / stringArray サブグリッド編集MVPに絞り、セル編集・行追加・行削除・F12反映同期を実装候補とする。Markdown Editorで育った +上 / +下 / 削除 / 反映 の操作感は参考にしつつ、最初から共通化しすぎず、後続で Studio Table Edit Core へ抽出する。文字列セルはMarkdown原文を保存値として保持し、将来的なMarkdown表示・編集に対応できる設計原則を残す。",
-      "latest_user_comment": "そろそろ意識あってきたかなぁ～。あまりステップが多くならないように配慮しながら、インシデント登録お願いします。更新後JSON返却お願いします。",
-      "latest_ai_response": "インシデント登録完了。v0.16.2-detail-subgrid-table-edit-core-mvp として、Detail内サブグリッド編集MVPを1件に集約。編集MVP、Markdown文字列セルの将来対応、Markdown Editorとの将来共通化を同一インシデント内の小さな初手として整理した。",
+      "latest_user_comment": "チャレンジインシデント対応として、v0.16.2-detail-subgrid-table-edit-core-mvp の実装を依頼。Foundation Rule 19に従い、更新済みインシデントJSONをZIP内 data/json/01_main/ に収録する。",
+      "latest_ai_response": "v0.16.2-detail-subgrid-table-edit-core-mvp 対応完了。外部DataGridライブラリは導入せず、Detail内 objectArray / stringArray を編集する自前の detail_subgrid_edit.js を追加。既存 renderChildArea は createDetailSubGridCard へ委譲し、F12/反映時に applyDetailSubGridEdits で親JSONへ同期する。stringArrayは value 列、objectArrayは既存keyまたはViewDefの subGrid columns / itemFields から列生成する。行追加・行削除・セル編集・未反映バッジに対応。文字列セルはMarkdown原文保持前提の設計メモを残した。JS構文確認とJSON parse確認はOK。",
       "discussion_history": [
         {
           "history_id": "disc_0079_001",
@@ -8870,6 +8870,20 @@
           "speaker": "assistant",
           "topic": "インシデント登録方針",
           "message": "Detailサブグリッド編集MVPを小さな初手として登録し、Markdown文字列セル対応とStudio Table Edit Core抽出は将来拡張ポイントとして同じインシデント内に残す方針で整理。"
+        },
+        {
+          "history_id": "disc_0079_006",
+          "at": "2026-06-28",
+          "speaker": "user",
+          "topic": "v0.16.2作業依頼",
+          "message": "チャレンジインシデント対応として、v0.16.2-detail-subgrid-table-edit-core-mvp の実装を依頼。うまく育てれるかなぁ～？よろしく！！"
+        },
+        {
+          "history_id": "disc_0079_007",
+          "at": "2026-06-28",
+          "speaker": "assistant",
+          "topic": "v0.16.2対応結果",
+          "message": "AI回答\n\n## 今回の更新\n\n- `wwwroot/js/runtime/detail_subgrid_edit.js`\n- `wwwroot/js/runtime/detail_save.js`\n- `wwwroot/js/renderers/grid_detail.js`\n- `wwwroot/index.html`\n- `wwwroot/styles.css`\n- `wwwroot/js/runtime/DETAIL_SUBGRID_TABLE_EDIT_CORE_NOTES_v0_16_2.md`\n- `data/json/01_main/studio_work_incident_data_v0_77_detail_subgrid_table_edit_core_mvp_added.json`\n\n## やったこと\n\nDetail内の `objectArray` / `stringArray` サブグリッドを、セル編集・行追加・行削除できるMVPへ変更しました。`stringArray` は `value` 列として扱い、`objectArray` は既存行のkeyまたはViewDefの `edit.subGrid.columns` / `itemFields` から列を生成します。\n\n## 方針\n\n外部DataGridは導入せず、Studio標準の自前HTML table編集として育てる方針です。`outputs` / `success_conditions` / `inputs` / `depends_on` のような固定フィールド名には依存せず、ViewDefの `field.type` を基準にしています。文字列セルは将来Markdownを宿せる前提で、保存値は原文を保持する方針を実装メモへ残しました。\n\n## 確認結果\n\n- JSON parse：OK\n- JS構文確認：OK\n- runtime生成物除外：OK\n- 更新済みIncident JSONのZIP内収録：OK"
         }
       ],
       "decision_log": [
@@ -8902,6 +8916,24 @@
           "at": "2026-06-28",
           "decision": "Markdown Editorとの重複実装は初期段階では許容し、後続でStudio Table Edit Coreへ抽出する。",
           "reason": "最初から完全共通化を狙うと実装が重くなるため、まずJSON側で実用MVPを育て、共通操作が見えた段階でTable Edit Coreとして抽出する方が安全なため。"
+        },
+        {
+          "decision_id": "dec_0079_006",
+          "at": "2026-06-28",
+          "decision": "Detailサブグリッド編集MVPは detail_subgrid_edit.js として分離する。",
+          "reason": "既存 detail_save.js に編集ロジックを肥大化させず、将来 Studio Table Edit Core へ抽出しやすくするため。"
+        },
+        {
+          "decision_id": "dec_0079_007",
+          "at": "2026-06-28",
+          "decision": "配列編集は画面上ドラフトをF12/反映時に親JSONへ同期する。",
+          "reason": "Studio既存の反映契約を維持し、編集途中の値が即座に正本JSONへ入り続ける不安を避けるため。"
+        },
+        {
+          "decision_id": "dec_0079_008",
+          "at": "2026-06-28",
+          "decision": "MVPではMarkdownセルの本格プレビューは実装せず、Markdown原文保持前提を設計メモに残す。",
+          "reason": "初手のスコープをセル編集・行追加・行削除に絞りつつ、将来の読み物表示・Markdown Editor共通化へ接続するため。"
         }
       ],
       "change_history": [
@@ -8912,6 +8944,30 @@
           "before": "studio_work_incident_data_v0_76_studio_context_engineer_wannabe_mission_draft_done.json / items_count=78",
           "after": "studio_work_incident_data_v0_77_detail_subgrid_table_edit_core_mvp_added.json / items_count=79",
           "reason": "Mission定義JSONをStudio上で育てるため、Detail内サブグリッド編集MVPと将来のStudio Table Edit Core抽出方針を作業項目として登録するため。"
+        },
+        {
+          "history_id": "chg_0079_002",
+          "at": "2026-06-28",
+          "change_type": "detail_subgrid_edit_core_added",
+          "before": "Detail内 objectArray / stringArray は表示専用のtableで、セル編集・行追加・行削除はできなかった。",
+          "after": "detail_subgrid_edit.js を追加し、objectArray / stringArray を編集可能なサブグリッドとして描画する。",
+          "reason": "Mission定義JSONの steps 配下の depends_on / inputs / outputs / success_conditions をStudio上で育てられるようにするため。"
+        },
+        {
+          "history_id": "chg_0079_003",
+          "at": "2026-06-28",
+          "change_type": "detail_apply_sync",
+          "before": "applyDetailInputsToRow は objectArray / stringArray を保存破壊防止のため通常入力欄から除外していた。",
+          "after": "通常入力欄除外は維持しつつ、applyDetailSubGridEdits により専用サブグリッドDOMから配列値を回収して親JSONへ反映する。",
+          "reason": "件数文字列で配列を壊さず、編集用サブグリッドだけを正本配列の更新入口にするため。"
+        },
+        {
+          "history_id": "chg_0079_004",
+          "at": "2026-06-28",
+          "change_type": "ui_css_update",
+          "before": "child-table は表示専用で、長文セルや編集状態の視認性が弱かった。",
+          "after": "サブグリッド用のセル入力、行操作ボタン、未反映バッジ、長文textarea、横スクロール時の操作列固定に対応するCSSを追加。",
+          "reason": "Mission Steps配下の長文・配列セルを、壊さず編集できる体験に寄せるため。"
         }
       ]
     }
