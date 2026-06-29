@@ -1,4 +1,4 @@
-# make_wwwroot_zip_v3.ps1
+# make_wwwroot_zip_v4.ps1
 # FRBStudio_App packaging script
 # data / defs / tests / tools / wwwroot + selected root files を ZIP 化する
 
@@ -27,6 +27,14 @@ $targetRootFiles = @(
     "package-lock.json",
     "playwright.config.ts",
     "web.config"
+)
+
+# ZIP に含めないパス
+# ルートからの相対パス、または $root 配下の絶対パスを指定できる。
+# 例: "wwwroot\js\lib\mermaid"
+# 例: "F:\FRB\tools\FRBStudio_App\wwwroot\js\lib\mermaid"
+$excludePaths = @(
+    "wwwroot\js\lib\mermaid"
 )
 
 # 出力 ZIP 名
@@ -72,6 +80,39 @@ try {
         }
         else {
             Write-Warning "[SKIP FILE] not found: $fileName"
+        }
+    }
+
+    # 除外対象をステージングフォルダから削除する。
+    # Copy-Item 後に消す方式にして、既存のコピー処理を大きく変えない。
+    foreach ($excludePath in $excludePaths) {
+        if ([string]::IsNullOrWhiteSpace($excludePath)) {
+            continue
+        }
+
+        $relativeExcludePath = $excludePath
+
+        if ([System.IO.Path]::IsPathRooted($excludePath)) {
+            $rootFull = [System.IO.Path]::GetFullPath($root).TrimEnd('\', '/')
+            $excludeFull = [System.IO.Path]::GetFullPath($excludePath)
+
+            if ($excludeFull.StartsWith($rootFull, [System.StringComparison]::OrdinalIgnoreCase)) {
+                $relativeExcludePath = $excludeFull.Substring($rootFull.Length).TrimStart('\', '/')
+            }
+            else {
+                Write-Warning "[SKIP EXCLUDE] outside root: $excludePath"
+                continue
+            }
+        }
+
+        $stageExcludePath = Join-Path $stage $relativeExcludePath
+
+        if (Test-Path -LiteralPath $stageExcludePath) {
+            Remove-Item -LiteralPath $stageExcludePath -Recurse -Force
+            Write-Host "[EXCLUDE] $relativeExcludePath"
+        }
+        else {
+            Write-Host "[EXCLUDE SKIP] not found in stage: $relativeExcludePath"
         }
     }
 
