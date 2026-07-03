@@ -9342,7 +9342,20 @@
       "enabled": true,
       "sort_order": 40,
       "note": ""
-    }
+    },
+{
+  "context_ref_id": "main_incident_005_ai_code_generation_source_policy",
+  "title": "AIコード生成時は、著作権・ライセンス上問題になり得る既存実装を下敷きにせず、ユーザー要件・制約・設計意図から生成すること。",
+  "read_timing": "before_code_update",
+  "target_path": "- tools/FRBStudio_App/wwwroot/**/*.js\n- tools/FRBStudio/**/*.cs\n- tools/**/*.ps1\n- tools/**/*.bat",
+  "purpose": "AIがソースコードを生成・修正する際に、既存OSS、ブログ記事、Stack Overflow、製品コード、出所不明コード等の具体的実装をそのまま材料にしない。実装は、ユーザーが提示した要件、制約、命名、設計思想、既存プロジェクト内の文脈に基づいて生成する。外部コードを参考にする必要がある場合は、出所、ライセンス、利用範囲を明示し、未確認の場合は採用しない。",
+  "failure_policy": "warn_and_continue",
+  "trust_category": "constraint",
+  "required": false,
+  "enabled": true,
+  "sort_order": 50,
+  "note": "これは法的判断ではなく、AIコード生成時の安全柵である。著作権侵害の最終判断をAIに委ねるものではない。公開前には必要に応じて出所確認・ライセンス確認・人間レビューを行う。"
+}
   ],
   "archive_policy": "studio_work_0079以前の完了系作業は archive JSON へ分離し、メインJSONには未着手・進行中・直近完了分を残す。",
   "archives": [
