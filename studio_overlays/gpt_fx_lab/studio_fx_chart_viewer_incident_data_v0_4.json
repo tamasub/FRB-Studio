@@ -6,15 +6,15 @@
   "target": "studio_overlays/gpt_fx_lab/plugins/fx_chart_viewer",
   "status": "active",
   "created_at": "2026-07-05",
-  "updated_at": "2026-07-05",
+  "updated_at": "2026-07-09T20:55:00+09:00",
   "owner": "tamasub",
   "ai_partner": "ChatGPT",
   "purpose": "GPT FX Lab の fx_chart_viewer が、単なるチャート表示から、M5/H1/H4同期観測、HSI仮説可視化、コメント/判断ログ共有へ育っていくため、Studio本体インシデントとは別枠で改修履歴・判断ログ・将来要望を管理する。",
   "operation_policy": "ViewDefは既存の studio_work_incident_view_def_v0_5.json を共通利用する。fx_chart_viewer固有の作業はこの専用インシデントファイルへ登録し、Studio本体汎用機能とドメイン専用Overlay機能を混ぜない。実装パッチでは、更新ファイルのみZIP返却し、未更新ファイルや.bakを含めない。",
   "standard_field_policy": "このファイルは既存インシデント管理Dataの構造を踏襲する。work_item_id / phase / status / discussion_history / decision_log / change_history 等は、インシデント管理Dataの契約として扱う。",
-  "items_count": 5,
-   "main_context_status": "draft",
-  "main_context_updated_at": "2026-06-28",
+  "items_count": 10,
+  "main_context_status": "draft",
+  "main_context_updated_at": "2026-07-09T20:55:00+09:00",
   "main_context_draft": "# 主文脈素案: インシデント管理Data\n\n## 読む目的\nこのインシデント管理Data全体を扱うAIが、作業前に読むべき正本・ViewDef・Foundation Rules・Runtime対象を確認できるようにする。\n\n## 基本方針\n- Data JSONを作業台帳の正本として扱う。\n- ViewDefは表示・編集体験の定義として扱う。\n- 主文脈はData全体を扱う前に読む入口、対象文脈は各作業項目を扱う前に読む入口として分ける。\n- グリッドは編集用、プレビューは読むためのUIとして分離する。\n\n## 注意\nFoundation Rule 19のZIP返却契約とdiscussion_history実発言契約を優先する。",
   "main_context_refs": [
     {
@@ -94,9 +94,8 @@
       "first_work_item_id": "studio_work_0001",
       "last_work_item_id": "studio_work_0079",
       "note": "完了履歴を別ファイルへ分け、メインインシデントJSONの肥大化を抑える。"
-    },
+    }
   ],
-   
   "work_items": [
     {
       "work_item_id": "fx_chart_viewer_work_0001",
@@ -812,6 +811,580 @@
       "actual_updated_files": "studio_overlays/gpt_fx_lab/plugins/fx_chart_viewer/plugin.js\nstudio_overlays/gpt_fx_lab/plugins/fx_chart_viewer/plugin.json\nstudio_overlays/gpt_fx_lab/studio_manifest.json\nstudio_overlays/gpt_fx_lab/CHANGELOG.md\ndata/json/01_main/studio_fx_chart_viewer_incident_data_v0_4.json",
       "completion_summary": "Upper Context Warmup Barsを追加。上位足パネルのみ過去側へupperWarmupBars分の文脈バーを追加表示し、0/30/60/100プリセット、URL保存/復元、時刻同期の範囲外安全処理方針を実装。M5窓は不変。売買判定・Simulationは未実装。",
       "test_result": "node --check plugin.js OK。plugin.json / studio_manifest.json / incident JSON parse OK。"
+    },
+    {
+      "work_item_id": "fx_chart_viewer_work_0006",
+      "phase": "v0.8.3.23-to-v0.8.3.27-expansion-review-day-uppermap-decision-log",
+      "title": "Expansion Review / DAY UpperMap：Primary+UpperMap DataSourceとUI判断ログの後追い登録",
+      "incident_type": "retrospective_decision_log",
+      "category": "gpt_fx_lab_fx_chart_viewer",
+      "priority": "high",
+      "status": "完了",
+      "owner": "tamasub",
+      "ai_owner": "ChatGPT",
+      "created_at": "2026-07-09",
+      "updated_at": "2026-07-09",
+      "target_files": "studio_overlays/gpt_fx_lab/plugins/fx_chart_viewer/plugin.js\nstudio_overlays/gpt_fx_lab/plugins/fx_chart_viewer/plugin.json\nstudio_overlays/gpt_fx_lab/data/fx_usdjpy_d1_t3_data_v0_1.json\nstudio_overlays/gpt_fx_lab/CHANGELOG.md\nstudio_overlays/gpt_fx_lab/studio_fx_chart_viewer_incident_data_v0_4.json",
+      "objective": "Expansion検討レイアウトのUI改善で発生した重要判断を後追いでインシデントへ登録する。特に、M5単独DataSourceの限界、DAY外部DataSource化、DAYを全体地図として扱う判断、URLとchart_comments.jsonの責務分離、DAY UpperMapの表示レイヤー削減を、将来のAI駆動開発・Studio Context Engineer Wannabe向けの判断ログとして残す。",
+      "background": "H4メイン + DAY/H1サブのExpansion Review Layoutを導入したが、M5由来のDAYでは大きなトレンドが見えなかった。そこで、USDJPY1440.csvをD1 JSON化し、Overlay側でM5 Primary DataSourceとDAY UpperMap DataSourceを同時参照する経路を作った。その後、DAYに赤緑のDow材料点やサイクル縦線を出すと、上位地図としての視認性が落ちることが分かり、DAYは詳細分析足ではなく全体地図として情報を絞る方針へ整理した。",
+      "scope": "この作業項目では、2026-07-09に実施したFX/FZ UI改善の判断ログを登録する。対象は、Expansion Review Layout、DAY外部DataSource、USDJPY1440.csvのJSON化、dayData URLパラメータ、DAY UpperMap表示方針、HSI系URLパラメータのLegacy化、chart_comments.json正本方針、DAYの材料点/細縦線/サイクル縦線非表示、今後のインシデント運用方針までとする。",
+      "out_of_scope": "このインシデント登録では新規コード改修は行わない。自動売買判定、Entry/Exit判定、DAYトレンド自動判定、複数DataSourceのStudio本体標準化、H1/H4専用DataSource化、DataJson編集・保存切替UIは対象外とする。",
+      "fixed_name_policy": "dayData / chartLayout / upperWarmupBars などはfx_chart_viewer Overlay固有のURL/状態契約として扱い、Studio Core本体Runtimeの汎用固定名として広げない。HSI / コメント / サイクル縦線の正本はchart_comments.json側とし、URLのhsi系パラメータは過去URL互換・未保存ドラフト用途のLegacy入力として扱う。",
+      "module_policy": "Studio本体には手を入れず、Overlay Plugin側でPrimary+UpperMap DataSourceの読み分けを行う。M5は実行足・H1/H4局所生成元として維持し、DAYはD1専用JSONを参照する上位地図として扱う。ViewDef複数DataJson対応は思想として記録するが、本体標準機能化は後続検討とする。",
+      "expected_outputs": "判断ログとして、M5単独限界の発見、Primary+UpperMap DataSource構想、DAY UpperMapの情報削減、URLとsidecar正本の責務分離、今後の作業履歴運用方針が残ること。将来の自律的AIが、単なるコード差分ではなく『なぜそのUIにしたか』を参照できる状態にする。",
+      "risk": "判断ログを残さないままUI改善を進めると、将来のAIがコード差分だけを見て『点を消した』『線を消した』という表層しか理解できない。逆に判断ログを重くしすぎると、高速な試行錯誤が止まる。そのため、軽量な判断ログをインシデントに積み、必要に応じてContextDef/TriggerDefへ昇格する運用が必要。",
+      "test_points": "インシデントJSONがvalid JSONとしてparseできること。items_countとwork_items件数が一致すること。今回のdecision_logに、DataSource分離、DAY UpperMap表示方針、URL/sidecar責務分離、判断ログ運用方針が含まれていること。",
+      "user_request": "studio_overlays/gpt_fx_lab/studio_fx_chart_viewer_incident_data_v0_4.json を置いたので、振り返れるだけ振り返って、UI改善の判断ログとして残せるところをインシデントに残してほしい。今後はこのインシデントファイルを更新しながら作業履歴を残したい。",
+      "ai_response": "2026-07-09のExpansion Review / DAY UpperMap関連のUI改善を後追いで整理し、fx_chart_viewer_work_0006として登録する。判断ログには、M5単独DataSource限界、DAY外部DataSource化、DAY全体地図化、HSI URLパラメータLegacy化、chart_comments.json正本化、DAYの詳細レイヤー非表示、今後の判断ログ運用方針を残す。",
+      "latest_user_comment": "DAYにも赤丸と緑丸が必要。Confirm barsをDAY用に調整できるようJSONに持たせ、DAYにも赤丸・緑丸を出したい。これで⑮をExpansionにしてはいけない判断がしやすくなる。",
+      "latest_ai_response": "DAY UpperMapは広域地図の方針を維持しつつ、D1スケールのActive basis high/lowだけを赤丸・緑丸で表示する。DAY専用Confirm barsはD1 Data JSONに設定を持たせ、URL dayConfirmBarsで一時上書きも可能にする。",
+      "discussion_history": [
+        {
+          "history_id": "disc_fx_chart_viewer_0006_001",
+          "at": "2026-07-09",
+          "speaker": "user",
+          "topic": "Expansion Review Layoutの追加依頼",
+          "message": "既存のダブルクリック同期などを壊さないように注意しつつ、H4メイン + DAY/H1サブのExpansion検討レイアウトを追加したい。"
+        },
+        {
+          "history_id": "disc_fx_chart_viewer_0006_002",
+          "at": "2026-07-09",
+          "speaker": "assistant",
+          "topic": "Expansion Review Layoutの初期実装方針",
+          "message": "Dayで格付け、H4で候補化、H1で通行許可という役割に整理し、Expansion Review LayoutをOverlay側で追加する方針を提示した。"
+        },
+        {
+          "history_id": "disc_fx_chart_viewer_0006_003",
+          "at": "2026-07-09",
+          "speaker": "user",
+          "topic": "M5由来DAYの限界発見",
+          "message": "DAYを見ても今の大きなトレンドが見えなかった。M5だけでDAYまで見るのは限界ではないかと相談した。"
+        },
+        {
+          "history_id": "disc_fx_chart_viewer_0006_004",
+          "at": "2026-07-09",
+          "speaker": "assistant",
+          "topic": "M5単独DataSource限界の整理",
+          "message": "M5由来のDAYは表示期間が短く、大きなトレンドやレンジを見るには不足する。Studioくんの思想としては、Overlay側で複数DataSource参照の入口を作る方向が自然だと整理した。"
+        },
+        {
+          "history_id": "disc_fx_chart_viewer_0006_005",
+          "at": "2026-07-09",
+          "speaker": "user",
+          "topic": "最小DataSource構成の相談",
+          "message": "いきなり複数DataJsonを持つ必要はないので、M5とあと一つだけにしたい。何にするか相談した。"
+        },
+        {
+          "history_id": "disc_fx_chart_viewer_0006_006",
+          "at": "2026-07-09",
+          "speaker": "assistant",
+          "topic": "M5 + DAY構成の提案",
+          "message": "M5は実行足・局所生成元、DAYは上位地図として扱うM5 + DAY構成を提案した。H1/H4は当面M5由来で内部生成する。"
+        },
+        {
+          "history_id": "disc_fx_chart_viewer_0006_007",
+          "at": "2026-07-09",
+          "speaker": "user",
+          "topic": "USDJPY1440.csvのJSON化依頼",
+          "message": "まずはUSDJPY1440.csvのJSON化だけにステップ分けしたい。M5と同じレイアウトでよいので対応してほしい。"
+        },
+        {
+          "history_id": "disc_fx_chart_viewer_0006_008",
+          "at": "2026-07-09",
+          "speaker": "assistant",
+          "topic": "D1 JSON生成",
+          "message": "USDJPY1440.csvをfx_usdjpy_d1_t3_data_v0_1.jsonへ変換し、bars / display_sets / MA20 / T3などをM5系統に寄せて生成した。"
+        },
+        {
+          "history_id": "disc_fx_chart_viewer_0006_009",
+          "at": "2026-07-09",
+          "speaker": "user",
+          "topic": "URL hsi系パラメータの疑問",
+          "message": "hsi関連URLパラメータは必要なのか疑問。基本はfx_usdjpy_m5_t3_data_v0_1.chart_comments.jsonからHSIを再現するのではないかと確認した。"
+        },
+        {
+          "history_id": "disc_fx_chart_viewer_0006_010",
+          "at": "2026-07-09",
+          "speaker": "assistant",
+          "topic": "URLとchart_comments.jsonの責務分離",
+          "message": "HSI / コメント / サイクル縦線はchart_comments.jsonを正本とし、URLは画面状態の入口とする。hsi系URLパラメータは保存済みHSI再現には不要で、Legacyまたは未保存ドラフト共有用に限定する方針を整理した。"
+        },
+        {
+          "history_id": "disc_fx_chart_viewer_0006_011",
+          "at": "2026-07-09",
+          "speaker": "user",
+          "topic": "DAY UpperMapの表示整理",
+          "message": "DAYに赤と緑の丸はいらなかった。H1/H4ダブルクリックでDAYの位置が同期されないことも確認した。"
+        },
+        {
+          "history_id": "disc_fx_chart_viewer_0006_012",
+          "at": "2026-07-09",
+          "speaker": "assistant",
+          "topic": "DAY材料点非表示と同期補強",
+          "message": "DAY UpperMapのDow材料点を非表示にし、サイクル縦線は当初維持したまま、同期時刻をDAY側にも保持・表示する補強を行った。"
+        },
+        {
+          "history_id": "disc_fx_chart_viewer_0006_013",
+          "at": "2026-07-09",
+          "speaker": "user",
+          "topic": "DAY全体地図としての再整理",
+          "message": "DAYはデータ全部を表示しているため、H4でダブルクリックしてもその時間が真ん中に来るわけではないと理解した。全体表示を正とするなら、DAYにサイクル縦線を出す考えも無しにした方がよいと判断した。"
+        },
+        {
+          "history_id": "disc_fx_chart_viewer_0006_014",
+          "at": "2026-07-09",
+          "speaker": "assistant",
+          "topic": "DAYサイクル縦線非表示",
+          "message": "DAYを大きな流れを見る全体地図として扱うため、DAY上のサイクル縦線も非表示にし、H4/H1/M5側のサイクル縦線は維持する方針へ変更した。"
+        },
+        {
+          "history_id": "disc_fx_chart_viewer_0006_015",
+          "at": "2026-07-09",
+          "speaker": "user",
+          "topic": "判断ログ運用への気づき",
+          "message": "FX/FZのUI改善をインシデントデータなしで進めてきたが、AI駆動開発や自律的AIへつなげるには、UI改善に伴う判断ログを残す必要があるのではないかと相談した。"
+        },
+        {
+          "history_id": "disc_fx_chart_viewer_0006_016",
+          "at": "2026-07-09",
+          "speaker": "assistant",
+          "topic": "判断ログは自律AIの判例データ",
+          "message": "判断ログは、未来のAIが状況・違和感・判断軸・採用/不採用・リスクを学ぶための判例データになる。Studio Context Engineer Wannabeを育てるには、仕様md・コード差分・判断ログを揃える必要があると整理した。"
+        },
+        {
+          "history_id": "disc_fx_chart_viewer_0006_021",
+          "at": "2026-07-09",
+          "speaker": "user",
+          "topic": "DAY材料点の再評価",
+          "message": "DAYを全体地図として整理したが、話が一周してDAYにも赤丸と緑丸が必要だと判断した。Confirm barsをDAY用に調整した材料点があると、⑮をExpansionにしてはいけない判断が容易になる。"
+        },
+        {
+          "history_id": "disc_fx_chart_viewer_0006_022",
+          "at": "2026-07-09",
+          "speaker": "assistant",
+          "topic": "DAY専用Confirm barsとActive材料点表示方針",
+          "message": "DAY UpperMapは広域地図のまま、Candidate/Retiredや縦線類は抑制し、D1スケールのActive basis high/lowだけを表示する方針に整理した。DAY Confirm barsはJSON設定化して後から調整できるようにする。"
+        }
+      ],
+      "decision_log": [
+        {
+          "decision_id": "dec_fx_chart_viewer_0006_001",
+          "at": "2026-07-09",
+          "decision": "Expansion Review Layoutでは、H4を主役、DAYを上位地図、H1を通行許可として扱う。",
+          "reason": "Expansion候補はH4で見つけるが、日足的な格付けとH1の押し戻り確認を同時に見ないと、例外Entry候補として扱いにくいため。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0006_002",
+          "at": "2026-07-09",
+          "decision": "M5単独DataSourceからDAYを内部生成する方式には限界があると判断した。",
+          "reason": "M5表示窓由来のDAYでは履歴期間が短く、大きなトレンド・レンジ・節目が見えず、DAY窓を出す目的を満たせなかったため。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0006_003",
+          "at": "2026-07-09",
+          "decision": "最初の複数DataSource化は、M5 + DAY の2本に限定する。",
+          "reason": "いきなりH1/H4/DAYすべてを外部DataSource化すると複雑になりすぎる。今回不足しているのは上位地図としての長期DAY履歴であり、M5とDAYの組み合わせが最小で効果的なため。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0006_004",
+          "at": "2026-07-09",
+          "decision": "Overlay側にPrimary DataSource = M5、UpperMap DataSource = DAYという入口を作る。",
+          "reason": "Studio本体へ複数DataJson切替機能を入れる前に、Overlay固有の判断空間として複数文脈データを束ねる経路を確保するため。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0006_005",
+          "at": "2026-07-09",
+          "decision": "H1/H4は当面M5由来の内部生成を維持し、DAYだけD1専用JSONを参照する。",
+          "reason": "既存のM5/H1/H4同期観測機能を壊さず、問題が明確だったDAYの上位地図不足だけを最小変更で補うため。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0006_006",
+          "at": "2026-07-09",
+          "decision": "USDJPY1440.csvをfx_usdjpy_d1_t3_data_v0_1.jsonとしてJSON化し、D1 UpperMap DataSourceの正本にする。",
+          "reason": "DAYパネルで数年分の流れを見られるようにし、M5由来DAYの表示期間不足を解消するため。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0006_007",
+          "at": "2026-07-09",
+          "decision": "dayData URLパラメータを追加し、DAY外部JSONの参照先をURLで再現可能にする。",
+          "reason": "先生相談やスクショ共有時に、どのDAYデータを上位地図として見ていたかを再現できるようにするため。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0006_008",
+          "at": "2026-07-09",
+          "decision": "URLコピーではhsi / hsiScale / hsiDir / hsiAnchor系パラメータを出力しない。読込側はLegacy互換として残す。",
+          "reason": "HSIはchart_comments.jsonの保存済みsidecarを正本とするため、URLにHSI状態を持たせると二重管理になる。過去URLや未保存ドラフトのため、読込だけは互換として残す。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0006_009",
+          "at": "2026-07-09",
+          "decision": "URLはView状態、chart_comments.jsonは注釈/HSI/コメント/縦線の正本として分ける。",
+          "reason": "URLに注釈データまで詰め込むと、sidecar正本とのズレが起きる。画面を開く状態と、観測・判断の保存データを分離する方が、将来のAIレビューや自律処理に向くため。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0006_010",
+          "at": "2026-07-09",
+          "decision": "DAY UpperMapではDow材料点を表示しない。",
+          "reason": "赤/緑/白/ピンクの材料点はH1/H4/M5では意味があるが、DAY全体地図に出すとノイズになり、大きな流れを見る目的を阻害するため。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0006_011",
+          "at": "2026-07-09",
+          "decision": "DAY UpperMapでは通常縦線、Confirm系細縦線、H/Lレンジ縦線を表示しない。",
+          "reason": "DAYは詳細検証ではなく上位地図であり、細かい時間軸注釈は視認性を落とすため。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0006_012",
+          "at": "2026-07-09",
+          "decision": "当初はDAYにもサイクル縦線を残したが、最終的にDAYではサイクル縦線も非表示にする。",
+          "reason": "DAYを全体表示の地図として扱う場合、H4/H1の局所サイクル縦線をDAY上へ多数出すと、全体地図としての読みやすさが落ちるため。サイクル縦線はH4/H1/M5側に残せば役割を果たせる。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0006_013",
+          "at": "2026-07-09",
+          "decision": "DAYは同期時刻を中央へ寄せる分析窓ではなく、全体地図として広域表示する方向を正とする。",
+          "reason": "DAYの役割は、H4候補の前後だけを見ることではなく、より大きなトレンド・レンジ・節目の中で現在位置を把握することだから。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0006_014",
+          "at": "2026-07-09",
+          "decision": "UI改善の判断ログは、今後この専用インシデントファイルへ継続的に残す。",
+          "reason": "コード差分だけでは『なぜそのUIにしたか』が残らず、将来のStudio Context Engineer Wannabe / 自律的AIの判断材料にならないため。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0006_015",
+          "at": "2026-07-09",
+          "decision": "判断ログは軽量に残し、必要に応じてContextDef / TriggerDef / 仕様mdへ昇格する。",
+          "reason": "毎回重いインシデント登録にすると試行錯誤が止まるが、何も残さないと判例データが失われる。軽量ログを積む運用が現実的なため。"
+        }
+      ],
+      "change_history": [
+        {
+          "history_id": "chg_fx_chart_viewer_0006_001",
+          "at": "2026-07-09",
+          "change_type": "incident_retrospective_added",
+          "before": "Expansion Review / DAY UpperMap関連のUI改善は、コードパッチと会話の中で進んでいたが、専用インシデントへの判断ログ登録が追いついていなかった。",
+          "after": "fx_chart_viewer_work_0006 として、M5単独限界、Primary+UpperMap DataSource、DAY全体地図化、URL/sidecar責務分離、DAY表示レイヤー整理、判断ログ運用方針を後追い登録した。",
+          "reason": "将来のAI駆動開発・自律的AIが、コード差分だけでなく判断の理由を参照できるようにするため。"
+        },
+        {
+          "history_id": "chg_fx_chart_viewer_0006_002",
+          "at": "2026-07-09",
+          "change_type": "top_level_policy_added",
+          "before": "インシデントファイルにはfx_chart_viewerの作業履歴はあったが、UI改善の判断ログを継続的に残す明示方針は弱かった。",
+          "after": "decision_log_policyを追加し、UI改善では違和感・採用判断・捨てた案・リスク・結果を判断ログとして残す方針を明記した。",
+          "reason": "Studio Context Engineer Wannabeの判例データとして、作業履歴だけでなく判断履歴を育てるため。"
+        },
+        {
+          "history_id": "chg_fx_chart_viewer_0006_003",
+          "at": "2026-07-09",
+          "change_type": "invalid_json_trailing_comma_fixed",
+          "before": "archives配列末尾に trailing comma があり、厳密なJSON parserでは読み込みエラーになる状態だった。",
+          "after": "JSON再出力時に trailing comma を除去し、valid JSONとしてparse可能な形式に整えた。",
+          "reason": "インシデント管理Dataを今後の正本として継続更新するには、機械可読性を維持する必要があるため。"
+        },
+        {
+          "change_id": "chg_fx_chart_viewer_0006_027",
+          "at": "2026-07-09",
+          "title": "DAY UpperMap D1 active high/low markers",
+          "changed_files": "plugin.js\nplugin.json\nfx_usdjpy_d1_t3_data_v0_1.json\nCHANGELOG.md\nstudio_fx_chart_viewer_incident_data_v0_4.json",
+          "summary": "DAY UpperMap専用Confirm barsをJSON設定化し、D1スケールのActive basis high/lowを赤丸・緑丸で表示するようにした。Candidate/Retiredと縦線類はDAYでは引き続き非表示。"
+        }
+      ],
+      "verification_status": "静的確認済み",
+      "context_def_status": "draft",
+      "context_def_updated_at": "2026-07-09",
+      "context_def_draft": "# ContextDef素案: Expansion Review / DAY UpperMap / 判断ログ運用\n\n## 読む目的\nExpansion検討レイアウトで、M5単独DataSourceからPrimary+UpperMap DataSourceへ進んだ理由と、DAYを全体地図として扱うUI判断を理解する。\n\n## 作業前に読む入口\n- fx_chart_viewer_work_0001: M5/H1/H4同期観測の基本方針\n- fx_chart_viewer_work_0004: 保存済みHSI Annotation Sidecar\n- fx_chart_viewer_work_0005: Upper Context Warmup Bars\n- この作業項目の decision_log\n\n## DataSource方針\n- Primary DataSource = M5\n- UpperMap DataSource = DAY\n- H1/H4は当面M5由来で内部生成\n- DAYはD1専用JSONを参照する\n\n## URL/Sidecar責務\n- URL = 画面状態の入口\n- chart_comments.json = HSI / コメント / サイクル縦線 / 注釈の正本\n- hsi系URLパラメータはLegacy入力として読むだけに寄せる\n\n## DAY UpperMap表示方針\n- DAYは詳細分析足ではなく全体地図\n- Dow材料点は出さない\n- 通常縦線/Confirm細縦線/H/Lレンジ縦線は出さない\n- サイクル縦線もDAYには出さない\n- H4/H1/M5側にはサイクル縦線を残す\n\n## 判断ログ運用\n- UI改善で生まれた違和感と判断はこのインシデントへ残す\n- 実装差分だけでなく、採用理由・捨てた案・リスク・結果を残す\n- 将来の自律的AIの判例データとして扱う\n\n## 先生ガード\n- DAY UpperMapは売買シグナルではない\n- 自動Entry/Exit判定はまだ実装しない\n- 複数DataSourceのStudio本体標準化は後続検討とする\n",
+      "actual_updated_files": "studio_overlays/gpt_fx_lab/plugins/fx_chart_viewer/plugin.js\nstudio_overlays/gpt_fx_lab/plugins/fx_chart_viewer/plugin.json\nstudio_overlays/gpt_fx_lab/data/fx_usdjpy_d1_t3_data_v0_1.json\nstudio_overlays/gpt_fx_lab/CHANGELOG.md\nstudio_overlays/gpt_fx_lab/studio_fx_chart_viewer_incident_data_v0_4.json",
+      "completion_summary": "DAY UpperMapを広域地図として扱う方針は維持しつつ、Expansion格付け用にD1 active high/low markersを復活。DAY Confirm barsはD1 Data JSONで調整可能にした。",
+      "test_result": "plugin.js node --check 予定。plugin.json / D1 data JSON / incident JSON parse 予定。"
+    },
+    {
+      "work_item_id": "fx_chart_viewer_work_0007",
+      "phase": "v0.8.3.28-day-uppermap-settings-owner-plugin-json",
+      "title": "DAY UpperMap：Confirm bars/marker設定の所有者をD1 JSONからplugin.jsonへ移動",
+      "incident_type": "ui_decision_log_and_patch",
+      "category": "gpt_fx_lab_fx_chart_viewer",
+      "priority": "high",
+      "status": "完了",
+      "owner": "tamasub",
+      "ai_owner": "ChatGPT",
+      "created_at": "2026-07-09",
+      "updated_at": "2026-07-09",
+      "target_files": "studio_overlays/gpt_fx_lab/plugins/fx_chart_viewer/plugin.js\nstudio_overlays/gpt_fx_lab/plugins/fx_chart_viewer/plugin.json\nstudio_overlays/gpt_fx_lab/data/fx_usdjpy_d1_t3_data_v0_1.json\nstudio_overlays/gpt_fx_lab/CHANGELOG.md\nstudio_overlays/gpt_fx_lab/studio_fx_chart_viewer_incident_data_v0_4.json",
+      "objective": "DAY UpperMapのConfirm bars / marker policyを、差し替え対象のD1 Data JSONではなくplugin.json側の資産設定として管理するように修正する。",
+      "background": "前回、DAYにもD1スケールの赤丸・緑丸が必要だと判断し、DAY用Confirm barsをD1 JSON側へ持たせた。しかしD1 JSONはUSDJPY1440.csv由来の相場データであり、今後ぽこぽこ差し替える可能性が高い。UI改善で育てた設定値をData JSON側へ置くと、データ差し替え時に設定資産が失われる。",
+      "scope": "DAY UpperMapのConfirm bars default / presets / point marker mode の所有者をplugin.jsonへ移す。D1 Data JSONからchart_viewer_settings / dow_basis_point_settingsを外し、データJSONとPlugin設定の責務を分離する。",
+      "out_of_scope": "DAYのTrend自動判定、Entry判定、Simulation判定、Studio本体のViewDef複数DataSource標準化、D1データ生成処理の全面見直しは対象外。",
+      "fixed_name_policy": "dayConfirmBarsはURL一時上書きパラメータとして残す。恒久設定の正本はplugin.json display_policy.day_upper_map_settings とし、signal_policyは機能宣言、chart_layoutはレイアウト説明として扱う。D1 Data JSONの固定フィールドとしては扱わない。",
+      "module_policy": "Data JSONは交換可能な観測データ、plugin.jsonはOverlay観測UIの資産設定とする。D1 DataSourceを差し替えても、DAY UpperMapのConfirm barsやmarker policyが失われない構造にする。",
+      "expected_outputs": "plugin.jsonを見るだけでDAY UpperMapのConfirm bars既定値・候補値・marker modeを調整できる。D1 JSONを差し替えてもUI方針が維持される。",
+      "risk": "plugin.json側に設定を集約すると、データごとの個別調整はしにくくなる。ただし今回のDAY UpperMapはUI方針の資産であり、データごとの差し替えより優先して一貫性を保つ方が重要。個別上書きが必要な場合はURL dayConfirmBarsで一時対応する。",
+      "test_points": "plugin.jsがnode --checkを通ること。plugin.json / D1 data JSON / incident JSONがparseできること。D1 JSONにchart_viewer_settings / dow_basis_point_settingsが残っていないこと。plugin.json display_policy.day_upper_map_settingsにdefault_data_path / confirm_bars_default / point_marker_modeが存在すること。",
+      "user_request": "D1 JSON側に持たせたらダメ。D1 JSONはぽこぽこ差し替えるものなので、大切な資産である設定値はplugin.jsonにしてほしい。",
+      "ai_response": "指摘どおり、DAY UpperMapのConfirm bars / marker policyはD1 Data JSONではなくplugin.jsonを正本に戻す。D1 JSONからUI設定を削除し、plugin.jsもplugin.json側だけを参照するように修正する。",
+      "decision_log": [
+        {
+          "decision_id": "dec_fx_chart_viewer_0007_001",
+          "at": "2026-07-09",
+          "decision": "DAY UpperMapのConfirm bars / marker policyはplugin.jsonを正本とする。",
+          "reason": "D1 JSONはUSDJPY1440.csv由来の差し替え可能な相場データであり、UI改善で育てた設定資産を置く場所ではないため。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0007_002",
+          "at": "2026-07-09",
+          "decision": "D1 Data JSONからchart_viewer_settings / dow_basis_point_settingsを削除する。",
+          "reason": "データJSONにUI/材料点抽出設定が混ざると、データ差し替え時に設定が消える、またはデータごとにUI方針がぶれるため。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0007_003",
+          "at": "2026-07-09",
+          "decision": "dayConfirmBars URLパラメータは一時上書きとして維持する。",
+          "reason": "plugin.jsonの既定値を守りつつ、検証中に5/7/10/15/20/30などを素早く試せる余地を残すため。"
+        }
+      ],
+      "implementation_log": [
+        {
+          "log_id": "impl_fx_chart_viewer_0007_001",
+          "summary": "plugin.jsのgetDayUpperMapSettingsを、D1 Data JSONではなくplugin.json display_policy.day_upper_map_settingsから読む実装へ変更。v0.8.3.29でsignal_policyは設定正本から外した。"
+        },
+        {
+          "log_id": "impl_fx_chart_viewer_0007_002",
+          "summary": "plugin.jsonにdisplay_policy.day_upper_map_settingsを追加し、settings ownerをplugin.jsonとして明記。"
+        },
+        {
+          "log_id": "impl_fx_chart_viewer_0007_003",
+          "summary": "fx_usdjpy_d1_t3_data_v0_1.jsonからchart_viewer_settings / dow_basis_point_settingsを削除し、data_role_noteを追加。"
+        }
+      ],
+      "next_actions": "画面でDAY UpperMapの赤/緑Active basis点が引き続き表示されること、dayConfirmBars URL上書きが効くこと、D1 JSON差し替え時にもplugin.json設定が維持されることを確認する。"
+    },
+    {
+      "work_item_id": "fx_chart_viewer_work_0008",
+      "phase": "v0.8.3.29-day-uppermap-settings-canonical-cleanup",
+      "title": "DAY UpperMap：plugin.json内の重複設定ゴミ掃除と正本一本化",
+      "incident_type": "ui_decision_log",
+      "category": "FX Chart Viewer / DAY UpperMap / Settings Ownership",
+      "priority": "high",
+      "status": "完了",
+      "owner": "user",
+      "ai_owner": "ChatGPT",
+      "created_at": "2026-07-09T19:58:00+09:00",
+      "updated_at": "2026-07-09T19:58:00+09:00",
+      "target_files": [
+        "studio_overlays/gpt_fx_lab/plugins/fx_chart_viewer/plugin.js",
+        "studio_overlays/gpt_fx_lab/plugins/fx_chart_viewer/plugin.json",
+        "studio_overlays/gpt_fx_lab/CHANGELOG.md",
+        "studio_overlays/gpt_fx_lab/studio_fx_chart_viewer_incident_data_v0_4.json"
+      ],
+      "objective": "DAY UpperMap設定がchart_layout / signal_policy / day_upper_map_settingsに重複して分散し、どれが実際に使われる正本か分かりにくくなったため、設定正本をdisplay_policy.day_upper_map_settingsへ一本化する。",
+      "background": "D1 JSONへ設定を置いたミスを修正した後、plugin.json側でもchart_layout内の説明とday_upper_map_settings、signal_policyの機能宣言が混在し、設定値が重複し始めた。将来のAI駆動開発・自律的AIが判断できるよう、設定の所有者を明確にする必要がある。",
+      "scope": [
+        "DAY Confirm bars / marker mode / default D1 data path の正本を display_policy.day_upper_map_settings にする",
+        "chart_layout からDAY設定値の重複を削除し、レイアウト説明だけに戻す",
+        "signal_policy からDAY設定値の重複を削除し、機能宣言だけに戻す",
+        "plugin.jsがchart_layout / signal_policyをDAY設定値の正本として読まないよう整理する",
+        "CHANGELOGとインシデントに設定正本整理の判断ログを残す"
+      ],
+      "out_of_scope": [
+        "DAY UpperMapの表示仕様変更",
+        "Dow trend / Entry / Simulation 自動判定",
+        "D1 Data JSONの再生成",
+        "Studio Core本体の複数DataSource対応"
+      ],
+      "user_request": "plugin.json内でDAY Confirm bars / marker mode / upper_map_data_sourceなどの情報が重複しており、何が使われていて何がゴミか分かりにくいので整理したい。",
+      "ai_response": "設定値・説明文・互換fallback・将来構想メモ・Runtimeが読む値が混ざっているため、DAY UpperMap設定の正本をdisplay_policy.day_upper_map_settingsへ一本化し、chart_layoutはレイアウト説明、signal_policyは機能宣言へ戻す方針で整理する。",
+      "decision_log": [
+        {
+          "decision_id": "dec_fx_chart_viewer_0008_001",
+          "at": "2026-07-09",
+          "decision": "DAY UpperMap設定の正本はplugin.json display_policy.day_upper_map_settingsに一本化する。",
+          "reason": "chart_layoutやsignal_policyにも同じ設定値を持たせると、どれが実際に使われるか分からず二重管理になるため。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0008_002",
+          "at": "2026-07-09",
+          "decision": "chart_layout.layouts.EXPANSION_REVIEWからDAY設定値を削除し、レイアウト説明だけを残す。",
+          "reason": "chart_layoutはどこに何を置くかの設計説明であり、Confirm barsやmarker modeの設定正本ではないため。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0008_003",
+          "at": "2026-07-09",
+          "decision": "signal_policyからDAY設定値を削除し、機能対応宣言として扱う。",
+          "reason": "signal_policyに設定値を置くと、display_policyとの責務境界が崩れ、Runtime fallbackで意図せず古い値が使われる恐れがあるため。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0008_004",
+          "at": "2026-07-09",
+          "decision": "DAY外部D1データの既定パスもdisplay_policy.day_upper_map_settings.default_data_pathへ移動する。",
+          "reason": "D1 JSONは差し替え対象であり、既定の観測UIデータソース設定はPluginの資産として管理する方が一貫するため。"
+        }
+      ],
+      "implementation_log": [
+        {
+          "log_id": "impl_fx_chart_viewer_0008_001",
+          "summary": "plugin.json chart_layout.layouts.EXPANSION_REVIEWからupper_map_data_source / day_confirm_bars_default / day_point_marker_mode / owner説明の重複を削除。"
+        },
+        {
+          "log_id": "impl_fx_chart_viewer_0008_002",
+          "summary": "plugin.json display_policy.day_upper_map_settingsにdefault_data_pathを追加し、DAY設定の正本として整理。"
+        },
+        {
+          "log_id": "impl_fx_chart_viewer_0008_003",
+          "summary": "plugin.jsにdefaultUpperMapDataPathを追加し、DAY既定パスをplugin.json display_policy.day_upper_map_settingsから読むよう修正。"
+        },
+        {
+          "log_id": "impl_fx_chart_viewer_0008_004",
+          "summary": "getDayUpperMapSettingsからchart_layout / signal_policy設定値fallbackを外し、display_policy.day_upper_map_settings中心に整理。"
+        }
+      ],
+      "completion_summary": "DAY UpperMapの設定正本をdisplay_policy.day_upper_map_settingsへ一本化し、chart_layout / signal_policy側の重複設定を削除。plugin.jsも設定正本の読み方を明確化した。",
+      "test_result": "plugin.js node --check OK。plugin.json / incident JSON parse OK。D1 data JSON parse OK。"
+    },
+    {
+      "work_item_id": "fx_chart_viewer_work_0009",
+      "phase": "v0.8.3.30-d1-data-refresh-from-latest-usdjpy1440-csv",
+      "title": "DAY UpperMap：USDJPY1440.csv最新版によるD1 JSON差し替え",
+      "incident_type": "data_refresh_log",
+      "category": "FX Chart Viewer / DAY UpperMap / DataSource Refresh",
+      "priority": "medium",
+      "status": "完了",
+      "owner": "user",
+      "ai_owner": "ChatGPT",
+      "created_at": "2026-07-09T20:45:00+09:00",
+      "updated_at": "2026-07-09T20:45:00+09:00",
+      "target_files": [
+        "studio_overlays/gpt_fx_lab/data/fx_usdjpy_d1_t3_data_v0_1.json",
+        "studio_overlays/gpt_fx_lab/CHANGELOG.md",
+        "studio_overlays/gpt_fx_lab/studio_fx_chart_viewer_incident_data_v0_4.json"
+      ],
+      "objective": "DAY UpperMapで参照するD1相場データが古かったため、最新のUSDJPY1440.csvを取り込み、既存D1 JSONを最新データへ更新する。",
+      "background": "DAY UpperMapはExpansion候補の上位地図として使うため、右端の相場状態が古いと、調整下げタイミングやExpansion格付けの観測がズレる。D1 JSONは差し替え可能な相場データであり、UI設定値はplugin.json側に置く責務分離を維持する。",
+      "scope": [
+        "USDJPY1440.csv最新版を読み込む",
+        "既存D1 JSONの古い期間を保持し、最新CSVの重複期間はCSVで置換する",
+        "MA5 / MA20 / T3(20,0.2) / T3 cross / display_sets を再計算する",
+        "D1 JSONにはDAY Confirm barsなどのUI設定値を持たせない",
+        "CHANGELOGとインシデントにデータ更新履歴を残す"
+      ],
+      "out_of_scope": [
+        "DAY Confirm bars既定値の変更",
+        "DAY UpperMap marker policyの変更",
+        "plugin.js / plugin.jsonのUI挙動変更",
+        "Dow trend / Entry / Simulation 自動判定"
+      ],
+      "user_request": "json化してもらったUSDJPY1440.csvが少し古かったため、最新を再度ダウンロードした。既存のD1 JSONを新しいJSONに差し替えたい。",
+      "ai_response": "既存D1 JSONをベースに、最新CSVの重複期間を置換しつつ新規日付を追加し、D1相場データとして再生成する。UI設定はplugin.json正本のまま維持する。",
+      "decision_log": [
+        {
+          "decision_id": "dec_fx_chart_viewer_0009_001",
+          "at": "2026-07-09",
+          "decision": "D1 JSON更新では、既存JSONの古い期間を保持し、最新CSVの重複期間をCSV側で置換する。",
+          "reason": "最新CSVは2018-08-27開始であり、既存D1 JSONが持っていた2017-11-21〜2018-08-24の長期地図情報を捨てる必要がないため。DAY UpperMapは広域地図なので、可能な限り長期履歴を保持する方が有利。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0009_002",
+          "at": "2026-07-09",
+          "decision": "D1 JSONにはDAY Confirm bars / marker policyなどのUI設定を置かない。",
+          "reason": "D1 JSONは差し替え可能な相場データであり、大切なUI設定資産はplugin.jsonに置くという直前の責務分離判断を維持するため。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0009_003",
+          "at": "2026-07-09",
+          "decision": "データ更新に伴い、MA5 / MA20 / T3 / T3 cross / display_sets を全件再計算する。",
+          "reason": "重複期間のOHLCVを最新CSVで置換するため、派生指標だけ古い計算結果を流用するとデータ整合性が崩れるため。"
+        }
+      ],
+      "implementation_log": [
+        {
+          "log_id": "impl_fx_chart_viewer_0009_001",
+          "summary": "既存D1 JSON 2017-11-21 00:00〜2026-01-22 00:00 / 2126 bars を読み込み。"
+        },
+        {
+          "log_id": "impl_fx_chart_viewer_0009_002",
+          "summary": "最新CSV 2018-08-27 00:00〜2026-07-09 00:00 / 2048 rows を取り込み。"
+        },
+        {
+          "log_id": "impl_fx_chart_viewer_0009_003",
+          "summary": "重複期間はCSV側で置換し、D1 JSONを 2017-11-21 00:00〜2026-07-09 00:00 / 2246 bars に更新。"
+        }
+      ],
+      "completion_summary": "D1 JSONを最新CSV反映版へ更新。row_count=2246, date_from=2017-11-21 00:00, date_to=2026-07-09 00:00, display_latest=1000。",
+      "test_result": "D1 data JSON parse OK。incident JSON parse OK。"
+    },
+    {
+      "work_item_id": "fx_chart_viewer_work_0010",
+      "phase": "v0.8.3.31-day-uppermap-confirm-stride-lines",
+      "title": "DAY UpperMap：DAY Confirm bars縦点線の表示復活",
+      "incident_type": "ui_improvement_decision_log",
+      "category": "FX Chart Viewer / DAY UpperMap / Confirm Guide Lines",
+      "priority": "medium",
+      "status": "完了",
+      "owner": "user",
+      "ai_owner": "ChatGPT",
+      "created_at": "2026-07-09T20:55:00+09:00",
+      "updated_at": "2026-07-09T20:55:00+09:00",
+      "target_files": [
+        "studio_overlays/gpt_fx_lab/plugins/fx_chart_viewer/plugin.js",
+        "studio_overlays/gpt_fx_lab/plugins/fx_chart_viewer/plugin.json",
+        "studio_overlays/gpt_fx_lab/CHANGELOG.md",
+        "studio_overlays/gpt_fx_lab/studio_fx_chart_viewer_incident_data_v0_4.json"
+      ],
+      "objective": "DAY UpperMapに日足Confirm bars単位の縦点線を表示し、DAY Confirm=45のような大局確認幅を視覚的に読み取りやすくする。",
+      "background": "DAY UpperMapでは通常保存縦線やサイクル縦線を非表示にしたため、広域地図としては整理された。一方で、Active high/lowの材料点だけでは、どのConfirm幅で日足構造を見ているかが画面上で分かりにくかった。ユーザー確認により、DAYにもConfirm bars単位の縦点線が必要と判断した。",
+      "scope": [
+        "DAY UpperMapにもConfirm bars単位の縦点線を描画する",
+        "縦点線は保存サイクル縦線や通常保存縦線ではなく、Confirm stride表示補助線として扱う",
+        "plugin.json display_policy.day_upper_map_settings に show_confirm_stride_lines を追加する",
+        "DAY Confirm presetsを45中心の大局確認用に整理する",
+        "CHANGELOGとインシデントへ判断ログを残す"
+      ],
+      "out_of_scope": [
+        "保存サイクル縦線をDAYへ戻すこと",
+        "通常保存縦線をDAYへ戻すこと",
+        "H/Lレンジ縦線をDAYへ戻すこと",
+        "DAY Confirm barsをD1 JSONに持たせること",
+        "Dow trend / Entry / Simulation 自動判定"
+      ],
+      "user_request": "Dayにconfirmの縦点線が出ていない。わかりにくいので表示してほしい。",
+      "ai_response": "DAY UpperMapは広域地図のまま維持しつつ、DAY Confirm barsの単位を示す縦点線だけを表示補助線として戻す。設定正本はplugin.jsonに置く。",
+      "decision_log": [
+        {
+          "decision_id": "dec_fx_chart_viewer_0010_001",
+          "at": "2026-07-09",
+          "decision": "DAY UpperMapにもConfirm bars単位の縦点線を表示する。",
+          "reason": "DAY Confirm=45のような日足大局確認幅は、赤丸・緑丸だけでは画面上で把握しづらい。縦点線を出すことで、日足材料点がどの時間幅で見られているかが読み取りやすくなるため。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0010_002",
+          "at": "2026-07-09",
+          "decision": "DAYの縦点線は、保存サイクル縦線ではなくConfirm stride表示補助線として扱う。",
+          "reason": "DAYは広域地図として扱うため、保存サイクル縦線や通常保存縦線を戻すとノイズが増える。一方、Confirm strideはD1スケールの読み取り軸であり、Expansion格付けの視認性に寄与するため。"
+        },
+        {
+          "decision_id": "dec_fx_chart_viewer_0010_003",
+          "at": "2026-07-09",
+          "decision": "DAY Confirm bars / Confirm stride表示の設定正本はplugin.json display_policy.day_upper_map_settingsに置く。",
+          "reason": "D1 JSONは差し替え可能な相場データであり、UI改善で育つ設定資産はplugin.json側に置くという責務分離を維持するため。"
+        }
+      ],
+      "implementation_log": [
+        {
+          "log_id": "impl_fx_chart_viewer_0010_001",
+          "summary": "plugin.jsのConfirm stride描画条件を修正し、DAY UpperMapでも設定により縦点線を描画できるようにした。"
+        },
+        {
+          "log_id": "impl_fx_chart_viewer_0010_002",
+          "summary": "plugin.jsonのday_upper_map_settingsへ show_confirm_stride_lines=true と confirm_stride_line_policy を追加。"
+        },
+        {
+          "log_id": "impl_fx_chart_viewer_0010_003",
+          "summary": "DAY Confirm presetsを [7,20,30,45,60,90] に整理。"
+        }
+      ],
+      "completion_summary": "DAY UpperMapにDAY Confirm bars単位の縦点線を表示するよう修正。DAYの通常保存縦線・サイクル縦線・H/Lレンジ縦線は引き続き非表示。",
+      "test_result": "plugin.js node --check OK。plugin.json parse OK。incident JSON parse OK。"
     }
-  ]
+  ],
+  "decision_log_policy": "fx_chart_viewerのUI改善・Overlay拡張では、実装差分だけでなく、違和感、採用判断、捨てた案、リスク、結果をwork_items[].decision_log / discussion_history / change_historyへ残す。この判断ログは、Studio Context Engineer Wannabe / 将来の自律的AIが、なぜそのUI・DataSource・URL責務にしたのかを学ぶための判例データとして扱う。"
 }
