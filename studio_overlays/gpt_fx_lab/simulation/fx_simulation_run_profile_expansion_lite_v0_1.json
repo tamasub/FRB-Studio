@@ -1,13 +1,13 @@
 {
   "schema_version": "fx_simulation_run_profile_v0_1",
   "kind": "fx_simulation_run_profile",
-  "profile_id": "usdjpy_expansion_lite_v0_18",
+  "profile_id": "usdjpy_expansion_lite_v0_19",
   "title": "USDJPY Expansion-Lite v0.18 — R3 Entry / R3.5-R4.5 Add-on / R5 Target",
-  "status": "draft_expansion_lite_independent_rule_lane",
+  "status": "draft_expansion_lite_directional_h1_cycle",
   "created_at": "2026-07-10T23:55:00+09:00",
   "updated_at": "2026-07-12",
-  "phase": "v0.9.0.48-expansion-lite-v0.18",
-  "rule_version": "simulation_rule_v0_18_expansion_lite_independent_lane_draft",
+  "phase": "v0.9.0.53-cycle-entry-window-independent-from-confirm",
+  "rule_version": "simulation_rule_v0_18_expansion_lite_cycle_entry_window_v0_20",
   "dataset": {
     "primary": {
       "dataset_id": "fx_usdjpy_m5_t3_data_v0_1",
@@ -63,7 +63,10 @@
           "LATE": "CLOSED",
           "UNDETERMINED": "UNKNOWN"
         },
-        "note": "WEEKは高値づかみ回避を優先し、Expansion Seasonを保守的に早めに閉じる初期Draft。閾値は明示設定でありConfirm barsから計算しない。"
+        "note": "WEEKは高値づかみ回避を優先し、Expansion Seasonを保守的に早めに閉じる初期Draft。閾値は明示設定でありConfirm barsから計算しない。 Entry許可窓の初期値=20本。Swing Confirm barsとは独立し、Rule Laneが明示的に参照した場合だけ使用する。",
+        "entry_allowed_max_bars": 20,
+        "entry_allowed_max_bars_status": "INITIAL_DRAFT",
+        "entry_allowed_usage": "RULE_LANE_SPECIFIC_ONLY"
       }
     },
     {
@@ -94,7 +97,10 @@
           "LATE": "NOT_EXPANSION",
           "UNDETERMINED": "UNKNOWN"
         },
-        "note": "DAY 45本以内/45本超Warning/60本超Not Expansionの仮説をCycle Stateへ写像。"
+        "note": "DAY 45本以内/45本超Warning/60本超Not Expansionの仮説をCycle Stateへ写像。 Entry許可窓の初期値=45本。Swing Confirm barsとは独立し、Rule Laneが明示的に参照した場合だけ使用する。",
+        "entry_allowed_max_bars": 45,
+        "entry_allowed_max_bars_status": "INITIAL_DRAFT",
+        "entry_allowed_usage": "RULE_LANE_SPECIFIC_ONLY"
       }
     },
     {
@@ -125,7 +131,10 @@
           "LATE": "PROTECT",
           "UNDETERMINED": "UNKNOWN"
         },
-        "note": "H4 Cycle Maturityの初期Draft。利益確定やAdd-on禁止はこのStateだけでは決定しない。"
+        "note": "H4 Cycle Maturityの初期Draft。利益確定やAdd-on禁止はこのStateだけでは決定しない。 Entry許可窓の初期値=14本。Swing Confirm barsとは独立し、Rule Laneが明示的に参照した場合だけ使用する。",
+        "entry_allowed_max_bars": 14,
+        "entry_allowed_max_bars_status": "INITIAL_DRAFT",
+        "entry_allowed_usage": "RULE_LANE_SPECIFIC_ONLY"
       }
     },
     {
@@ -156,7 +165,10 @@
           "LATE": "LATE",
           "UNDETERMINED": "UNKNOWN"
         },
-        "note": "H1 Cycle Positionの初期Draft。Exit Trigger判定は後続Phase。"
+        "note": "H1 Cycle Positionの初期Draft。Exit Trigger判定は後続Phase。 Entry許可窓の初期値=14本。Swing Confirm barsとは独立し、Rule Laneが明示的に参照した場合だけ使用する。",
+        "entry_allowed_max_bars": 14,
+        "entry_allowed_max_bars_status": "INITIAL_DRAFT",
+        "entry_allowed_usage": "RULE_LANE_SPECIFIC_ONLY"
       }
     },
     {
@@ -187,7 +199,10 @@
           "LATE": "LATE",
           "UNDETERMINED": "UNKNOWN"
         },
-        "note": "M5 Cycle Positionの初期Draft。Entry/Close Executionは後続Phase。"
+        "note": "M5 Cycle Positionの初期Draft。Entry/Close Executionは後続Phase。 Entry許可窓の初期値=20本。Swing Confirm barsとは独立し、Rule Laneが明示的に参照した場合だけ使用する。",
+        "entry_allowed_max_bars": 20,
+        "entry_allowed_max_bars_status": "INITIAL_DRAFT",
+        "entry_allowed_usage": "RULE_LANE_SPECIFIC_ONLY"
       }
     }
   ],
@@ -644,7 +659,7 @@
     "event_output": "run_snapshot.position_lifecycle.execution_events",
     "decision_event_output": "run_snapshot.position_lifecycle.decision_events",
     "chart_event_projection": "execution_events_only",
-    "teacher_guard": "EXPANSION_LITE専用。H4/H1 CloseのT3側、H1 Cycle前半、M5 Dow Confirmation、R3タッチだけでEntryを評価する。R3.5/R4/R4.5タッチで各1回Add-on。R5/T3/Dow構造/採用HSI起点で全Close。NORMAL / EXPANSIONへFallbackしない。",
+    "teacher_guard": "Expansion-Lite専用。H1 Entry Windowは方向別の最新H1候補安値/高値から14本以内で判定する。候補点はCycle Gateだけに使い、他Rule LaneやHSI起点へ流用しない。",
     "valuation_policy": {
       "unit_base_currency_amount": 1000,
       "display_currency": "JPY",
@@ -655,7 +670,7 @@
       "note": "仮想損益表示用。1単位=1,000通貨。手数料・スリッページ・税は含めない。"
     },
     "normal_entry_policy": {
-      "rule_version": "v0.17",
+      "rule_version": "v0.17.1",
       "direction_permission": "H4_H1_T3_SLOPE_AND_CLOSE_SIDE_PLUS_M5_DOW",
       "long_permission": [
         "H4_T3_UP",
@@ -674,7 +689,6 @@
       "h4_dow_required": false,
       "h1_m5_dow_match_required": false,
       "cycle_late_guard_timeframes": [
-        "H4",
         "H1"
       ],
       "cycle_late_entry_allowed": false,
@@ -801,8 +815,6 @@
       "day_cycle_position_required": false,
       "h4_close_t3_side_required": true,
       "h1_close_t3_side_required": true,
-      "h1_cycle_front_half_required": true,
-      "h1_cycle_front_half_ratio": 0.5,
       "m5_dow_confirmation_required": true,
       "hsi_anchor_source": "M5_DOW_CONFIRMATION_ADOPTED_ANCHOR",
       "entry_touch_source": "M5_HIGH_LOW",
@@ -849,7 +861,16 @@
         "STRUCTURAL_EXIT",
         "TARGET_EXIT"
       ],
-      "other_rule_lane_fallback": "FORBIDDEN"
+      "other_rule_lane_fallback": "FORBIDDEN",
+      "h1_cycle_candidate_usage_scope": "EXPANSION_LITE_H1_CYCLE_GATE_ONLY",
+      "h1_cycle_candidate_for_hsi_anchor": "FORBIDDEN",
+      "h1_cycle_entry_window_required": true,
+      "h1_cycle_entry_allowed_max_bars_source": "timeframe_profiles[H1].cycle.entry_allowed_max_bars",
+      "h1_cycle_entry_allowed_max_bars": 14,
+      "h1_cycle_entry_window_origin_policy": "DIRECTIONAL_LATEST_PENDING_SWING_ELSE_ACTIVE_SWING",
+      "h1_cycle_entry_window_long_origin": "LATEST_H1_LOW_CANDIDATE_ELSE_ACTIVE_LOW",
+      "h1_cycle_entry_window_short_origin": "LATEST_H1_HIGH_CANDIDATE_ELSE_ACTIVE_HIGH",
+      "h1_cycle_entry_window_elapsed_rule": "LATEST_CONFIRMED_H1_BAR_INDEX_MINUS_DIRECTIONAL_ORIGIN_INDEX"
     }
   }
 }
