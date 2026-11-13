@@ -9,7 +9,8 @@ import {spawnSync} from 'node:child_process';
 import {evaluateChangeSet} from '../../tools/change_core/change_core.mjs';
 import {readSnapshot} from '../../tools/change_core/storage.mjs';
 const root=fileURLToPath(new URL('../../',import.meta.url));
-const def=JSON.parse(await fs.readFile(path.join(root,'defs/launch/frb_launch_maintenance_view_def_v0_1.json'),'utf8'));
+const TEST_VIEWDEF=path.join(root,'tests/change_core/fixtures/frb_launch_maintenance_view_def_v0_1.json');
+const def=JSON.parse(await fs.readFile(TEST_VIEWDEF,'utf8'));
 const view=def.views.find(v=>v.id==='items_view');
 const doc=()=>({title:'Do not touch',pages:[{page_id:'system',title:'System'}],items:[
  {item_id:'folders',page_id:'system',parent_item_id:'',sort_order:10,item_kind:'category',title:'Files'},
@@ -22,7 +23,7 @@ const update=(targets,mode='dry_run')=>({schema_version:'studio_changeset_v0_1',
 const one=(changes,id='it1',group_id='system')=>({id,group_id,changes});
 const change=(path,value)=>({path,value});
 const run=(config,input)=>{const r=spawnSync(process.execPath,[path.join(root,'tools/change_core/cli.mjs'),'--config',config],{input:JSON.stringify(input),encoding:'utf8'});return {code:r.status,reply:JSON.parse(r.stdout)};};
-async function setup(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'frb-update-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));const file=path.join(dir,'document.json');await fs.writeFile(file,JSON.stringify(doc(),null,2));const cfg=path.join(dir,'approved.json');await fs.writeFile(cfg,JSON.stringify({schema_version:'studio_change_core_config_v0_1',documents:{approved_launch_config:{path:file,view_def:'launch/frb_launch_maintenance_view_def_v0_1.json',view_id:'items_view',section_ids:['items']}}}));return {file,cfg};}
+async function setup(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'frb-update-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));const file=path.join(dir,'document.json');await fs.writeFile(file,JSON.stringify(doc(),null,2));const cfg=path.join(dir,'approved.json');await fs.writeFile(cfg,JSON.stringify({schema_version:'studio_change_core_config_v0_1',documents:{approved_launch_config:{path:file,view_def:'launch/frb_launch_maintenance_view_def_v0_1.json',view_def_path:TEST_VIEWDEF,view_id:'items_view',section_ids:['items']}}}));return {file,cfg};}
 test('Update: multiple fields, multiple rows, nested array/object, no path change',()=>{
  const before=doc();const saved=structuredClone(before);
  const req=update([

@@ -12,6 +12,7 @@ namespace FRBStudio.NativeShell
         public string LaunchNewCategoryPage { get; private set; }
         public string LaunchPageId { get; private set; }
         public string StudioTheme { get; private set; }
+        public string LaunchViewDefPath { get; private set; }
 
         public static NativeLaunchOptions Parse(string[] args)
         {
@@ -52,6 +53,14 @@ namespace FRBStudio.NativeShell
                     options.LaunchNewCategoryPage = arg.Substring("--launch-new-category=".Length).Trim();
                     if (string.IsNullOrWhiteSpace(options.LaunchNewCategoryPage))
                         throw new ArgumentException("--launch-new-category requires a page ID.");
+                    continue;
+                }
+                if (arg.StartsWith("--launch-view-def=", StringComparison.OrdinalIgnoreCase))
+                {
+                    var path = arg.Substring("--launch-view-def=".Length).Trim();
+                    if (!Path.IsPathRooted(path) || !path.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                        throw new ArgumentException("--launch-view-def requires an absolute .json file path.");
+                    options.LaunchViewDefPath = Path.GetFullPath(path);
                     continue;
                 }
                 if (arg.StartsWith("--open-json=", StringComparison.OrdinalIgnoreCase))
@@ -100,6 +109,19 @@ namespace FRBStudio.NativeShell
             int launchTargets = (options.LaunchItemId != null ? 1 : 0)
                 + (options.LaunchNewCategoryPage != null ? 1 : 0)
                 + (options.LaunchPageId != null ? 1 : 0);
+            // Launch's ViewDef is always owned by the SAME Launch install as the
+            // opened config JSON. Never grant an arbitrary external ViewDef.
+            if (options.LaunchViewDefPath != null)
+            {
+                if (options.InitialJsonPath == null ||
+                    !string.Equals(Path.GetFileName(options.InitialJsonPath), "frb_launch_data.json", StringComparison.OrdinalIgnoreCase) ||
+                    !string.Equals(Path.GetFileName(Path.GetDirectoryName(options.InitialJsonPath)), "config", StringComparison.OrdinalIgnoreCase))
+                    throw new ArgumentException("--launch-view-def requires Launch's frb_launch_data.json.");
+                var launchRoot = Path.GetDirectoryName(Path.GetDirectoryName(options.InitialJsonPath));
+                var canonical = Path.GetFullPath(Path.Combine(launchRoot, "defs", "launch", "frb_launch_maintenance_view_def_v0_1.json"));
+                if (!string.Equals(options.LaunchViewDefPath, canonical, StringComparison.OrdinalIgnoreCase))
+                    throw new ArgumentException("--launch-view-def must point to the Launch-owned canonical ViewDef.");
+            }
             if (launchTargets > 1)
                 throw new ArgumentException("Launch edit targets cannot be combined.");
             if (launchTargets > 0 && options.InitialJsonPath == null)
@@ -111,6 +133,8 @@ namespace FRBStudio.NativeShell
             if (!string.IsNullOrWhiteSpace(options.InitialJsonPath))
             {
                 var page = "index.html?startupJson=1";
+                if (options.LaunchViewDefPath != null)
+                    page += "&launchViewDef=1";
                 if (options.LaunchItemId != null)
                     page += "&focusField=item_id&focusValue=" + Uri.EscapeDataString(options.LaunchItemId) + "&openDetail=true&launchItemProperties=1";
                 if (options.LaunchNewCategoryPage != null)

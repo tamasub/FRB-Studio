@@ -1,0 +1,33 @@
+{
+  "views": [
+    {
+      "id": "items_view",
+      "sections": [
+        {
+          "id": "items",
+          "type": "grid",
+          "dataPath": "$.items",
+          "keyField": "item_id",
+          "tree": {
+            "enabled": true,
+            "idField": "item_id",
+            "parentField": "parent_item_id",
+            "labelField": "title",
+            "groupField": "page_id",
+            "orderField": "sort_order",
+            "groupSource": "$.pages",
+            "groupIdField": "page_id",
+            "groupLabelField": "title",
+            "parentKindField": "item_kind",
+            "parentKinds": [
+              "category"
+            ],
+            "groupRoots": true,
+            "groupOrderField": "sort_order",
+            "groupEnabledField": "enabled"
+          }
+        }
+      ]
+    }
+  ]
+}

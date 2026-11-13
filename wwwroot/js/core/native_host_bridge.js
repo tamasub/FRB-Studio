@@ -311,8 +311,27 @@
       if (method === 'GET' && path === '/api/data')
         return jsonResponse(await listStudioDataJsonFiles());
 
-      if (method === 'GET' && path === '/api/defs')
-        return jsonResponse(await listRelativeFiles('defs', ['.json']));
+      // Launch-owned ViewDef is only mapped during an explicitly authorized
+      // --open-json + --launch-view-def session. Studio-local shadows are ignored.
+      const launchDefSession = new URL(global.location.href).searchParams.get('launchViewDef') === '1';
+      const launchDefRelative = 'launch/frb_launch_maintenance_view_def_v0_1.json';
+      const launchDefApi = '/api/defs/' + launchDefRelative;
+      if (method === 'GET' && path === '/api/defs') {
+        const names = await listRelativeFiles('defs', ['.json']);
+        return jsonResponse(launchDefSession ? [...new Set([...names, launchDefRelative])] : names);
+      }
+      if (launchDefSession && path === launchDefApi) {
+        if (method === 'GET') {
+          const result = await invoke('startupViewDef.read');
+          return textResponse(result.content, 'application/json; charset=utf-8');
+        }
+        if (method === 'POST') {
+          const body = await parseJsonBody(input, init);
+          const saved = await invoke('startupViewDef.write', { content: prettyJson(body) });
+          return jsonResponse({ saved: launchDefRelative, sha256: saved.sha256 });
+        }
+        return errorResponse(405, 'METHOD_NOT_ALLOWED', 'Only GET/POST are supported.');
+      }
 
       if (method === 'GET' && path === '/api/markdown') {
         const files = await listRelativeFiles('data/markdown', ['.md', '.markdown']);

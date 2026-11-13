@@ -1,0 +1,41 @@
+{
+  "app": {
+    "name": "FRB Launch - ブラウザー設定",
+    "version": "0.1",
+    "presentation": { "preset": "launcher", "density": "compact", "shell": "minimal" }
+  },
+  "views": [
+    {
+      "id": "webview_options",
+      "caption": "ブラウザー設定",
+      "layout": "header-search-grid-detail",
+      "sections": [
+        {
+          "id": "options",
+          "caption": "ブラウザー設定",
+          "type": "form",
+          "dataPath": "$",
+          "fields": [
+            {
+              "field": "remember_login",
+              "caption": "ログイン状態を記憶する",
+              "type": "boolean",
+              "grid": { "visible": false },
+              "edit": { "visible": true },
+              "search": { "visible": false }
+            },
+            {
+              "field": "new_tab_url",
+              "caption": "新しいタブのURL",
+              "type": "text",
+              "grid": { "visible": false },
+              "edit": { "visible": true },
+              "search": { "visible": false },
+              "width": "FULL"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

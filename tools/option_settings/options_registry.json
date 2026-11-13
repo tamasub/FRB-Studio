@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "options": [
+    {
+      "id": "webview",
+      "caption": "ブラウザー",
+      "dataFile": "webview_settings.json",
+      "viewDef": "defs/launch/options/webview_settings_view_def_v0_1.json"
+    },
+    {
+      "id": "file_index",
+      "caption": "ファイル検索",
+      "dataFile": "file_index_options.json",
+      "viewDef": "defs/launch/options/file_index_options_view_def_v0_1.json"
+    }
+  ]
+}

@@ -28,6 +28,7 @@ namespace FRBStudio.NativeShell
         private readonly string _initialUri;
         private readonly string _initialPage;
         private readonly string _initialJsonPath;
+        private readonly string _launchViewDefPath;
         private readonly string _initialMarkdownPath;
         private readonly string _initialWorkspaceRoot;
         private readonly CoreWebView2Environment _sharedEnvironment;
@@ -329,12 +330,14 @@ namespace FRBStudio.NativeShell
             CoreWebView2Environment sharedEnvironment = null,
             bool deferInitialNavigation = false,
             string initialMarkdownPath = null,
-            string startupTheme = null)
+            string startupTheme = null,
+            string launchViewDefPath = null)
         {
             _startupSplashLight = string.Equals(startupTheme, "light", StringComparison.OrdinalIgnoreCase);
             _initialUri = initialUri;
             _initialPage = initialPage;
             _initialJsonPath = initialJsonPath;
+            _launchViewDefPath = launchViewDefPath;
             _initialMarkdownPath = initialMarkdownPath;
             _initialWorkspaceRoot = initialWorkspaceRoot;
             _sharedEnvironment = sharedEnvironment;
@@ -434,7 +437,7 @@ namespace FRBStudio.NativeShell
                     !string.IsNullOrWhiteSpace(_initialWorkspaceRoot) && Directory.Exists(_initialWorkspaceRoot)
                         ? _initialWorkspaceRoot
                         : _appRoot);
-                _dispatcher = new NativeCommandDispatcher(_config, _workspace, _initialJsonPath, _initialMarkdownPath);
+                _dispatcher = new NativeCommandDispatcher(_config, _workspace, _initialJsonPath, _initialMarkdownPath, _launchViewDefPath);
 
                 var webRoot = Path.Combine(_appRoot, "wwwroot");
                 if (!File.Exists(Path.Combine(webRoot, _config.StartPage)))

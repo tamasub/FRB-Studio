@@ -13,12 +13,13 @@ import {createRequire} from 'node:module';
 const require = createRequire(import.meta.url);
 const sharedDiff = require('../../wwwroot/js/services/changeset/change_diff.js');
 const root=fileURLToPath(new URL('../../',import.meta.url));
-const def=JSON.parse(await fs.readFile(path.join(root,'defs/launch/frb_launch_maintenance_view_def_v0_1.json'),'utf8'));
+const TEST_VIEWDEF=path.join(root,'tests/change_core/fixtures/frb_launch_maintenance_view_def_v0_1.json');
+const def=JSON.parse(await fs.readFile(TEST_VIEWDEF,'utf8'));
 const view=def.views.find(v=>v.id==='items_view');
 const document=()=>({title:'test',pages:[{page_id:'work',title:'work'}],items:[{item_id:'folders',parent_item_id:'',page_id:'work',sort_order:10,title:'Folder',item_kind:'category'}]});
 const request=(records,mode='commit')=>({schema_version:'studio_changeset_v0_1',request_id:'test-1',mode,document_ref:'approved_launch_config',view_def:'launch/frb_launch_maintenance_view_def_v0_1.json',view_id:'items_view',operations:[{operation:'add',section_id:'items',placement:{group_id:'work',parent_id:'folders',position:'end'},records}]});
 const record=(title)=>({title,item_kind:'command',launch_actions:[{launch_action_type:'Open',launch_target:'C:\\same.txt'}]});
-async function sandbox(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'studio-changeset-'));t.after(async()=>fs.rm(dir,{recursive:true,force:true}));const doc=path.join(dir,'doc.json');await fs.writeFile(doc,JSON.stringify(document(),null,2));const config=path.join(dir,'config.json');await fs.writeFile(config,JSON.stringify({schema_version:'studio_change_core_config_v0_1',documents:{approved_launch_config:{path:doc,view_def:'launch/frb_launch_maintenance_view_def_v0_1.json',view_id:'items_view',section_ids:['items']}}}));return {doc,config};}
+async function sandbox(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'studio-changeset-'));t.after(async()=>fs.rm(dir,{recursive:true,force:true}));const doc=path.join(dir,'doc.json');await fs.writeFile(doc,JSON.stringify(document(),null,2));const config=path.join(dir,'config.json');await fs.writeFile(config,JSON.stringify({schema_version:'studio_change_core_config_v0_1',documents:{approved_launch_config:{path:doc,view_def:'launch/frb_launch_maintenance_view_def_v0_1.json',view_def_path:TEST_VIEWDEF,view_id:'items_view',section_ids:['items']}}}));return {doc,config};}
 function cli(config,input){const c=spawnSync(process.execPath,[path.join(root,'tools/change_core/cli.mjs'),'--config',config],{input:JSON.stringify(input),encoding:'utf8'});assert.ok(c.stdout,`stderr=${c.stderr}`);return {code:c.status,result:JSON.parse(c.stdout)};}
 test('複数Add: Expected=Actual, ID固定, 既存行無変更, 同一Path許容',()=>{
  const before=document(),req=request([record('A'),record('B')]);const ret=evaluateChangeSet(before,req,view,{createId:(()=>{let n=0;return()=>`new-${++n}`;})()});

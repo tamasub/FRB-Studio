@@ -1,0 +1,49 @@
+/* FRB Launch Generic Editor: compact Launch density / light+dark themes. */
+:root {
+  color-scheme:light;
+  --bg:#edf5f0;--panel:#ffffff;--text:#263e35;--muted:#637a6f;
+  --line:#bfd4c6;--control:#fcfffd;--hover:#e2f0e7;--active:#286d4b;
+  --active-text:#ffffff;--accent:#2a7952;--help:#f2f8f3;
+  font-family:'Yu Gothic UI','Segoe UI',Meiryo,sans-serif;
+  font-size:12px;background:var(--bg);color:var(--text);
+}
+:root[data-theme="dark"] {
+  color-scheme:dark;
+  --bg:#202b29;--panel:#273733;--text:#e6f0eb;--muted:#a2b9ae;
+  --line:#4b6660;--control:#1b2926;--hover:#344d47;--active:#416457;
+  --active-text:#ffffff;--accent:#94c5ab;--help:#30453b;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-size:12px}
+.container{width:100%;margin:0 auto;padding:12px 14px 16px}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.brand{display:flex;align-items:center;gap:8px;min-width:0}
+.brand h1{font-size:17px;font-weight:600;line-height:1.25;margin:0 0 2px}
+.brand small{font-size:10px;color:var(--muted)}
+.leaf{font-size:17px;color:var(--accent)}
+.status{flex:none;font-size:10px;color:var(--accent);border:1px solid var(--line);padding:3px 7px;border-radius:12px;background:var(--panel);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+nav{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+button{font:inherit;font-size:12px;cursor:pointer;border:1px solid var(--line);border-radius:5px;background:var(--panel);color:var(--text);padding:5px 10px;white-space:nowrap;line-height:1.3}
+button:hover{background:var(--hover)}
+button.active,button.primary{background:var(--active);border-color:var(--active);color:var(--active-text)}
+button.primary:hover{filter:brightness(1.10)}
+button:disabled{opacity:.45;cursor:default}
+main{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:13px 14px;box-shadow:none}
+.heading{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.heading h2{font-size:14px;margin:0;font-weight:600}
+.info{font-size:10px;color:var(--accent);text-align:right}
+.explain{color:var(--muted);font-size:10px;margin:6px 0 13px;line-height:1.5}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;width:100%;max-width:none}
+.field label{font-size:12px;font-weight:600}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:5px;padding:5px 8px;background:var(--control);color:var(--text);font:12px 'Yu Gothic UI','Segoe UI',Meiryo,sans-serif;line-height:1.35;min-height:29px}
+.field textarea{min-height:65px;resize:vertical;line-height:1.45}
+.field input:focus,.field select:focus,.field textarea:focus{outline:1px solid var(--accent);outline-offset:0}
+footer{display:flex;align-items:center;gap:7px;border-top:1px solid var(--line);margin-top:12px;padding-top:10px}
+footer p{flex:1;color:var(--muted);font-size:10px;margin:0;line-height:1.4}
+#status.error{background:var(--help);color:#d97f63;border-color:#b46b55}
+.field-control-row{display:flex;gap:6px;align-items:stretch}
+.field-control-row select{flex:1;min-width:0}
+.field-control-row .field-help-toggle{flex:none;width:29px;padding:2px 0;font-weight:700;border-radius:5px;color:var(--accent)}
+.field-help[hidden]{display:none}
+.field-help textarea[readonly]{background:var(--help);color:var(--text);border:1px solid var(--line);resize:none;cursor:default;min-height:72px;white-space:pre-wrap}
+@media(max-width:570px){.container{padding:8px}main{padding:10px}footer{flex-wrap:wrap}footer p{width:100%;flex:auto}.status{max-width:130px}}

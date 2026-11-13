@@ -9,7 +9,8 @@ import {spawnSync} from 'node:child_process';
 import {evaluateChangeSet} from '../../tools/change_core/change_core.mjs';
 import {readSnapshot} from '../../tools/change_core/storage.mjs';
 const root=fileURLToPath(new URL('../../',import.meta.url));
-const def=JSON.parse(await fs.readFile(path.join(root,'defs/launch/frb_launch_maintenance_view_def_v0_1.json'),'utf8'));
+const TEST_VIEWDEF=path.join(root,'tests/change_core/fixtures/frb_launch_maintenance_view_def_v0_1.json');
+const def=JSON.parse(await fs.readFile(TEST_VIEWDEF,'utf8'));
 const view=def.views.find(x=>x.id==='items_view');
 const row=(id,p='',g='work',order=10,kind='command')=>({item_id:id,parent_item_id:p,page_id:g,sort_order:order,item_kind:kind,title:id,launch_actions:[]});
 const doc=()=>({pages:[{page_id:'work'},{page_id:'frb'}],items:[
@@ -54,7 +55,7 @@ test('CLI Move: preview/commit/SHA race; leaves original JSON alone in preview',
  t.after(()=>fs.rm(folder,{recursive:true,force:true}));
  const filename=path.join(folder,'config.json'),trusted=path.join(folder,'trusted.json');
  await fs.writeFile(filename,JSON.stringify(doc(),null,2));
- await fs.writeFile(trusted,JSON.stringify({schema_version:'studio_change_core_config_v0_1',documents:{approved_launch_config:{path:filename,view_def:'launch/frb_launch_maintenance_view_def_v0_1.json',view_id:'items_view',section_ids:['items']}}}));
+ await fs.writeFile(trusted,JSON.stringify({schema_version:'studio_change_core_config_v0_1',documents:{approved_launch_config:{path:filename,view_def:'launch/frb_launch_maintenance_view_def_v0_1.json',view_def_path:TEST_VIEWDEF,view_id:'items_view',section_ids:['items']}}}));
  const snap=await readSnapshot(filename);
  const input=req('a',{parent_id:'root',group_id:'work',position:'after',anchor_id:'b'});input.base_sha256=snap.sha256;
  const run=()=>{const result=spawnSync(process.execPath,[path.join(root,'tools/change_core/cli.mjs'),'--config',trusted],{input:JSON.stringify(input),encoding:'utf8'});return JSON.parse(result.stdout);};

@@ -37,6 +37,8 @@
     "folderGrant.describePath",
     "document.writeText",
     "startupMarkdown.open",
+    "startupViewDef.read",
+    "startupViewDef.write",
     "startupJson.read",
     "startupJson.write",
     "file.describeDrop",

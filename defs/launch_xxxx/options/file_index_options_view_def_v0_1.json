@@ -1,0 +1,30 @@
+{
+  "app": {
+    "name": "FRB Launch - ファイル検索設定",
+    "version": "0.1",
+    "presentation": { "preset": "launcher", "density": "compact", "shell": "minimal" }
+  },
+  "views": [
+    {
+      "id": "file_index_options",
+      "caption": "ファイル検索",
+      "layout": "header-search-grid-detail",
+      "sections": [
+        {
+          "id": "options",
+          "caption": "ファイル検索",
+          "type": "form",
+          "dataPath": "$",
+          "fields": [
+            { "field": "enabled", "caption": "ファイル検索を有効にする", "type": "boolean", "edit": { "visible": true } },
+            { "field": "index_mode", "caption": "検索対象の方式", "type": "select", "options": ["registered", "configured", "off"], "edit": { "visible": true } },
+            { "field": "index_folders", "caption": "指定フォルダー（1行に1つ）", "type": "stringArray", "edit": { "visible": true } },
+            { "field": "extensions", "caption": "対象拡張子（1行に1つ）", "type": "stringArray", "edit": { "visible": true } },
+            { "field": "search_limit", "caption": "検索結果の上限", "type": "number", "edit": { "visible": true, "min": 1, "max": 500, "step": 1 } },
+            { "field": "update_mode", "caption": "更新方式", "type": "select", "options": ["manual", "auto"], "edit": { "visible": true } }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -26,7 +26,15 @@ async function run(){
     for(const [field,v] of [['view_def',viewRef],['view_id',documentConfig.view_id]]){
       if(request[field]!==v)throw new ChangeSetError('VIEW_MISMATCH',`${field}は許可済み設定と一致する必要があります`);
     }
-    const viewDef=JSON.parse(await fs.readFile(path.join(root,'defs',viewRef),'utf8'));
+    // Trusted callers may supply a canonical ViewDef outside Studio. The
+    // request cannot choose this path; it belongs to the trusted config only.
+    const selectedViewDef = documentConfig.view_def_path == null
+      ? path.join(root,'defs',viewRef)
+      : documentConfig.view_def_path;
+    if (typeof selectedViewDef !== 'string' ||
+        (documentConfig.view_def_path != null && (!path.isAbsolute(selectedViewDef) || path.basename(selectedViewDef) !== path.basename(viewRef))))
+      throw new ChangeSetError('INVALID_CONFIG','ViewDefの信頼済み絶対パスが不正です');
+    const viewDef=JSON.parse(await fs.readFile(selectedViewDef,'utf8'));
     const view=viewDef.views?.find(v=>v.id===request.view_id);
     if(!view)throw new ChangeSetError('VIEW_NOT_FOUND','Viewがありません');
     const sections=new Set(documentConfig.section_ids??[]);

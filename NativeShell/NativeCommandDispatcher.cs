@@ -18,6 +18,8 @@ namespace FRBStudio.NativeShell
     {
         private readonly NativeShellConfig _config;
         private readonly string _startupJsonPath;
+        private readonly string _launchViewDefPath;
+        private string _launchViewDefSha;
         private readonly string _startupMarkdownPath;
         private string _startupDocumentId;
         private readonly WorkspacePolicy _workspace;
@@ -32,10 +34,11 @@ namespace FRBStudio.NativeShell
         private readonly Dictionary<string, string> _persistedFolderGrantPaths = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         private readonly string _persistedFolderGrantStorePath;
 
-        public NativeCommandDispatcher(NativeShellConfig config, WorkspacePolicy workspace, string startupJsonPath = null, string startupMarkdownPath = null)
+        public NativeCommandDispatcher(NativeShellConfig config, WorkspacePolicy workspace, string startupJsonPath = null, string startupMarkdownPath = null, string launchViewDefPath = null)
         {
             _config = config;
             _startupJsonPath = startupJsonPath;
+            _launchViewDefPath = launchViewDefPath;
             _startupMarkdownPath = startupMarkdownPath;
             _workspace = workspace;
             var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -165,6 +168,12 @@ namespace FRBStudio.NativeShell
 
                 case "startupMarkdown.open":
                     return OpenStartupMarkdown();
+
+                case "startupViewDef.read":
+                    return ReadLaunchViewDef();
+
+                case "startupViewDef.write":
+                    return WriteLaunchViewDef(payload);
 
                 case "startupJson.read":
                     return ReadStartupJson();
@@ -734,6 +743,78 @@ namespace FRBStudio.NativeShell
 
         // The web page can access only the single file explicitly selected by CLI.
         // Never accept a path from the web message or expand the workspace roots.
+        // Only the exact Launch-owned ViewDef passed by a validated CLI argument
+        // is readable/writable. Studio never copies it into its own defs tree.
+        private string RequireLaunchViewDefPath()
+        {
+            if (string.IsNullOrWhiteSpace(_launchViewDefPath))
+                throw new InvalidOperationException("Launch-owned ViewDef was not specified at startup.");
+            var full = Path.GetFullPath(_launchViewDefPath);
+            if (!File.Exists(full)) throw new FileNotFoundException("Launch ViewDef not found.", full);
+            return full;
+        }
+
+        private object ReadLaunchViewDef()
+        {
+            var full = RequireLaunchViewDefPath();
+            var bytes = File.ReadAllBytes(full);
+            if (bytes.Length > 1024 * 1024) throw new InvalidDataException("Launch ViewDef exceeds 1 MiB.");
+            var content = new UTF8Encoding(false, true).GetString(bytes).TrimStart('\uFEFF');
+            var parsed = _serializer.DeserializeObject(content) as IDictionary<string, object>;
+            if (parsed == null || !parsed.ContainsKey("views"))
+                throw new InvalidDataException("Launch ViewDef must contain views.");
+            _launchViewDefSha = ComputeSha256(bytes);
+            return new Dictionary<string, object> { ["content"] = content, ["sha256"] = _launchViewDefSha };
+        }
+
+        private object WriteLaunchViewDef(IDictionary<string, object> payload)
+        {
+            var full = RequireLaunchViewDefPath();
+            if (string.IsNullOrWhiteSpace(_launchViewDefSha))
+                throw new InvalidOperationException("Launch ViewDef must be read before editing.");
+            var content = RequiredString(payload, "content");
+            var parsed = _serializer.DeserializeObject(content) as IDictionary<string, object>;
+            if (parsed == null || !parsed.ContainsKey("views"))
+                throw new InvalidDataException("Launch ViewDef must contain views.");
+            var encoded = new UTF8Encoding(false).GetBytes(content);
+            if (encoded.Length > 1024 * 1024) throw new InvalidDataException("Launch ViewDef exceeds 1 MiB.");
+            var lockPath = full + ".studio-changeset.lock";
+            var tempPath = string.Empty;
+            FileStream lockStream;
+            try { lockStream = new FileStream(lockPath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None); }
+            catch (IOException ex)
+            {
+                if (File.Exists(lockPath)) throw new IOException("LOCKED: Launch ViewDef is being edited.", ex);
+                throw;
+            }
+            try
+            {
+                using (lockStream)
+                {
+                    if (!string.Equals(ComputeSha256(File.ReadAllBytes(full)), _launchViewDefSha, StringComparison.Ordinal))
+                        throw new InvalidOperationException("CONFLICT: Launch ViewDef changed since loading.");
+                    tempPath = Path.Combine(Path.GetDirectoryName(full), "." + Path.GetFileName(full) + "." + Guid.NewGuid().ToString("N") + ".tmp");
+                    using (var stream = new FileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                    {
+                        stream.Write(encoded, 0, encoded.Length);
+                        stream.Flush(true);
+                    }
+                    if (!string.Equals(ComputeSha256(File.ReadAllBytes(full)), _launchViewDefSha, StringComparison.Ordinal))
+                        throw new InvalidOperationException("CONFLICT: Launch ViewDef changed during editing.");
+                    File.Replace(tempPath, full, null, true);
+                    tempPath = string.Empty;
+                    _launchViewDefSha = ComputeSha256(encoded);
+                    return new Dictionary<string, object> { ["saved"] = full, ["sha256"] = _launchViewDefSha };
+                }
+            }
+            finally
+            {
+                if (tempPath.Length > 0 && File.Exists(tempPath)) File.Delete(tempPath);
+                // Lock file belongs to this call, not any competing process.
+                if (File.Exists(lockPath)) File.Delete(lockPath);
+            }
+        }
+
         private object ReadStartupJson()
         {
             if (string.IsNullOrWhiteSpace(_startupJsonPath))
