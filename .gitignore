@@ -18,3 +18,16 @@ Thumbs.db
 
 # Git Diff generated JSON outputs
 wwwroot/diff/*.json
+/NativeShell/bin/
+/NativeShell/obj/
+/NativeShell/_publish/
+/app_zip/
+/node_modules/
+/data/json/99_test_runtime/
+/data/markdown/_system/temp/
+/wwwroot/js/lib/mermaid/
+
+# .NET build intermediate files (all directories)
+/obj/
+obj/
+/studio_overlays/gpt_fx_lab/data/fx_usdjpy_*.json
