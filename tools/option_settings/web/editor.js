@@ -37,11 +37,32 @@ class GenericEditor {
       this.inputs.clear();el('fields').replaceChildren();el('form-title').textContent=doc.caption+'の設定';
       const fields=fieldsFromViewDef(doc.viewDef);
       for(const field of fields)this.buildField(field,atPath(doc.edited,field.field));
+      this.refreshConditionalVisibility();
       el('option-buttons').querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.id===id));
       const hasUser=Object.keys(doc.edited).some(()=>true) && doc.revision!=='missing';
       el('ownership').textContent=hasUser?'User設定あり／保存で再確定':'System標準値を表示中（まだUser保存なし）';
       this.status('設定を読み込みました');
     }catch(error){this.status(error.message,true);}
+  }
+  // Shared Studio ViewDef contract: visibleWhen is presentation only.
+  // The field's value stays in the edit model while temporarily hidden,
+  // so switching index_mode does not discard previously entered folders.
+  refreshConditionalVisibility() {
+    for (const {field, input, wrap} of this.inputs.values()) {
+      const cond=field.visibleWhen ?? field.visible_when;
+      if (!cond || typeof cond!=='object' || Array.isArray(cond)) continue;
+      const source=String(cond.field ?? cond.sourceField ?? cond.source_field ?? '').trim();
+      if (!source) continue;
+      const actual=this.inputs.has(source)
+        ? this.inputs.get(source).input.value
+        : atPath(this.original,source);
+      let visible=true;
+      if (Array.isArray(cond.in)) visible=cond.in.map(String).includes(String(actual??''));
+      else if (Array.isArray(cond.values)) visible=cond.values.map(String).includes(String(actual??''));
+      else if (cond.equals!=null) visible=String(actual??'')===String(cond.equals);
+      else if (cond.value!=null) visible=String(actual??'')===String(cond.value);
+      wrap.hidden=!visible;
+    }
   }
   buildField(field,value) {
     const wrap=root.createElement('div');wrap.className='field';
@@ -89,8 +110,9 @@ class GenericEditor {
       input.value=String(value??'');
     }
     input.id='field_'+field.field.replace(/\W/g,'_');label.htmlFor=input.id;
-    input.addEventListener('input',()=>{this.dirty=true;this.status('未保存の変更があります');});
-    this.inputs.set(field.field,{input,field});wrap.append(label,input);el('fields').appendChild(wrap);
+    input.addEventListener('input',()=>{this.dirty=true;this.status('未保存の変更があります');this.refreshConditionalVisibility();});
+    input.addEventListener('change',()=>this.refreshConditionalVisibility());
+    this.inputs.set(field.field,{input,field,wrap});wrap.append(label,input);el('fields').appendChild(wrap);
   }
   gather() {
     const edited={};

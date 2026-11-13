@@ -34,6 +34,7 @@ main{background:var(--panel);border:1px solid var(--line);border-radius:7px;padd
 .info{font-size:10px;color:var(--accent);text-align:right}
 .explain{color:var(--muted);font-size:10px;margin:6px 0 13px;line-height:1.5}
 .field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;width:100%;max-width:none}
+.field[hidden]{display:none}
 .field label{font-size:12px;font-weight:600}
 .field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:5px;padding:5px 8px;background:var(--control);color:var(--text);font:12px 'Yu Gothic UI','Segoe UI',Meiryo,sans-serif;line-height:1.35;min-height:29px}
 .field textarea{min-height:65px;resize:vertical;line-height:1.45}

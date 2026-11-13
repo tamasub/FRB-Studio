@@ -116,3 +116,16 @@ test('Launch owns registry / ViewDef and can change presentation without changin
  assert.equal(composed.viewDef.views[0].sections[0].fields.find(f=>f.field==='index_mode').options[0].label,'設定画面の表示名');
  assert.equal(composed.edited.index_mode,'registered');
 });
+
+test('Studio visibleWhen is presentation-only: hidden folders are not lost on Save', async t=>{
+ const a=await fixture(t);
+ const composed=await composeOptions({...a,id:'file_index'});
+ const fields=composed.viewDef.views[0].sections[0].fields;
+ const folders=fields.find(f=>f.field==='index_folders');
+ assert.deepEqual(folders.visibleWhen,{field:'index_mode',equals:'configured'});
+ assert.equal(composed.edited.index_mode,'registered');
+ assert.ok(Array.isArray(composed.edited.index_folders));
+ const originalFolders=structuredClone(composed.edited.index_folders);
+ const saved=await saveOptions({...a,id:'file_index'},{edited:composed.edited,revision:composed.revision});
+ assert.deepEqual((await json(saved.userFile)).index_folders,originalFolders);
+});

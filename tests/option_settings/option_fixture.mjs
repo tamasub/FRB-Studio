@@ -15,7 +15,7 @@ const definitions={
       {value:'off',label:'索引を使用しない'}
     ]}),
     field('_index_mode_help','textarea',{readonly:true,edit:{visible:true,readonly:true},defaultValue:'登録フォルダーを使用する\n指定フォルダーのみ\n索引を使わない'}),
-    field('index_folders','stringArray'),
+    field('index_folders','stringArray',{visibleWhen:{field:'index_mode',equals:'configured'}}),
     field('extensions','stringArray'),
     field('search_limit','number',{edit:{visible:true,min:1,max:500,step:1}}),
     field('update_mode','select',{options:['manual','auto']})
