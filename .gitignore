@@ -20,7 +20,7 @@ Thumbs.db
 wwwroot/diff/*.json
 /NativeShell/bin/
 /NativeShell/obj/
-/NativeShell/_publish/
+/NativeShell/_publish/*
 /app_zip/
 /node_modules/
 /data/json/99_test_runtime/
@@ -31,3 +31,9 @@ wwwroot/diff/*.json
 /obj/
 obj/
 /studio_overlays/gpt_fx_lab/data/fx_usdjpy_*.json
+!/NativeShell/_publish/FRBStudio.NativeShell.exe.config
+!/NativeShell/_publish/FRB_Studio.ico
+!/NativeShell/_publish/MarkdownStudio.ico
+!/NativeShell/_publish/native_shell.config.json
+/SeleniumTaste/driver/edgedriver_win64/
+/studio_overlays/gpt_fx_lab/sidecars/*.simulation_trace.json
