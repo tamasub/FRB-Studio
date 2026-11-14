@@ -13,6 +13,7 @@ namespace FRBStudio.NativeShell
         public string LaunchPageId { get; private set; }
         public string StudioTheme { get; private set; }
         public string LaunchViewDefPath { get; private set; }
+        public string LaunchHomePath { get; private set; }
 
         public static NativeLaunchOptions Parse(string[] args)
         {
@@ -53,6 +54,14 @@ namespace FRBStudio.NativeShell
                     options.LaunchNewCategoryPage = arg.Substring("--launch-new-category=".Length).Trim();
                     if (string.IsNullOrWhiteSpace(options.LaunchNewCategoryPage))
                         throw new ArgumentException("--launch-new-category requires a page ID.");
+                    continue;
+                }
+                if (arg.StartsWith("--launch-home=", StringComparison.OrdinalIgnoreCase))
+                {
+                    var path = arg.Substring("--launch-home=".Length).Trim();
+                    if (!Path.IsPathRooted(path))
+                        throw new ArgumentException("--launch-home requires an absolute directory path.");
+                    options.LaunchHomePath = Path.GetFullPath(path);
                     continue;
                 }
                 if (arg.StartsWith("--launch-view-def=", StringComparison.OrdinalIgnoreCase))
@@ -109,19 +118,38 @@ namespace FRBStudio.NativeShell
             int launchTargets = (options.LaunchItemId != null ? 1 : 0)
                 + (options.LaunchNewCategoryPage != null ? 1 : 0)
                 + (options.LaunchPageId != null ? 1 : 0);
-            // Launch's ViewDef is always owned by the SAME Launch install as the
-            // opened config JSON. Never grant an arbitrary external ViewDef.
+            // Launch owns the ViewDef, while the document can now live in
+            // %LOCALAPPDATA%/FRBLaunch/UserData. Require the explicit Launch
+            // installation root; do not infer the owner from the AppData path.
+            // Legacy Launch/config sessions continue to work during migration.
             if (options.LaunchViewDefPath != null)
             {
                 if (options.InitialJsonPath == null ||
-                    !string.Equals(Path.GetFileName(options.InitialJsonPath), "frb_launch_data.json", StringComparison.OrdinalIgnoreCase) ||
-                    !string.Equals(Path.GetFileName(Path.GetDirectoryName(options.InitialJsonPath)), "config", StringComparison.OrdinalIgnoreCase))
-                    throw new ArgumentException("--launch-view-def requires Launch's frb_launch_data.json.");
-                var launchRoot = Path.GetDirectoryName(Path.GetDirectoryName(options.InitialJsonPath));
+                    !string.Equals(Path.GetFileName(options.InitialJsonPath), "frb_launch_data.json", StringComparison.OrdinalIgnoreCase))
+                    throw new ArgumentException("--launch-view-def requires frb_launch_data.json.");
+                string launchRoot;
+                if (!string.IsNullOrEmpty(options.LaunchHomePath))
+                {
+                    launchRoot = options.LaunchHomePath;
+                    var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                    var canonicalUser = Path.GetFullPath(Path.Combine(localAppData, "FRBLaunch", "UserData", "frb_launch_data.json"));
+                    var legacy = Path.GetFullPath(Path.Combine(launchRoot, "config", "frb_launch_data.json"));
+                    if (!string.Equals(options.InitialJsonPath, canonicalUser, StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(options.InitialJsonPath, legacy, StringComparison.OrdinalIgnoreCase))
+                        throw new ArgumentException("--open-json must be the canonical Launch UserData JSON.");
+                }
+                else
+                {
+                    if (!string.Equals(Path.GetFileName(Path.GetDirectoryName(options.InitialJsonPath)), "config", StringComparison.OrdinalIgnoreCase))
+                        throw new ArgumentException("AppData Launch editing requires --launch-home.");
+                    launchRoot = Path.GetDirectoryName(Path.GetDirectoryName(options.InitialJsonPath));
+                }
                 var canonical = Path.GetFullPath(Path.Combine(launchRoot, "defs", "launch", "frb_launch_maintenance_view_def_v0_1.json"));
                 if (!string.Equals(options.LaunchViewDefPath, canonical, StringComparison.OrdinalIgnoreCase))
                     throw new ArgumentException("--launch-view-def must point to the Launch-owned canonical ViewDef.");
             }
+            else if (options.LaunchHomePath != null)
+                throw new ArgumentException("--launch-home requires --launch-view-def.");
             if (launchTargets > 1)
                 throw new ArgumentException("Launch edit targets cannot be combined.");
             if (launchTargets > 0 && options.InitialJsonPath == null)
