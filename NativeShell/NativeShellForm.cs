@@ -139,7 +139,7 @@ namespace FRBStudio.NativeShell
             _status.Height = 20;
             // Preserve the existing compact bounds contract. A palette click
             // must never resize the native window or overwrite saved bounds.
-            if (NativeShellWindowBounds.TryLoad(out var bounds))
+            if (NativeShellWindowBounds.TryLoad(out var bounds, launcher:true))
             {
                 StartPosition = FormStartPosition.Manual;
                 Bounds = bounds;
@@ -316,8 +316,8 @@ namespace FRBStudio.NativeShell
             _startupSplash?.Close();
             _startupSplash?.Dispose();
             _startupSplash = null;
-            if (_launcherPresentation)
-                NativeShellWindowBounds.TrySave(WindowState == FormWindowState.Normal ? Bounds : RestoreBounds);
+            if (_useStartupSplash)
+                NativeShellWindowBounds.TrySave(WindowState == FormWindowState.Normal ? Bounds : RestoreBounds, launcher:_launcherPresentation);
             base.OnFormClosing(e);
         }
 
@@ -353,6 +353,13 @@ namespace FRBStudio.NativeShell
             Width = 1500;
             Height = 950;
             StartPosition = FormStartPosition.CenterScreen;
+            // Standard Studio restores its own last normal-size bounds. Launcher
+            // presentation may override these with the independent Launch bounds.
+            if (_useStartupSplash && NativeShellWindowBounds.TryLoad(out var studioBounds, launcher:false))
+            {
+                StartPosition = FormStartPosition.Manual;
+                Bounds = studioBounds;
+            }
 		    var iconPath = Path.Combine(AppContext.BaseDirectory, "FRB_Studio.ico");
 		    if (File.Exists(iconPath))
 		    {
@@ -373,8 +380,8 @@ namespace FRBStudio.NativeShell
             Controls.Add(_clientSurface);
 
             ResizeEnd += (_, __) => {
-                if (_launcherPresentation && WindowState == FormWindowState.Normal)
-                    NativeShellWindowBounds.TrySave(Bounds);
+                if (_useStartupSplash && WindowState == FormWindowState.Normal)
+                    NativeShellWindowBounds.TrySave(Bounds, launcher:_launcherPresentation);
             };
             Shown += async (_, __) => {
                 ShowStartupSplash();

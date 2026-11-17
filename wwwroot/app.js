@@ -336,6 +336,8 @@ function updateSelectedJsonFolderButtonStates() {
     if (!input || !button) return;
     button.disabled = !safeJsonFileName(input.value);
   });
+  // プログラムが直接 .value を設定した場合にも × 表示を同期する。
+  if (typeof syncComboClearButtonStates === 'function') syncComboClearButtonStates();
 }
 
 function setupSelectedJsonFolderButtons() {
@@ -429,6 +431,7 @@ const studioSmartSearchEditor = typeof StudioSmartSearchEditor !== 'undefined'
       input: $('studioFullTextSearchInput'),
       section: $('searchSection'),
       getFields: () => (typeof gridDef === 'function' ? gridDef()?.fields ?? [] : []),
+      getRows: () => Array.isArray(currentRows) ? currentRows : [],
       onOpen: () => studioSmartSearchHistory?.close()
     })
   : null;

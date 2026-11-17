@@ -53,11 +53,14 @@ test('Home navigation and current-page reset are separate Common Shell actions',
   assert.match(shellJs, /frb-studio:reset-request/);
 });
 
-test('JSON Object Studio uses the agreed left-thin + right-wide two-column workspace', () => {
+test('JSON Object Studio keeps only its full-width main pane; left-pane anchor is hidden', () => {
   assert.match(indexHtml, /class="json-studio-workspace"/);
   assert.match(indexHtml, /class="json-studio-source-pane"/);
   assert.match(indexHtml, /class="json-studio-main-pane"/);
-  assert.match(shellCss, /grid-template-columns:minmax\(220px, 250px\) minmax\(0, 1fr\)/);
+  const compactCss = read('wwwroot/css/studio-compact-json.css');
+  assert.match(indexHtml, /class="json-studio-source-pane" hidden/);
+  assert.match(compactCss, /\.json-studio-source-pane \{ display:none!important; \}/);
+  assert.match(compactCss, /\.json-studio-workspace \{[\s\S]*display:block/);
 });
 
 test('Markdown Studio keeps its responsibility-driven three-column layout', () => {
@@ -132,11 +135,12 @@ test('Common page title bar remains fixed below the module navigation on every s
 test('JSON Object Studio treats DATA JSON as the primary source and places it before ViewDef', () => {
   const dataInput = indexHtml.indexOf('id="dataNameInput"');
   const defInput = indexHtml.indexOf('id="defNameInput"');
-  const dataDrop = indexHtml.indexOf('data-input="dataFile"');
-  const defDrop = indexHtml.indexOf('data-input="defFile"');
+  const dataDrop = indexHtml.indexOf('id="dataFile"');
+  const defDrop = indexHtml.indexOf('id="defFile"');
   assert.ok(dataInput >= 0 && defInput >= 0 && dataInput < defInput);
   assert.ok(dataDrop >= 0 && defDrop >= 0 && dataDrop < defDrop);
   assert.match(indexHtml, /<span class="drop-label">DATA JSON<\/span>/);
+  assert.doesNotMatch(indexHtml, /class="drop-file-box/); // visual Drop areas retired
   assert.doesNotMatch(indexHtml, />対象JSON</);
   assert.doesNotMatch(indexHtml, />対象Drop</);
 });
@@ -198,17 +202,18 @@ test('JSON loaded documents always resynchronize the primary save button after r
   assert.match(loadRuntime, /updateReadonlyLaunchControls\(\);\s*syncLoadedDocumentSaveButtonState\(\);/);
 });
 
-test('JSON title toolbar is compact and document path metadata moves to the fixed left rail', () => {
-  assert.match(indexHtml, /class="json-document-meta"/);
+test('JSON metadata is limited to filename/status in a compact bottom bar', () => {
+  assert.match(indexHtml, /class="json-document-meta studio-json-statusbar"/);
   assert.match(indexHtml, /id="jsonMetaFileName"/);
   assert.match(indexHtml, /id="jsonMetaCharCount"/);
   assert.doesNotMatch(indexHtml, /class="status current-data-path"/);
   assert.match(indexHtml, /id="exportMarkdownModeSelect"/);
   assert.match(indexHtml, /<option value="viewdef">ViewDef<\/option>/);
   assert.match(indexHtml, /id="exportMarkdownBtn"[^>]*>MD Viewer<\/button>/);
-  assert.match(shellCss, /\.frb-page-json-object \.json-document-meta \{[\s\S]*margin-top: 16px;/);
+  assert.match(read('wwwroot/css/studio-compact-json.css'), /position:fixed; bottom:0/);
+  assert.match(indexHtml, /id="jsonMetaCharCount" hidden/);
   assert.match(fileApi, /metaFileEl\.title = path/);
-  assert.match(fileApi, /JSON\.stringify\(sourceData, null, 2\)\.length/);
+  assert.doesNotMatch(fileApi, /JSON\.stringify\(sourceData, null, 2\)\.length/);
 });
 
 test('Markdown document metadata keeps filename and character count only, with filename tooltip sync', () => {

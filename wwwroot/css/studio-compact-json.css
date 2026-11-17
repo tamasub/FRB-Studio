@@ -1,0 +1,137 @@
+/* 2026-11-17 Studio compact shell — only standard JSON Object view.
+   Launcher/minimal presentation keeps its own title/save placement. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-workspace {
+  display:block; grid-template-columns:none; width:100%; max-width:none;
+  padding:0 10px; margin:0; min-height:calc(100dvh - var(--frb-fixed-header-height, 122px));
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-source-pane { display:none!important; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-pane { width:100%; max-width:none; padding:8px 0 26px; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-main { flex:1 1 auto; min-width:0; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-page-description,
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-page-separator { display:none; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar { gap:8px; padding:5px 10px; min-height:56px; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-main { gap:6px; }
+/* Page identity uses the original common-shell typography/icon scale. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-page-title { font-size:16px; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-page-icon {
+  width:24px; height:24px; flex:0 0 24px; font-size:10.5px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-actions { gap:4px; flex:0 0 auto; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-button { padding:6px 7px; font-size:10px; }
+/* Provide breathing room between the page title and filename selectors. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar {
+  min-width:0; margin-left:20px; flex:0 1 auto;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel {
+  display:flex!important; align-items:center; flex-wrap:nowrap; gap:5px;
+  padding:0; margin:0; border:0; background:transparent; box-shadow:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field {
+  display:flex; flex-direction:column; justify-content:center;
+  flex:0 1 190px; min-width:125px; width:190px; max-width:200px;
+  padding:2px 4px; margin:0; border-radius:7px; min-height:38px;
+  background:#f8fbff;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field:nth-of-type(2) { flex-basis:215px; min-width:146px; width:215px; max-width:225px; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .drop-label {
+  font-size:9px; line-height:1.05; margin:0 0 2px; padding:0 2px; white-space:nowrap;
+}
+/* Action buttons sit in the label row, above the filename input. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-label-row {
+  display:flex; align-items:center; justify-content:space-between; gap:2px;
+  min-height:19px; margin-bottom:1px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-label-text {
+  min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions {
+  display:inline-flex; align-items:center; justify-content:flex-end; flex:0 0 auto; gap:2px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions button {
+  position:static; inset:auto; margin:0; padding:0;
+  width:18px; min-width:18px; height:18px; min-height:18px;
+  flex:0 0 18px; transform:none; opacity:.9; pointer-events:auto;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:12px; line-height:18px;
+}
+/* The clear button remains hidden until a file is selected (existing contract). */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions button.combo-clear-button {
+  opacity:0; pointer-events:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions button.combo-clear-button.visible {
+  opacity:1; pointer-events:auto;
+}
+/* Keep disabled state visible even though relocated buttons have scoped styling. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions button.combo-folder-button:disabled {
+  opacity:.32; pointer-events:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions button.viewdef-maintenance-button {
+  opacity:.9; color:#335a7b; background:#e4edf5; border:1px solid #ccdae5;
+  /* Glyphのベースライン差で下寄りにならないよう、3点をCSSで中央描画。 */
+  font-size:0; line-height:0; letter-spacing:0; border-radius:9px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions button.viewdef-maintenance-button::before {
+  content:""; display:block; width:3px; height:3px; border-radius:50%;
+  background:currentColor; box-shadow:-5px 0 0 currentColor, 5px 0 0 currentColor;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions button.viewdef-maintenance-button:disabled {
+  opacity:.35; cursor:default;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions button:hover:not(:disabled),
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions button:active {
+  transform:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-input-wrap::after {
+  right:6px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.has-clear input {
+  padding-right:19px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-input-wrap { width:100%; min-width:0; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar input:not([type="file"]) { padding:2px 17px 2px 5px; height:19px; min-height:19px; font-size:10px; width:100%; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar #loadBtn,
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar #saveBtn {
+  flex:0 0 auto; width:58px; min-width:0; min-height:36px; padding:5px 6px;
+  white-space:nowrap; font-size:11px; line-height:1.2; border-radius:8px;
+}
+/* Collapse the title/fields only when the viewport is genuinely narrow.
+   Restore horizontal space to the input boxes before moving page actions. */
+@media (min-width:741px) and (max-width:980px) {
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar {
+    margin-left:14px;
+  }
+}
+/* Save can be in another placement for ViewDef-declared minimal presentation. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-json-statusbar {
+  position:fixed; bottom:0; left:0; right:0; z-index:200;
+  display:flex; align-items:center; gap:18px; min-height:22px;
+  padding:3px 12px; box-sizing:border-box; margin:0;
+  background:rgba(247,250,253,.97); border-top:1px solid #dbe4eb;
+  color:#435265; font-size:10px; box-shadow:0 -1px 3px rgba(20,30,45,.035);
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-json-status-item {
+  display:flex; align-items:center; gap:5px; min-width:0; max-width:50%;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-json-status-item b { flex:0 0 auto; color:#64748b; font-size:10px; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-json-status-item span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-json-statusbar [hidden] { display:none!important; }
+body.frb-page-json-object[data-studio-shell="minimal"] .studio-compact-source-bar,
+body.frb-page-json-object[data-studio-shell="minimal"] .studio-json-statusbar { display:none!important; }
+body.frb-page-json-object[data-studio-shell="minimal"] .frb-pagebar { display:none!important; }
+@media (max-width:1100px) {
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar { flex-wrap:wrap; }
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-actions { margin-left:auto; }
+}
+@media (max-width:740px) {
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-main { flex-wrap:wrap; }
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar { flex:1 1 100%; margin-left:0; }
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel { flex-wrap:wrap; }
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-json-statusbar { gap:7px; padding:3px 6px; }
+}
+/* Settings mode previously scoped these controls below the retired left rail. */
+body.studio-settings-mode .studio-compact-source-bar .combo-clear-button,
+body.studio-settings-mode .studio-compact-source-bar .viewdef-maintenance-button,
+body.studio-settings-mode .studio-compact-source-bar .file-tree-picker { display:none!important; }
+body.studio-settings-mode .studio-compact-source-bar input:disabled {
+  opacity:1; color:#344054; background:#f7f8fa; cursor:default;
+}

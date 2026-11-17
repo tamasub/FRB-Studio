@@ -199,9 +199,12 @@
       readonly: false,
       edit: { ...(field?.edit ?? {}), readonly: false }
     };
-    // Search Projectionは編集画面固有のradio/listbox指定を引き継がず、
-    // select型は検索用の標準ComboBoxとして扱う。
-    if (String(searchField.type ?? '') === 'select') {
+    // Search Projection must not inherit edit-only controls. In particular a
+    // boolean-checkbox has input.value="on", even when visually indeterminate;
+    // SearchFilter would treat that as an active condition and hide every row.
+    // Keep boolean search as the three-choice (blank/true/false) select while
+    // leaving the one-click checkbox available in the detail editor.
+    if (['select', 'boolean'].includes(String(searchField.type ?? ''))) {
       delete searchField.control;
       if (searchField.edit) delete searchField.edit.control;
       if (searchField.edit) delete searchField.edit.selectMode;

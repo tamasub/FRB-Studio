@@ -1086,7 +1086,7 @@
         "csvImport": {
           "enabled": true,
           "caption": "CSV取込",
-          "mode": "replace_all",
+          "mode": "replace_groups",
           "columns": {
             "title": [
               "名前",
@@ -1139,7 +1139,8 @@
             "group_id": "",
             "enabled": true
           },
-          "descriptionFallbackField": "value"
+          "descriptionFallbackField": "value",
+          "groupField": "group_id"
         }
       }
     },

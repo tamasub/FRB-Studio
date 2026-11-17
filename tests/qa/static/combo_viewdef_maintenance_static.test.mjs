@@ -15,7 +15,7 @@ test('ViewDef maintenance adds only the quiet ellipsis entry and preserves exist
 
   assert.match(index, /id="maintainViewDefBtn"[^>]*>…<\/button>/);
   assert.match(index, /id="openDefFolderBtn"[^>]*>📁<\/button>/);
-  assert.match(index, /id="loadBtn" class="primary-button">読み込み<\/button>/);
+  assert.match(index, /id="loadBtn"[^>]*class="primary-button"[^>]*>読込<\/button>/);
   assert.match(pageSetup, /VIEWDEF_MAINTENANCE_VIEWDEF_PATH = 'common\/view_def_maint_fields_v0_2\.json'/);
   assert.match(pageSetup, /loadFromObjects\([\s\S]*'viewdef'[\s\S]*\)/);
   assert.match(app, /setupViewDefMaintenanceButton\(\)/);

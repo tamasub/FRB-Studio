@@ -150,6 +150,22 @@
         field.width = numeric;
       }
     }
+    // Independent Grid width. Preserve blank as undefined instead of coercing
+    // to zero so the old Field.width read fallback remains available.
+    if (field.grid && Object.prototype.hasOwnProperty.call(field.grid, 'width')) {
+      const text = String(field.grid.width ?? '').trim();
+      if (!text) {
+        delete field.grid.width;
+      } else if (text.toUpperCase() === 'FULL') {
+        field.grid.width = 'FULL';
+      } else {
+        const numeric = Number(text);
+        if (!Number.isFinite(numeric) || numeric <= 0) {
+          throw new Error(`ViewDef Grid列幅は正の数値またはFULLを指定してください: ${text}`);
+        }
+        field.grid.width = numeric;
+      }
+    }
     return field;
   }
 

@@ -655,7 +655,7 @@
               ]
             }
           ],
-          "description": "Field共通の視覚幅。数値はpx幅、`FULL` はHeader / Basic Info / Detailで利用可能行幅いっぱい、Gridでは固定列以外の残り幅を使う可変列として扱う。未指定はStudio標準幅。Searchは操作UIのため本値を参照せずStudio標準幅を使う。Live View Designで保存された数値幅の正本。"
+          "description": "Editor（Header / Basic Info / Detail）の項目幅正本。数値pxまたはFULL。Grid列幅はfield.grid.widthへ分離し、Gridが未指定の場合のみ従来Field.widthを互換参照。Searchは標準幅。"
         },
         "options": {
           "type": "array",
@@ -817,9 +817,19 @@
           "type": "boolean"
         },
         "width": {
-          "type": "number",
-          "minimum": 0,
-          "description": "Legacy Grid-only width. v0.18.132以降の新規幅保存はField.widthを正本とし、既存ViewDef互換の読取のみ維持する。"
+          "oneOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "string",
+              "enum": [
+                "FULL"
+              ]
+            }
+          ],
+          "description": "Grid専用の列幅正本。数値pxまたはFULL。EditorのField.widthを変更しない。旧Field.widthのみのViewDefでは未指定時に互換参照。"
         },
         "format": {
           "type": "string"

@@ -37,11 +37,10 @@ function renderCurrentLoadedDataDisplay() {
     metaFileEl.textContent = fileName || '未読み込み';
     metaFileEl.title = path || '';
   }
-  if (metaCharEl) {
-    let count = 0;
-    try { count = sourceData ? JSON.stringify(sourceData, null, 2).length : 0; } catch { count = 0; }
-    metaCharEl.textContent = count ? `${count.toLocaleString('ja-JP')} 文字` : '-';
-  }
+  // Character-count metadata was retired with the compact Studio sidebar.
+  // Keep the hidden legacy node harmless; avoid serializing large Data JSON
+  // merely to calculate a value that is no longer shown.
+  if (metaCharEl) metaCharEl.textContent = '';
   if (statusEl) {
     statusEl.textContent = statusText || '未読み込み';
     statusEl.title = statusText || '';

@@ -8,20 +8,21 @@ using System.Windows.Forms;
 
 namespace FRBStudio.NativeShell
 {
-    // Launcher presentation only. Small independent UI state, not project Data JSON.
+    // Native window UI state only, independent of project Data JSON and ViewDef.
+    // Studio and Launch-settings keep separate bounds so neither changes the other.
     internal static class NativeShellWindowBounds
     {
-        private static string StorePath => Path.Combine(
+        private static string StorePath(bool launcher) => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FRBStudio", "launcher_window_bounds.json");
+            "FRBStudio", launcher ? "launcher_window_bounds.json" : "studio_window_bounds.json");
 
-        internal static bool TryLoad(out Rectangle bounds)
+        internal static bool TryLoad(out Rectangle bounds, bool launcher=true)
         {
             bounds = Rectangle.Empty;
             try
             {
-                if (!File.Exists(StorePath)) return false;
-                var saved = new JavaScriptSerializer().Deserialize<Dictionary<string, int>>(File.ReadAllText(StorePath));
+                if (!File.Exists(StorePath(launcher))) return false;
+                var saved = new JavaScriptSerializer().Deserialize<Dictionary<string, int>>(File.ReadAllText(StorePath(launcher)));
                 if (saved == null || !saved.ContainsKey("x") || !saved.ContainsKey("y")
                     || !saved.ContainsKey("width") || !saved.ContainsKey("height")) return false;
                 var width = saved["width"];
@@ -46,12 +47,12 @@ namespace FRBStudio.NativeShell
             catch (Exception) { return false; }
         }
 
-        internal static void TrySave(Rectangle bounds)
+        internal static void TrySave(Rectangle bounds, bool launcher=true)
         {
             if (bounds.Width < 520 || bounds.Height < 360) return;
             try
             {
-                var path = StorePath;
+                var path = StorePath(launcher);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
                 var json = new JavaScriptSerializer().Serialize(new Dictionary<string, int> {
                     ["x"] = bounds.X, ["y"] = bounds.Y,

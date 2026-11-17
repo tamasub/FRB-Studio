@@ -84,6 +84,9 @@ async function loadFromObjects(defObj, dataObj, label='読み込み完了', data
   updateReadonlyLaunchControls();
   syncLoadedDocumentSaveButtonState();
   updateFileLabels();
+  // URL/ショートカット起動では入力イベントが発生しないため、読み込み完了時に表示を確定する。
+  if (typeof updateSelectedJsonFolderButtonStates === 'function') updateSelectedJsonFolderButtonStates();
+  else if (typeof syncComboClearButtonStates === 'function') syncComboClearButtonStates();
   if (typeof setCurrentLoadedDataDisplayPath === 'function') {
     setCurrentLoadedDataDisplayPath(dataDisplayPath || dataApiUrl || label, { updateStatus: false });
   }

@@ -1,8 +1,11 @@
 // studio_work_0268: field/value completion + candidate filtering + context-menu trigger.
+// 2026-11-17: Non-combo fields can suggest distinct values from the loaded main-grid Data.
+// Candidate rows are limited to 50 *after filtering*, not the data itself.
 // '/' is an editor command, never part of the query. The Parser remains independent.
 var StudioSmartSearchEditor = (function () {
   'use strict';
   const OPERATORS = ['==', '!=', '=!', '>=', '=>', '<=', '=<', '=', '>', '<'];
+  const VALUE_CANDIDATE_LIMIT = 50;
 
   function isSearchTrigger(event, input) {
     // '/' is reserved as a command anywhere in the Smart Search input, even
@@ -46,28 +49,68 @@ var StudioSmartSearchEditor = (function () {
     return {text:quoteAtom(rawValue)+(reuseSeparator?'':' '), reuseSeparator};
   }
 
-  function valueChoices(field) {
-    const family = typeof StudioSmartSearch !== 'undefined' ? StudioSmartSearch.familyFor(field) : String(field?.type ?? '');
-    if (family === 'boolean') return [
-      {label:'はい（true）',value:'true'}, {label:'いいえ（false）',value:'false'}
-    ];
-    if (family !== 'select' && !Array.isArray(field?.options)) return [];
+  function loadedFieldValue(row, fieldName) {
+    // Same dotted-path / literal-key contract as SmartSearch's matching engine.
+    const path = String(fieldName ?? '').replace(/^\$\.?/, '');
+    if (row && Object.prototype.hasOwnProperty.call(row, path)) return row[path];
+    return path.split('.').reduce((value, key) => value == null ? undefined : value[key], row);
+  }
+
+  function dataValueChoices(field, rows) {
+    // A data-driven suggestion is only an editing aid; it never changes the
+    // meaning of free-text/number/date searches or the stored row values.
     const result = [];
-    const ids = new Set();
-    for (const option of Array.isArray(field?.options) ? field.options : []) {
-      const value = typeof optionValue === 'function' ? optionValue(option,field) :
-        (option && typeof option==='object' ? option[field.valueField ?? 'cd'] ?? option.cd ?? option.value ?? option.id ?? option.key : option);
-      const label = typeof optionLabel === 'function' ? optionLabel(option,field) :
-        (option && typeof option==='object' ? option[field.labelField ?? 'name'] ?? option.name ?? option.label ?? option.caption ?? option.text ?? value : option);
-      if (value == null || label == null || ids.has(String(value))) continue;
-      ids.add(String(value));
-      result.push({label:String(label), value:String(value), insertValue:String(label)});
+    const seen = new Set();
+    if (!field?.field || !Array.isArray(rows)) return result;
+    for (const row of rows) {
+      const raw = loadedFieldValue(row, field.field);
+      for (const value of (Array.isArray(raw) ? raw : [raw])) {
+        if (value == null || value === '' || !['string','number','boolean'].includes(typeof value)) continue;
+        const label = String(value);
+        // Deduplicate by actual string value. Never collapse distinct values
+        // merely because their labels resemble one another.
+        if (seen.has(label)) continue;
+        seen.add(label);
+        result.push({label, value:label, insertValue:label});
+      }
     }
     return result;
   }
 
+  function valueChoices(field, rows=[]) {
+    const family = typeof StudioSmartSearch !== 'undefined' ? StudioSmartSearch.familyFor(field) : String(field?.type ?? '');
+    if (family === 'boolean') return [
+      {label:'はい（true）',value:'true'}, {label:'いいえ（false）',value:'false'}
+    ];
+    if (family === 'select' || Array.isArray(field?.options)) {
+      const result = [];
+      const ids = new Set();
+      for (const option of Array.isArray(field?.options) ? field.options : []) {
+        const value = typeof optionValue === 'function' ? optionValue(option,field) :
+          (option && typeof option==='object' ? option[field.valueField ?? 'cd'] ?? option.cd ?? option.value ?? option.id ?? option.key : option);
+        const label = typeof optionLabel === 'function' ? optionLabel(option,field) :
+          (option && typeof option==='object' ? option[field.labelField ?? 'name'] ?? option.name ?? option.label ?? option.caption ?? option.text ?? value : option);
+        if (value == null || label == null || ids.has(String(value))) continue;
+        ids.add(String(value));
+        result.push({label:String(label), value:String(value), insertValue:String(label)});
+      }
+      if (result.length) return result;
+    }
+    return dataValueChoices(field,rows);
+  }
+
+  // Filter against *all* distinct values first, then show the first 50.
+  // Thus a value hidden in the initial 50 can still be found in the filter box.
+  function valueCandidatePage(items, query='', limit=VALUE_CANDIDATE_LIMIT) {
+    const needle=String(query??'').trim().toLocaleLowerCase();
+    const matches=needle ? (Array.isArray(items)?items:[]).filter(x=>
+      [x.label,x.id,x.value].some(v=>String(v??'').toLocaleLowerCase().includes(needle))) : [...(Array.isArray(items)?items:[])];
+    const capped=Math.max(1, Number.isFinite(limit) ? Math.floor(limit) : VALUE_CANDIDATE_LIMIT);
+    return {items:matches.slice(0,capped), total:matches.length, omitted:Math.max(0,matches.length-capped), limit:capped};
+  }
+
   // Detect a candidate value immediately before caret; no SQL parsing or changes to existing expressions.
-  function valueContext(prefix, fields) {
+  function valueContext(prefix, fields, rows=[]) {
     const match = /(?:^|[\s(])("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^\s()=!<>]+)(==|!=|=!|>=|=>|<=|=<|=|>|<)([^\s()]*)$/u.exec(prefix);
     if (!match) return null;
     const name = match[1];
@@ -76,7 +119,7 @@ var StudioSmartSearchEditor = (function () {
     const exactId = fields.find(f => String(f.field).toLowerCase()===unquoted.toLowerCase());
     const byCaption = fields.filter(f => String(f.caption ?? f.label ?? '').toLowerCase()===unquoted.toLowerCase());
     const field = exactId ?? (byCaption.length===1 ? byCaption[0] : null);
-    if (!field || !valueChoices(field).length) return null;
+    if (!field || !valueChoices(field, rows).length) return null;
     return {field, valueStart:prefix.length - match[3].length, typed:match[3]};
   }
 
@@ -84,6 +127,7 @@ var StudioSmartSearchEditor = (function () {
     const input = args.input, section = args.section;
     if (!input || !section) return null;
     const getFields = typeof args.getFields === 'function' ? args.getFields : () => [];
+    const getRows = typeof args.getRows === 'function' ? args.getRows : () => [];
     const popup = document.createElement('div');
     popup.id = 'studioSmartSearchSuggestions';
     popup.className = 'studio-smart-search-suggestions';
@@ -103,9 +147,13 @@ var StudioSmartSearchEditor = (function () {
     filter.autocomplete='off';
     filter.setAttribute('aria-label','補完候補を絞り込む');
     filter.placeholder='候補を検索…';
+    const summary=document.createElement('div');
+    summary.className='studio-smart-search-candidate-summary';
+    summary.setAttribute('role','status');
+    summary.hidden=true;
     const list=document.createElement('div');
     list.className='studio-smart-search-option-list';
-    popup.append(hint,filter,list);
+    popup.append(hint,filter,summary,list);
     function filterItems(items, query) {
       const needle=String(query??'').trim().toLocaleLowerCase();
       return needle ? items.filter(x=>[x.label,x.id,x.value].some(v=>String(v??'').toLocaleLowerCase().includes(needle))) : [...items];
@@ -113,7 +161,11 @@ var StudioSmartSearchEditor = (function () {
     function updateCandidateFilter() {
       if (!state) return;
       state.filter=filter.value;
-      state.items=filterItems(state.allItems,state.filter);
+      const matching=filterItems(state.allItems,state.filter);
+      const page=valueCandidatePage(matching);
+      state.items=page.items;
+      state.total=page.total;
+      state.omitted=page.omitted;
       state.index=0;
       draw();
     }
@@ -141,6 +193,8 @@ var StudioSmartSearchEditor = (function () {
       section.classList.remove('studio-smart-search-popup-open');
       list.replaceChildren();
       filter.value='';
+      summary.hidden=true;
+      summary.textContent='';
       input.setAttribute('aria-expanded','false');
       input.removeAttribute('aria-activedescendant');
     }
@@ -156,6 +210,9 @@ var StudioSmartSearchEditor = (function () {
       list.replaceChildren();
       hint.textContent=state.mode==='field' ? '検索項目を選択  ·  ↑↓ 移動 / Tab・Enter・→ 確定 / Esc 閉じる' :
         `${state.field.caption ?? state.field.field} の値  ·  ↑↓ 移動 / Tab・Enter・→ 確定 / Esc 閉じる`;
+      summary.hidden=state.mode!=='value' || !state.omitted;
+      summary.textContent=summary.hidden ? '' :
+        `候補は${state.items.length}件まで表示（該当${state.total}件、残り${state.omitted}件は省略）。候補検索で省略分も探せます。`;
       if (!state.items.length) {
         const empty=document.createElement('div');empty.className='studio-smart-search-empty';
         empty.textContent='候補はありません（自由入力も可能）'; list.appendChild(empty);
@@ -166,7 +223,7 @@ var StudioSmartSearchEditor = (function () {
         button.id=`studioSmartSearchOption${i}`;
         button.setAttribute('role','option');
         button.setAttribute('aria-selected',i===state.index?'true':'false');
-        const title=document.createElement('span');title.textContent=item.label;
+        const title=document.createElement('span');title.textContent=item.label;title.title=item.label;
         const detail=document.createElement('small');detail.textContent=state.mode==='field'?item.id:(item.value===item.label?'':item.value);
         button.append(title,detail);
         button.addEventListener('mousedown',e=>e.preventDefault());
@@ -202,16 +259,19 @@ var StudioSmartSearchEditor = (function () {
       if (input.disabled || input.readOnly) return;
       close();
       const allItems=fieldChoices(getFields());
-      state={mode:'field', allItems,items:allItems,index:0,caret:input.selectionStart,selectionEnd:input.selectionEnd,filter:''};
+      state={mode:'field', allItems,items:allItems,index:0,caret:input.selectionStart,selectionEnd:input.selectionEnd,filter:'',omitted:0,total:allItems.length};
       draw();
       // Slash/right-click are explicit completion commands: focus its dedicated filter.
       filter.focus();
     }
     function showValueList(ctx) {
-      const all=valueChoices(ctx.field);
+      const all=valueChoices(ctx.field,getRows());
       const needle=ctx.typed.toLocaleLowerCase();
-      const items=all.filter(x=>x.label.toLocaleLowerCase().includes(needle) || x.value.toLocaleLowerCase().includes(needle));
-      state={mode:'value',field:ctx.field, allItems:items,items,index:0,valueStart:ctx.valueStart,typed:ctx.typed,filter:''};
+      const matches=all.filter(x=>x.label.toLocaleLowerCase().includes(needle) || x.value.toLocaleLowerCase().includes(needle));
+      if (!matches.length) {close();return;}
+      const page=valueCandidatePage(matches);
+      state={mode:'value',field:ctx.field, allItems:matches,items:page.items,total:page.total,
+        omitted:page.omitted,index:0,valueStart:ctx.valueStart,typed:ctx.typed,filter:''};
       filter.value='';
       draw();
     }
@@ -224,7 +284,10 @@ var StudioSmartSearchEditor = (function () {
         const insertion=(needsSpace?' ':'')+quoteAtom(chosen.insertName)+'=';
         close(); replace(start,end,insertion);
         const field=chosen.field;
-        if (valueChoices(field).length) showValueList({field,valueStart:input.selectionStart,typed:''});
+        if (valueChoices(field,getRows()).length) {
+          showValueList({field,valueStart:input.selectionStart,typed:''});
+          filter.focus();
+        }
       } else {
         const end=input.selectionStart, start=state.valueStart;
         const insertion=valueInsertion(chosen.insertValue ?? chosen.value,input.value.slice(end));
@@ -260,7 +323,7 @@ var StudioSmartSearchEditor = (function () {
     input.addEventListener('input',()=>{
       if (internalChange) return;
       if (state?.mode==='field') {close();return;}
-      const ctx=valueContext(input.value.slice(0,input.selectionStart),getFields());
+      const ctx=valueContext(input.value.slice(0,input.selectionStart),getFields(),getRows());
       if (ctx) showValueList(ctx);
       else close();
     });
@@ -283,5 +346,5 @@ var StudioSmartSearchEditor = (function () {
     close();
     return Object.freeze({close,showFieldList,isOpen:()=>Boolean(state)});
   }
-  return Object.freeze({setup,isSearchTrigger,fieldChoices,valueChoices,valueContext,quoteAtom,valueInsertion});
+  return Object.freeze({setup,isSearchTrigger,fieldChoices,valueChoices,dataValueChoices,valueCandidatePage,valueContext,quoteAtom,valueInsertion});
 })();

@@ -77,7 +77,7 @@ function gridDef() { return editorSections().find(s => s.type === 'grid'); }
 function convertValue(type, value) {
   if (Array.isArray(value)) return value;
   if (type === 'number') return value === '' ? null : Number(value);
-  if (type === 'boolean') return value === 'true' || value === true;
+  if (type === 'boolean') return value == null || value === '' ? null : value === 'true' || value === true;
   if (type === 'array') {
     if (value == null || value === '') return [];
     return String(value).split(',').map(x => x.trim()).filter(Boolean);
@@ -1024,6 +1024,63 @@ function createBooleanControlElement({ field, value }) {
   return input;
 }
 
+// Boolean checkbox editor is opt-in via edit.control="boolean-checkbox".
+// The normal boolean select remains available for existing ViewDefs.
+// true/false toggle in one click; the small "未設定" control explicitly sets null.
+// Absent optional fields stay absent while left untouched (see shouldSkipAbsentBlankWrite).
+function studioSetBooleanCheckboxState(input, state) {
+  const normalized = state === true || state === 'true' ? 'true'
+    : state === false || state === 'false' ? 'false' : '';
+  input.dataset.studioBooleanState = normalized;
+  input.checked = normalized === 'true';
+  input.indeterminate = normalized === '';
+  input.setAttribute('aria-checked', normalized === '' ? 'mixed' : normalized);
+  const shell = input.closest('.studio-boolean-shell');
+  const text = shell?.querySelector('.studio-boolean-value');
+  if (text) text.textContent = normalized || '未設定';
+  const reset = shell?.querySelector('.studio-boolean-reset');
+  if (reset) reset.disabled = input.disabled || normalized === '';
+}
+
+function createBooleanCheckboxControlElement({ value }) {
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.className = 'studio-boolean-checkbox';
+  input.dataset.studioBooleanControl = 'tristate';
+  studioSetBooleanCheckboxState(input, value);
+  input.title = 'クリック/Spaceで true・false 切替。右の「未設定」で null に戻します';
+  input.addEventListener('change', () => {
+    // A reset dispatches change too; do not accidentally turn null into false.
+    studioSetBooleanCheckboxState(input, input.indeterminate ? '' : (input.checked ? 'true' : 'false'));
+  });
+  return input;
+}
+
+function studioAppendBooleanCheckboxShell(wrap, input) {
+  const shell = document.createElement('div');
+  shell.className = 'studio-boolean-shell';
+  shell.appendChild(input);
+  const value = document.createElement('span');
+  value.className = 'studio-boolean-value';
+  value.setAttribute('aria-hidden', 'true');
+  shell.appendChild(value);
+  const reset = document.createElement('button');
+  reset.type = 'button';
+  reset.className = 'studio-boolean-reset';
+  reset.textContent = '未設定';
+  reset.title = 'null（未設定）に戻す';
+  reset.setAttribute('aria-label', 'null（未設定）に戻す');
+  reset.addEventListener('click', () => {
+    if (input.disabled) return;
+    studioSetBooleanCheckboxState(input, '');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  shell.appendChild(reset);
+  wrap.appendChild(shell);
+  studioSetBooleanCheckboxState(input, input.dataset.studioBooleanState);
+}
+
 function createTextLikeControlElement({ field, value }) {
   const input = document.createElement('input');
   input.type = field.type === 'number' ? 'number' : field.type === 'datetime' ? 'text' : 'text';
@@ -1048,6 +1105,7 @@ registerFieldControl('radio', createRadioControlElement);
 registerFieldControl('select', createSelectControlElement);
 registerFieldControl('textarea', createTextareaControlElement);
 registerFieldControl('boolean', createBooleanControlElement);
+registerFieldControl('boolean-checkbox', createBooleanCheckboxControlElement);
 registerFieldControl('text', createTextLikeControlElement, [
   'number',
   'datetime',
@@ -1088,7 +1146,11 @@ function createInput(field, value, prefix, readonlyOverride=false, row=null, gd=
   input.dataset.type = field.type ?? 'text';
   input.dataset.prefix = prefix;
   if (readonly) input.disabled = true;
-  wrap.appendChild(input);
+  if (input.dataset.studioBooleanControl === 'tristate') {
+    studioAppendBooleanCheckboxShell(wrap, input);
+  } else {
+    wrap.appendChild(input);
+  }
 
   // v0.18.132 Live View Design:
   // Field.width is the common visual width for Header / Grid Detail.

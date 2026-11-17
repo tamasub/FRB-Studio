@@ -22,7 +22,8 @@ test('native window only appears after profile sizing and web app initialization
   assert.match(form, /BeginInvoke\(new Action\(RevealMainWindow\)\)/);
   assert.match(form, /PerformLayout\(\);\s*_webView\.PerformLayout\(\);\s*Opacity = 1;/);
   assert.match(form, /SetNativeTitleBarDark\(_nativeTitleBarDark, _nativeTitleBarLaunchPalette, _nativeTitleBarLaunchLightPalette\)/);
-  assert.match(form, /NativeShellWindowBounds\.TryLoad\(out var bounds\)/);
+  assert.match(form, /NativeShellWindowBounds\.TryLoad\(out var bounds, launcher:true\)/);
+  assert.match(form, /NativeShellWindowBounds\.TryLoad\(out var studioBounds, launcher:false\)/);
   assert.match(bounds, /launcher_window_bounds\.json/);
 });
 

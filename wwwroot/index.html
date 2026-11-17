@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FRB Studio - JSON Object Studio v0.4-r001</title>
-  <link rel="stylesheet" href="styles.css?v=subgrid-collapse-018107&ui=responsibility-diff-evidence-018121&live=018135&tables=20260918&detailFooter=20261016-fixed&fullSearchRow=20261016&detailTitle=20261018&smartEditor=0268help&launchEditor=20261018" />
+  <link rel="stylesheet" href="styles.css?v=subgrid-collapse-018107&ui=responsibility-diff-evidence-018121&live=018135&compact=20261117&tables=20260918&detailFooter=20261016-fixed&fullSearchRow=20261016&detailTitle=20261018&smartEditor=0268help&launchEditor=20261018&values50=20261117&boolCheckbox=20261117" />
   <script>
   (function () {
     if (location.hostname === "localhost" || location.hostname === "127.0.0.1") return;
@@ -197,6 +197,7 @@
 </style>
   <link rel="stylesheet" href="css/frb-studio-shell.css?v=0185p10-json-output-align" />
   <link rel="stylesheet" href="css/studio-presentation.css?v=studio-presentation-005-launcher-chrome&heading=007&fullSearchRow=20261016&darkContrast=20261018&launchLight=20261018&smartSearchHelpContrast=20261108" />
+  <link rel="stylesheet" href="css/studio-compact-json.css?v=20261117-clear-buttons-center-dots-1" />
 </head>
 <body>
   <script src="js/ui/frb_studio_shell.js?v=0185p5"></script>
@@ -209,74 +210,50 @@
       resetConfirmMessage: 'JSON Object Studioの現在の選択・表示状態を破棄して、初期状態へ戻します。よろしいですか？'
     });
   </script>
-  <div class="json-studio-workspace">
-    <aside class="json-studio-source-pane">
-      <header class="app-header" id="appHeader">
-    <div class="brand-block">
-      <div class="app-kicker" id="appBrand">FRB Studio</div>
-      <h1><span id="appProductName" class="app-product-name">JSON Object Studio</span><span id="appDisplayVersion" class="app-version">v0.4-r001</span></h1>
-      <p id="appTagline">JSONで思考を構造化し、AIとの文脈を育てる。</p>
-    </div>
+  <!-- Source controls are relocated into the Common Shell pagebar once at startup.
+       Their original IDs are retained so existing load/save/unsaved-guard contracts survive. -->
+  <div id="studioCompactSourceBar" class="studio-compact-source-bar" aria-label="JSON読み込み・保存">
     <section class="loader-panel" aria-label="JSON読み込み">
-      <label class="combo-field has-clear">
-        <span class="drop-label">DATA JSON</span>
+      <label class="combo-field has-clear" title="DATA JSONを選択">
+        <span class="drop-label combo-label-row">
+          <span class="combo-label-text">DATA JSON</span>
+          <span class="combo-header-actions">
+            <button id="openDataFolderBtn" class="combo-folder-button" type="button" aria-label="DATA JSONの場所をExplorerで開く" title="DATA JSONの場所をExplorerで開く" disabled>📁</button>
+            <button id="clearDataNameBtn" class="combo-clear-button" type="button" aria-label="DATA JSONの選択をクリア" title="DATA JSONの選択をクリア">×</button>
+          </span>
+        </span>
         <span class="combo-input-wrap">
-          <input id="dataNameInput" name="frb_data_combo_009" list="dataNameList" placeholder="data から検索・選択" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="latin" enterkeyhint="search" data-studio-ime-policy="latin-filename" style="ime-mode: inactive;" />
-          <button id="openDataFolderBtn" class="combo-folder-button" type="button" aria-label="DATA JSONの場所をExplorerで開く" title="DATA JSONの場所をExplorerで開く" disabled>📁</button>
-          <button id="clearDataNameBtn" class="combo-clear-button" type="button" aria-label="DATA JSONの選択をクリア" title="DATA JSONの選択をクリア">×</button>
+          <input id="dataNameInput" name="frb_data_combo_009" list="dataNameList" placeholder="dataを選択" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="latin" enterkeyhint="search" data-studio-ime-policy="latin-filename" style="ime-mode: inactive;" />
         </span>
         <datalist id="dataNameList"></datalist>
       </label>
-      <label class="combo-field has-clear">
-        <span class="drop-label combo-label-row"><span>画面定義JSON</span><button id="maintainViewDefBtn" class="viewdef-maintenance-button" type="button" aria-label="選択中ViewDefをメンテナンス" title="選択中ViewDefをメンテナンス" disabled>…</button></span>
+      <label class="combo-field has-clear" title="画面定義JSONを選択">
+        <span class="drop-label combo-label-row">
+          <span class="combo-label-text">画面定義JSON</span>
+          <span class="combo-header-actions">
+            <button id="maintainViewDefBtn" class="viewdef-maintenance-button" type="button" aria-label="選択中ViewDefをメンテナンス" title="選択中ViewDefをメンテナンス" disabled>…</button>
+            <button id="openDefFolderBtn" class="combo-folder-button" type="button" aria-label="画面定義JSONの場所をExplorerで開く" title="画面定義JSONの場所をExplorerで開く" disabled>📁</button>
+            <button id="clearDefNameBtn" class="combo-clear-button" type="button" aria-label="画面定義JSONの選択をクリア" title="画面定義JSONの選択をクリア">×</button>
+          </span>
+        </span>
         <span class="combo-input-wrap">
-          <input id="defNameInput" name="frb_def_combo_009" list="defNameList" placeholder="defs から検索・選択" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="latin" enterkeyhint="search" data-studio-ime-policy="latin-filename" style="ime-mode: inactive;" />
-          <button id="openDefFolderBtn" class="combo-folder-button" type="button" aria-label="画面定義JSONの場所をExplorerで開く" title="画面定義JSONの場所をExplorerで開く" disabled>📁</button>
-          <button id="clearDefNameBtn" class="combo-clear-button" type="button" aria-label="画面定義JSONの選択をクリア" title="画面定義JSONの選択をクリア">×</button>
+          <input id="defNameInput" name="frb_def_combo_009" list="defNameList" placeholder="defsを選択" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="latin" enterkeyhint="search" data-studio-ime-policy="latin-filename" style="ime-mode: inactive;" />
         </span>
         <datalist id="defNameList"></datalist>
       </label>
-      <label class="drop-file-box compact-drop" data-input="dataFile">
-        <span class="drop-label">DATA JSON</span>
-        <span class="drop-name" id="dataFileName">Drop</span>
-        <input id="dataFile" type="file" accept=".json,application/json" />
-      </label>
-      <label class="drop-file-box compact-drop" data-input="defFile">
-        <span class="drop-label">画面定義JSON Drop</span>
-        <span class="drop-name" id="defFileName">Drop</span>
-        <input id="defFile" type="file" accept=".json,application/json" />
-      </label>
-      <button id="loadBtn" class="primary-button">読み込み</button>
-      <button id="saveBtn" class="ghost-button" disabled>保　存</button>
-      <div class="studio-tool-dock studio-viewer-dock" aria-label="Viewerリンク">
-        <div class="studio-tool-group" aria-label="Viewerリンク">
-          <span class="studio-tool-label">Viewer</span>
-          <a class="studio-nav-link markdown-link" href="mdViewer.html" title="Markdown Viewer / Editor を開く">
-            <span class="nav-icon">📝</span>
-            <span><span class="nav-main">Markdown</span><span class="nav-sub">Viewer</span></span>
-          </a>
-          <a class="studio-nav-link diff-link" href="DiffJsonViewer.html" title="DiffJson Viewer を開く">
-            <span class="nav-icon">Δ</span>
-            <span><span class="nav-main">DiffJSON</span><span class="nav-sub">差分Viewer</span></span>
-          </a>
-          <a class="studio-nav-link metadiff-link" href="MetaDiff_HypothesisViewer.html" title="MetaDiff Hypothesis Viewer を開く">
-            <span class="nav-icon">🧠</span>
-            <span><span class="nav-main">MetaDiff</span><span class="nav-sub">AI差分仮説</span></span>
-          </a>
-        </div>
-      </div>
-      <span class="studio-row-break" aria-hidden="true"></span>
+      <button id="loadBtn" type="button" class="primary-button">読込</button>
+      <button id="saveBtn" type="button" class="ghost-button" disabled>保存</button>
+      <!-- Removed visual Drop zones. Keep native file inputs for the established
+           code paths that reset/read them; no Drop targets are installed. -->
+      <input id="dataFile" type="file" accept=".json,application/json" hidden tabindex="-1" />
+      <input id="defFile" type="file" accept=".json,application/json" hidden tabindex="-1" />
+      <span id="dataFileName" hidden>Drop</span>
+      <span id="defFileName" hidden>Drop</span>
     </section>
-    <section class="json-document-meta" aria-label="JSONドキュメントメタ">
-      <h2>ドキュメントメタ</h2>
-      <div class="json-document-meta-list">
-        <div><b>保存ファイル名</b><span id="jsonMetaFileName" title="">未読み込み</span></div>
-        <div><b>文字数</b><span id="jsonMetaCharCount">-</span></div>
-        <div><b>状態</b><span id="status" class="status">未読み込み</span></div>
-      </div>
-    </section>
-      </header>
-    </aside>
+  </div>
+  <div class="json-studio-workspace">
+    <!-- Kept as an empty compatibility anchor for legacy theme selectors. -->
+    <aside class="json-studio-source-pane" hidden aria-hidden="true"></aside>
     <section class="json-studio-main-pane">
       <div class="json-studio-main-toolbar">
         <div class="current-data-layer" aria-label="現在表示中のData JSON">
@@ -362,6 +339,20 @@
     </section>
   </div>
 
+  <footer id="studioJsonBottomBar" class="json-document-meta studio-json-statusbar" aria-label="JSONドキュメント状態">
+    <div class="studio-json-status-item"><b>保存ファイル名</b><span id="jsonMetaFileName" title="">未読み込み</span></div>
+    <div class="studio-json-status-item"><b>状態</b><span id="status" class="status">未読み込み</span></div>
+    <!-- Legacy script compatibility only; no character-count UI. -->
+    <span id="jsonMetaCharCount" hidden>-</span>
+  </footer>
+  <script>
+    (function relocateStudioSourceControls() {
+      const controls = document.getElementById('studioCompactSourceBar');
+      const pagebarMain = document.querySelector('.frb-pagebar[data-frb-pagebar="json-object"] .frb-pagebar-main');
+      if (pagebarMain && controls) pagebarMain.appendChild(controls);
+    })();
+  </script>
+
   <dialog id="detailDialog">
     <form method="dialog" class="dialog-body">
       <div class="dialog-title-row">
@@ -421,7 +412,7 @@
   <script src="js/services/viewdef_maintenance_projection.js?v=visibility-contract-audit-01831&width=018133"></script>
   <script src="js/ui/studio_dialog.js?v=studio-dialog-top-layer-018352"></script>
   <script src="js/core/loaders.js?v=studio-dialog-no-browser-standard-01813"></script>
-  <script src="js/ui/page_setup.js?v=viewdef-row-order-01857"></script>
+  <script src="js/ui/page_setup.js?v=viewdef-row-order-01857&clear=20261117"></script>
   <script src="js/ui/file_tree_picker.js?v=file-picker-gpt-fx-lab-0170"></script>
   <script src="js/core/data_utils.js?v=action-execute-006"></script>
   <script src="js/components/studio_component.js?v=studio-editor-component-model-01840"></script>
@@ -457,19 +448,19 @@
   <script src="js/virtualData/expected_builders.js?v=action-execute-006"></script>
   <script src="js/virtualData/join_builders.js?v=join-writeback-001"></script>
   <script src="js/virtualData/join_writeback.js?v=join-writeback-001"></script>
-  <script src="js/runtime/live_view_design.js?v=live-view-design-editor-tip-top-layer-fix-018136"></script>
-  <script src="js/renderers/field_controls.js?v=empty-primary-section-hide-01878&live=018133&tables=20260918&smart=20261022&date=20261023"></script>
+  <script src="js/runtime/live_view_design.js?v=compact-width-split-20261117&live-view-design-editor-tip-top-layer-fix-018136"></script>
+  <script src="js/renderers/field_controls.js?v=empty-primary-section-hide-01878&live=018133&tables=20260918&smart=20261022&date=20261023&boolCheckbox=20261117"></script>
   <script src="js/responsibilities/grid_column_builder.js?v=responsibility-refactor-0187"></script>
   <script src="js/services/search_capability_resolver.js?v=standard-search-capability-01865"></script>
-  <script src="js/services/search_ui_controller.js?v=standard-search-ui-018138"></script>
+  <script src="js/services/search_ui_controller.js?v=standard-search-ui-018138&amp;boolSearchIsolation=20261117"></script>
   <script src="js/responsibilities/smart_search_engine.js?v=studio-smart-search-date-20261023"></script>
   <script src="js/responsibilities/smart_search_date_settings.js?v=studio-smart-search-date-20261023"></script>
-  <script src="js/ui/studio_smart_search_editor.js?v=studio-smart-search-history-0268"></script>
+  <script src="js/ui/studio_smart_search_editor.js?v=studio-smart-search-data-values-50-20261117"></script>
   <script src="js/ui/studio_smart_search_history.js?v=studio-smart-search-history-0268"></script>
-  <script src="js/ui/studio_smart_search_help.js?v=studio-smart-search-help-date-20261023"></script>
+  <script src="js/ui/studio_smart_search_help.js?v=studio-smart-search-help-values50-20261117"></script>
   <script src="js/responsibilities/search_filter.js?v=standard-search-ui-01867&smart=20261022&date=20261023"></script>
   <script src="js/responsibilities/csv_exporter.js?v=responsibility-refactor-0187"></script>
-  <script src="js/responsibilities/csv_importer.js?v=related-grid-csv-replace-20261016"></script>
+  <script src="js/responsibilities/csv_importer.js?v=related-grid-csv-replace-groups-20261117"></script>
   <script src="js/responsibilities/grid_aggregator.js?v=grid-numeric-aggregate-01820"></script>
   <script src="js/services/changeset/change_diff.js?v=studio-work-0269-step4"></script>
   <script src="js/services/changeset/change_gate.js?v=studio-work-0269-step5"></script>
@@ -479,25 +470,25 @@
   <script src="js/runtime/subgrid_cards.js?v=1"></script>
   <script src="js/runtime/tree_drag_move.js?v=1"></script>
   <script src="js/runtime/tree_file_drop.js?v=1"></script>
-  <script src="js/renderers/grid_detail.js?v=visibility-contract-audit-01831&resource=018124&live=018133&smart=20261022&date=20261023&relatedAutoApply=20261018b&f12BlurFix=20261018"></script>
+  <script src="js/renderers/grid_detail.js?v=visibility-contract-audit-01831&resource=018124&live=018133&smart=20261022&date=20261023&relatedAutoApply=20261117-groups&f12BlurFix=20261018&boolCheckbox=20261117"></script>
   <script src="js/ui/section_group_navigation.js?v=section-group-navigation-01873"></script>
   <script src="js/markdown/markdown_registry.js?v=markdown-export-mode-0186"></script>
   <script src="js/markdown/data_markdown.js?v=visible-rows-md-01861"></script>
   <script src="js/markdown/viewdef_markdown.js?v=action-execute-006"></script>
   <script src="js/runtime/detail_subgrid_edit.js?v=subgrid-preview-f12-disabled-018108"></script>
   <script src="js/runtime/sqlite_error_messages.js?v=sqlite-error-message-20261017"></script>
-  <script src="js/runtime/detail_save.js?v=sqlite-error-message-20261017&detailFooter=20261016-fixed&detailTitle=20261018b&launchEditor=20261018&relatedAutoApply=20261018b&changeGate=studio-work-0269-step5"></script>
+  <script src="js/runtime/detail_save.js?v=sqlite-error-message-20261017&detailFooter=20261016-fixed&detailTitle=20261018b&launchEditor=20261018&relatedAutoApply=20261117-groups&changeGate=studio-work-0269-step5"></script>
   <script src="js/runtime/studio_json_round_trip.js?v=studio-json-round-trip-018353"></script>
   <script src="js/core/viewdef_context_contract.js?v=context-grid-preview-0165-6"></script>
   <script src="js/ui/studio_presentation_profile.js?v=studio-presentation-006-launcher-save-top&heading=007&launchLight=20261018&persistTheme=20261019"></script>
   <script src="js/runtime/json_load_diagnostics.js?v=20261021-load-failure"></script>
-  <script src="js/runtime/load_runtime.js?v=viewdef-search-initial-018125&live=018132&startup=20261010&launch=20261018&faststart=20261018"></script>
+  <script src="js/runtime/load_runtime.js?v=viewdef-search-initial-018125&live=018132&startup=20261010&launch=20261018&faststart=20261018&clear=20261117"></script>
   <script src="js/actions/action_registry.js?v=01887-test-run-post-json-api-fix&resource=018124"></script>
-  <script src="js/runtime/related_grid_view.js?v=related-grid-inline-view-id-01834b&relatedAutoApply=20261018b"></script>
+  <script src="js/runtime/related_grid_view.js?v=related-grid-inline-view-id-01834b&relatedAutoApply=20261117-groups"></script>
   <script src="js/core/plugin_host.js?v=native-overlay-runtime-01894"></script>
   <script src="js/runtime/search_state.js?v=viewdef-search-initial-018125"></script>
   <script src="js/actions/action_toolbar.js?v=visible-rows-md-01861"></script>
-  <script src="app.js?v=detail-dialog-expand-01836&amp;search=enter-002&amp;faststart=20261018&amp;smart=20261022&date=20261023-step2"></script>
+  <script src="app.js?v=detail-dialog-expand-01836&amp;search=enter-002&amp;faststart=20261018&amp;smart=20261022&date=20261023-step2&values50=20261117&clear=20261117"></script>
   <script src="js/runtime/studio_keyboard_standard.js?v=keyboard-standard-20261016-ctrlq"></script>
   <script src="js/runtime/studio_detail_apply_indicator.js?v=detail-unapplied-dot-20261016"></script>
 </body>

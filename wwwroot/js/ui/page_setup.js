@@ -221,6 +221,20 @@ function setupViewDefMaintenanceButton() {
   updateViewDefMaintenanceButtonState();
 }
 
+// HTMLInputElement.value の直接代入では input/change が発火しない。
+// ショートカット起動、URL起動、ViewDef自動選択でも × の表示を揃える。
+function syncComboClearButtonStates() {
+  [
+    ['dataNameInput', 'clearDataNameBtn'],
+    ['defNameInput', 'clearDefNameBtn']
+  ].forEach(([inputId, buttonId]) => {
+    const input = $(inputId);
+    const button = $(buttonId);
+    if (!input || !button) return;
+    button.classList.toggle('visible', String(input.value ?? '').trim().length > 0);
+  });
+}
+
 function setupComboClearButtons() {
   const configs = [
     { inputId: 'defNameInput', buttonId: 'clearDefNameBtn', label: '画面定義JSON', names: () => (typeof viewDefSelectionNames === 'function' ? viewDefSelectionNames() : serverDefNames) },
@@ -231,9 +245,7 @@ function setupComboClearButtons() {
     const button = $(buttonId);
     if (!input || !button) return;
 
-    const sync = () => {
-      button.classList.toggle('visible', String(input.value ?? '').trim().length > 0);
-    };
+    const sync = () => syncComboClearButtonStates();
 
     input.addEventListener('input', sync);
     input.addEventListener('change', () => {

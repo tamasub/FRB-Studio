@@ -7,11 +7,13 @@ import path from 'node:path';
 const require = createRequire(import.meta.url);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const importer = require(path.join(root, 'wwwroot/js/responsibilities/csv_importer.js'));
-const viewdef = JSON.parse(readFileSync(path.join(root, 'defs/launch/frb_launch_maintenance_view_def_v0_1.json'), 'utf8'));
+const viewdef = JSON.parse(readFileSync(path.join(root, 'defs/launch_xxxx/frb_launch_maintenance_view_def_v0_1.json'), 'utf8'));
 const definition = viewdef.views.find(view => view.id === 'launch_choices_view').toolbar.csvImport;
-assert.equal(definition.mode, 'replace_all');
+assert.equal(definition.mode, 'replace_groups');
+assert.equal(definition.groupField, 'group_id');
 assert.equal(definition.defaults.group_id, '');
-const get = text => importer.buildRows(text, definition);
+// This file covers the historical replace_all behavior, which must remain supported.
+const get = text => importer.buildRows(text, {...definition, mode: 'replace_all'});
 
 test('Japanese email list creates candidates without group assignments', () => {
   const rows = get('氏名,メールアドレス\r\n田中,tanaka@example.com\r\n佐藤,sato@example.com\r\n');
@@ -58,7 +60,7 @@ test('reject empty email, broken CSV, missing header, empty data and too many ro
   assert.throws(() => get('氏名,メールアドレス\n"太郎,me@example.com'), /引用符/);
   assert.throws(() => get('氏名,電話番号\n太郎,12345'), /ヘッダー/);
   assert.throws(() => get('氏名,メールアドレス\n'), /データ行/);
-  assert.throws(() => importer.buildRows('メールアドレス\na@b.com\nb@c.com', { ...definition, maxRows:1 }), /上限/);
+  assert.throws(() => importer.buildRows('メールアドレス\na@b.com\nb@c.com', { ...definition, mode:'replace_all', maxRows:1 }), /上限/);
 });
 test('UTF-8 BOM and utf-16 decode work', () => {
   assert.equal(importer.decode(new Uint8Array([0xef,0xbb,0xbf,...Buffer.from('名前')])), '名前');
@@ -82,7 +84,7 @@ test('ViewDef-driven CSV import confirms destructive replace and automatically s
   assert.match(related, /ensureRelatedGridCsvImportButton\(\)/);
   const button = related.slice(related.indexOf('async () => {\n    const file = picker.files'));
   assert.ok(button.indexOf('CsvGridImporter.buildRows') < button.indexOf('window.confirm'));
-  assert.ok(button.indexOf('window.confirm') < button.indexOf('setByPath(sourceData, relatedGridChildRuntime.dataPath, importedRows)'));
+  assert.ok(button.indexOf('window.confirm') < button.indexOf('setByPath(sourceData, relatedGridChildRuntime.dataPath, updatedRows)'));
   assert.match(button, /queueRelatedGridAutoApply\(\)/);
   assert.doesNotMatch(related, /function ensureRelatedGridApplyButton\(/);
   assert.match(related, /relatedGridChildRuntime\.dataPath/);

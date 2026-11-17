@@ -357,7 +357,7 @@ function queueRelatedGridAutoApply() {
 function relatedGridCsvImportDefinition() {
   if (!relatedGridChildRuntime) return null;
   const definition = relatedGridToolbarDef()?.csvImport;
-  if (!definition || definition.enabled === false || definition.mode !== 'replace_all') return null;
+  if (!definition || definition.enabled === false || !['replace_all', 'replace_groups'].includes(definition.mode)) return null;
   return definition;
 }
 
@@ -377,7 +377,9 @@ function ensureRelatedGridCsvImportButton() {
   button.type = 'button';
   button.className = 'ghost-button small related-grid-csv-import-button';
   button.textContent = definition.caption || 'CSV取込';
-  button.title = 'CSVを読み込み、現在のGrid配列を全件置換します（確認あり）。最終保存は親画面で行います。';
+  button.title = definition.mode === 'replace_groups'
+    ? 'CSVに登場するグループだけを置換します（確認あり）。最終保存は親画面で行います。'
+    : 'CSVを読み込み、現在のGrid配列を全件置換します（確認あり）。最終保存は親画面で行います。';
   const exportButton = $('gridCsvExportBtn');
   if (exportButton && exportButton.parentElement === actions) {
     exportButton.after(button, picker);
@@ -397,17 +399,28 @@ function ensureRelatedGridCsvImportButton() {
       const importedRows = CsvGridImporter.buildRows(text, definition);
       const previousRows = relatedGridChildRows();
       if (!Array.isArray(previousRows)) throw new Error('選択中のGridがArrayではありません');
-      const oldCount = previousRows.length;
-      const message = `CSV全件置換の確認\n\n既存の${oldCount}件をすべて削除してから、CSVの${importedRows.length}件を取り込みます。\n` +
-        '既存のグループIDも引き継ぎません。\n\n' +
-        '取り込み後の最終保存は親Studio画面で行ってください。\n\n続行しますか？';
+      const groupMode = definition.mode === 'replace_groups';
+      const merged = groupMode ? CsvGridImporter.replaceGroups(previousRows, importedRows, definition) : null;
+      const updatedRows = groupMode ? merged.rows : importedRows;
+      const summary = groupMode
+        ? merged.groups.slice(0, 15).map(g => `・${g.group}: ${g.before}件 → ${g.after}件`).join('\n') +
+          (merged.groups.length > 15 ? `\n…ほか${merged.groups.length - 15}グループ` : '')
+        : '';
+      const message = groupMode
+        ? `CSVグループ単位置換の確認\n\n${summary}\n\n` +
+          `置換対象: ${merged.groups.length}グループ / 削除: ${merged.replacedCount}件 / 登録: ${merged.importedCount}件\n` +
+          'CSVにないグループは変更しません。\n\n' +
+          '取り込み後の最終保存は親Studio画面で行ってください。\n\n続行しますか？'
+        : `CSV全件置換の確認\n\n既存の${previousRows.length}件をすべて削除してから、CSVの${importedRows.length}件を取り込みます。\n` +
+          '既存のグループIDも引き継ぎません。\n\n' +
+          '取り込み後の最終保存は親Studio画面で行ってください。\n\n続行しますか？';
       if (!window.confirm(message)) {
         setStatus('CSV取込をキャンセルしました。既存データは変更していません。', { toast: false });
         return;
       }
       const previousIndex = selectedIndex;
       try {
-        setByPath(sourceData, relatedGridChildRuntime.dataPath, importedRows);
+        setByPath(sourceData, relatedGridChildRuntime.dataPath, updatedRows);
         selectedIndex = -1;
         loadRows();
         renderGrid();
@@ -419,7 +432,7 @@ function ensureRelatedGridCsvImportButton() {
         throw renderError;
       }
       queueRelatedGridAutoApply();
-      setStatus(`CSV ${importedRows.length}件を取り込みました。最終保存は親Studio画面で行ってください。`, {
+      setStatus(`CSV ${importedRows.length}件を取り込みました。${groupMode ? 'CSVにないグループは維持しました。' : ''}最終保存は親Studio画面で行ってください。`, {
         kind: 'success', title: 'CSV取込', toast: false, sticky: true
       });
     } catch (error) {

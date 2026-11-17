@@ -1,7 +1,8 @@
 // v0.18.139-live-view-design-field-alignment-guide-exact-pixel-match
-// Live View Design: Field.width is the canonical visual width for data display/editing.
-// Field.width accepts a numeric px value or FULL. Search controls stay at Studio standard width.
-// Grid legacy grid.width remains read-compatible.
+// Live View Design: independent width responsibilities.
+// Editor (Header/Detail): Field.width; Grid: Field.grid.width.
+// Both accept a numeric px value or FULL. Search stays at Studio standard width.
+// Legacy Field.width remains a read-only fallback for Grid until Grid width is saved.
 
 const STUDIO_STANDARD_FIELD_WIDTH_PX = 220;
 const STUDIO_MIN_FIELD_WIDTH_PX = 80;
@@ -36,12 +37,12 @@ function studioFieldTypeUsesFixedControlWidth(field) {
   return ['boolean', 'checkbox', 'radio'].includes(type);
 }
 
-function studioFieldWidthKey(section, fieldName) {
+function studioFieldWidthKey(section, fieldName, context='editor') {
   const viewId = String((typeof mainView === 'function' ? mainView()?.id : '') ?? '');
   const sectionId = String(section?.id ?? '');
   const sectionType = String(section?.type ?? '');
   const dataPath = String(section?.dataPath ?? section?.data_path ?? '');
-  return [viewId, sectionId, sectionType, dataPath, String(fieldName ?? '')].join('::');
+  return [viewId, sectionId, sectionType, dataPath, String(fieldName ?? ''), context === 'grid' ? 'grid' : 'editor'].join('::');
 }
 
 function studioFieldWidthSectionDescriptor(section) {
@@ -62,9 +63,9 @@ function studioFieldWidthSectionForContext(prefix, gd=null) {
   return null;
 }
 
-function studioDraftFieldWidth(field, section=null) {
+function studioDraftFieldWidth(field, context='editor', section=null) {
   if (!field?.field) return null;
-  const key = studioFieldWidthKey(section, field.field);
+  const key = studioFieldWidthKey(section, field.field, context);
   return studioNormalizeFieldWidth(studioFieldWidthDrafts.get(key)?.width);
 }
 
@@ -77,23 +78,25 @@ function studioResolvedFieldWidth(field, context='detail', section=null) {
     return STUDIO_STANDARD_FIELD_WIDTH_PX;
   }
 
-  const draft = studioDraftFieldWidth(field, section);
+  const target = ctx === 'grid' ? 'grid' : 'editor';
+  const draft = studioDraftFieldWidth(field, target, section);
   if (draft) return draft;
 
-  const canonical = studioNormalizeFieldWidthValue(field?.width);
-  if (canonical === STUDIO_FIELD_WIDTH_FULL) return STUDIO_FIELD_WIDTH_FULL;
-  if (canonical) return canonical;
-
-  // Backward compatibility:
-  // - Grid keeps reading legacy grid.width.
-  // - text / textarea may reuse the legacy width in Header/Detail so existing ViewDefs
-  //   immediately gain the common-width experience without a bulk migration.
-  const legacy = studioNormalizeFieldWidth(field?.grid?.width);
-  if (ctx === 'grid' && legacy) return legacy;
-  if ((ctx === 'header' || ctx === 'detail') && ['text', 'textarea'].includes(String(field?.type ?? 'text')) && legacy) {
-    return legacy;
+  // New canonical ownership: Grid always prefers grid.width. Editor never
+  // observes a Grid resize draft or Grid width when its own width is explicit.
+  const explicitGrid = studioNormalizeFieldWidthValue(field?.grid?.width);
+  const explicitEditor = studioNormalizeFieldWidthValue(field?.width);
+  if (target === 'grid') {
+    if (explicitGrid) return explicitGrid;
+    if (explicitEditor) return explicitEditor; // old shared Field.width ViewDefs
+  } else {
+    if (explicitEditor) return explicitEditor;
+    // Preserve legacy-only text/textarea Editor appearance on first migration.
+    // Grid saves snapshot this into Field.width before changing grid.width.
+    if (['text', 'textarea'].includes(String(field?.type ?? 'text')) && explicitGrid) {
+      return explicitGrid;
+    }
   }
-
   return STUDIO_STANDARD_FIELD_WIDTH_PX;
 }
 
@@ -140,8 +143,10 @@ function studioSetLiveFieldWidth(field, width, section, source='live') {
   if (!field?.field || !section) return null;
   const normalized = studioNormalizeFieldWidth(width);
   if (!normalized) return null;
-  const key = studioFieldWidthKey(section, field.field);
+  const context = String(source ?? '').startsWith('grid.') ? 'grid' : 'editor';
+  const key = studioFieldWidthKey(section, field.field, context);
   studioFieldWidthDrafts.set(key, {
+    context,
     width: normalized,
     fieldName: String(field.field),
     section: studioFieldWidthSectionDescriptor(section),
@@ -190,6 +195,23 @@ function studioViewDefApiPath(rawName) {
   return '/api/defs/' + name.split('/').map(part => encodeURIComponent(part)).join('/');
 }
 
+// Grid-only width save must never change the existing Editor appearance. For
+// legacy ViewDefs without Field.width, capture the old editor fallback first.
+function studioApplyWidthEntry(field, entry) {
+  if (entry.context === 'grid') {
+    if (!field.grid || typeof field.grid !== 'object') field.grid = {};
+    if (field.width == null || field.width === '') {
+      const legacyEditorWidth = studioNormalizeFieldWidthValue(field.grid.width);
+      if (legacyEditorWidth && ['text', 'textarea'].includes(String(field.type ?? 'text'))) {
+        field.width = legacyEditorWidth;
+      }
+    }
+    field.grid.width = entry.width;
+  } else {
+    field.width = entry.width;
+  }
+}
+
 function studioApplySavedWidthsToCurrentResolvedView() {
   if (!studioFieldWidthDrafts.size || typeof mainView !== 'function') return;
   const currentView = mainView();
@@ -198,10 +220,7 @@ function studioApplySavedWidthsToCurrentResolvedView() {
     const section = studioFindRawTargetSection(currentView, entry.section);
     const field = section?.fields?.find(item => String(item?.field ?? '') === entry.fieldName);
     if (!field) return;
-    field.width = entry.width;
-    if (field.grid && Object.prototype.hasOwnProperty.call(field.grid, 'width')) {
-      delete field.grid.width;
-    }
+    studioApplyWidthEntry(field, entry);
   });
 }
 
@@ -236,13 +255,7 @@ async function saveStudioLiveFieldWidths() {
       return;
     }
 
-    field.width = entry.width;
-
-    // Once a field is explicitly saved through Live View Design, migrate that field
-    // from legacy Grid-only width to the single canonical Field.width.
-    if (field.grid && Object.prototype.hasOwnProperty.call(field.grid, 'width')) {
-      delete field.grid.width;
-    }
+    studioApplyWidthEntry(field, entry);
   });
 
   if (notFound.length) {

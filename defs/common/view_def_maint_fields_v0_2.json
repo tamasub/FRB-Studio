@@ -181,7 +181,8 @@
               },
               "edit": {
                 "visible": true,
-                "readonly": false
+                "readonly": false,
+                "control": "boolean-checkbox"
               },
               "search": {
                 "visible": true,
@@ -191,7 +192,7 @@
             },
             {
               "field": "width",
-              "caption": "項目幅(px/FULL)",
+              "caption": "Editor項目幅(px/FULL)",
               "type": "text",
               "grid": {
                 "visible": true,
@@ -208,23 +209,21 @@
             },
             {
               "field": "grid.width",
-              "caption": "旧Grid列幅",
-              "type": "number",
+              "caption": "Grid列幅(px/FULL)",
+              "type": "text",
               "grid": {
                 "visible": false,
                 "width": 80
               },
               "edit": {
                 "visible": true,
-                "readonly": true,
-                "step": "0.001"
+                "readonly": false,
+                "placeholder": "80-1200 または FULL"
               },
               "search": {
                 "visible": false,
                 "operator": "gte"
-              },
-              "format": "#.000",
-              "defaultValue": 0
+              }
             },
             {
               "field": "edit.visible",
@@ -236,7 +235,8 @@
               },
               "edit": {
                 "visible": true,
-                "readonly": false
+                "readonly": false,
+                "control": "boolean-checkbox"
               },
               "defaultValue": false
             },
@@ -250,7 +250,8 @@
               },
               "edit": {
                 "visible": true,
-                "readonly": false
+                "readonly": false,
+                "control": "boolean-checkbox"
               },
               "search": {
                 "visible": true,
@@ -268,7 +269,8 @@
               },
               "edit": {
                 "visible": true,
-                "readonly": false
+                "readonly": false,
+                "control": "boolean-checkbox"
               },
               "search": {
                 "visible": true,
@@ -329,7 +331,8 @@
               },
               "edit": {
                 "visible": true,
-                "readonly": false
+                "readonly": false,
+                "control": "boolean-checkbox"
               },
               "search": {
                 "visible": true,
@@ -360,7 +363,8 @@
               },
               "edit": {
                 "visible": true,
-                "readonly": false
+                "readonly": false,
+                "control": "boolean-checkbox"
               },
               "defaultValue": false
             },

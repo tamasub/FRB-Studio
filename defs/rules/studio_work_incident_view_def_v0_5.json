@@ -144,7 +144,7 @@
                 "readonly": false
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "contains"
               },
               "width": 125
@@ -154,13 +154,14 @@
               "caption": "Phase",
               "type": "text",
               "grid": {
-                "visible": true
+                "visible": true,
+                "width": 252
               },
               "edit": {
                 "visible": true
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "contains"
               },
               "width": 317
@@ -170,13 +171,14 @@
               "caption": "タイトル",
               "type": "text",
               "grid": {
-                "visible": true
+                "visible": true,
+                "width": 398
               },
               "edit": {
                 "visible": true
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "contains"
               },
               "width": 493
@@ -206,7 +208,7 @@
                 "visible": true
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "equals"
               },
               "width": 125
@@ -241,7 +243,7 @@
                 "visible": true
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "equals"
               },
               "width": 164
@@ -262,7 +264,7 @@
                 "visible": true
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "equals"
               },
               "width": 100
@@ -281,17 +283,18 @@
                 "中止"
               ],
               "grid": {
-                "visible": true
+                "visible": true,
+                "width": 80
               },
               "edit": {
                 "visible": true,
                 "control": "radio"
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "equals"
               },
-              "width": 80
+              "width": 417
             },
             {
               "field": "follow_up_status",
@@ -315,7 +318,7 @@
                 "control": "select"
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "equals"
               },
               "display_note": "follow_up_actionsの検索用代表状態。既存項目の要否未評価はUNASSESSED。個別action更新時は集約規則に従って同期する。",
@@ -340,7 +343,7 @@
                 "control": "radio"
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "equals"
               },
               "display_note": "人間が作業結果や内容を確認した状態を記録する。作業ステータスとは別に、tamasub確認用として扱う。"
@@ -362,7 +365,7 @@
                 "visible": true
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "equals"
               },
               "display_note": "v0.16.3: 未完了作業に投入したContextDef素案の状態。",
@@ -395,7 +398,7 @@
                 "visible": true
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "contains"
               },
               "width": 86
@@ -411,7 +414,7 @@
                 "visible": true
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "contains"
               },
               "width": 90
@@ -611,7 +614,7 @@
                 "height": 140
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "contains"
               },
               "validation": {
@@ -895,7 +898,7 @@
                 "height": 180
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "contains"
               },
               "markdown": {

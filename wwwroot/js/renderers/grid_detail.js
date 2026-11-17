@@ -1170,6 +1170,9 @@ function detailEditableControls() {
 }
 
 function getControlValue(el) {
+  if (el?.dataset?.studioBooleanControl === 'tristate') {
+    return el.dataset.studioBooleanState ?? '';
+  }
   // Readable Textarea keeps the canonical Markdown source in data-raw-value while
   // preview mode renders HTML. Returning innerText from the preview would strip
   // Markdown markers (e.g. **bold**, list prefixes), so use the raw source instead.
@@ -1188,6 +1191,10 @@ function getControlValue(el) {
 }
 
 function setControlValue(el, value) {
+  if (el?.dataset?.studioBooleanControl === 'tristate') {
+    studioSetBooleanCheckboxState(el, value);
+    return;
+  }
   const text = value == null ? '' : String(value);
   if (el.hasAttribute('contenteditable')) {
     el.innerText = text;

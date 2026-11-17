@@ -5,7 +5,7 @@ import fs from 'node:fs';
 
 const read = path => fs.readFileSync(path, 'utf8');
 
-test('ViewDef schema exposes canonical Field.width with numeric px or FULL and marks grid.width as legacy', () => {
+test('ViewDef schema exposes independent Editor width and Grid width with numeric px/FULL', () => {
   const schema = JSON.parse(read('data/json/00_rules/frb_view_def_schema_v0_9.json'));
   const fieldWidth = schema?.$defs?.field?.properties?.width;
   const gridWidth = schema?.$defs?.gridOptions?.properties?.width;
@@ -14,10 +14,11 @@ test('ViewDef schema exposes canonical Field.width with numeric px or FULL and m
   assert.ok(fieldWidth.oneOf.some(rule => rule?.type === 'string' && rule?.enum?.includes('FULL')));
   assert.match(String(fieldWidth?.description ?? ''), /Field共通|正本/);
   assert.match(String(fieldWidth?.description ?? ''), /FULL/);
-  assert.match(String(gridWidth?.description ?? ''), /Legacy|互換/);
+  assert.match(String(gridWidth?.description ?? ''), /Grid専用|列幅正本/);
+  assert.ok(gridWidth.oneOf.some(rule => rule.type === 'string' && rule.enum?.includes('FULL')));
 });
 
-test('ViewDef maintenance exposes px/FULL input and keeps legacy grid.width read-only', () => {
+test('ViewDef maintenance exposes editable and independent Editor/Grid width inputs', () => {
   const def = JSON.parse(read('defs/common/view_def_maint_fields_v0_2.json'));
   const fields = def.views[0].sections.find(section => section.id === 'fields').fields;
   const canonical = fields.find(field => field.field === 'width');
@@ -27,8 +28,9 @@ test('ViewDef maintenance exposes px/FULL input and keeps legacy grid.width read
   assert.equal(canonical.type, 'text');
   assert.equal(canonical.edit?.readonly, false);
   assert.match(String(canonical.edit?.placeholder ?? ''), /FULL/);
-  assert.equal(legacy.caption, '旧Grid列幅');
-  assert.equal(legacy.edit?.readonly, true);
+  assert.equal(legacy.caption, 'Grid列幅(px/FULL)');
+  assert.equal(legacy.edit?.readonly, false);
+  assert.equal(legacy.type, 'text');
 });
 
 test('ViewDef maintenance projection normalizes numeric text and FULL for canonical width', () => {
@@ -55,7 +57,7 @@ test('Field controls apply common width and FULL can consume the available Heade
   const css = read('wwwroot/styles.css');
   assert.match(live, /STUDIO_FIELD_WIDTH_FULL = 'FULL'/);
   assert.match(live, /ctx === 'search'.*STUDIO_STANDARD_FIELD_WIDTH_PX/s);
-  assert.match(live, /canonical === STUDIO_FIELD_WIDTH_FULL.*return STUDIO_FIELD_WIDTH_FULL/s);
+  assert.match(live, /if \(explicitEditor\) return explicitEditor/);
   assert.match(live, /wrap\.style\.width = full \? '100%' :/);
   assert.match(live, /wrap\.style\.flex = full \? '1 0 100%'/);
   assert.match(css, /\.field\.studio-field-width-full/);
@@ -86,14 +88,15 @@ test('Dragging a FULL field intentionally changes it to a numeric live draft wit
   assert.match(live, /studioSetLiveFieldWidth\(field, width, section/);
 });
 
-test('Width changes are explicit-save Live View Design state and persist to ViewDef Field.width', () => {
+test('Width changes are explicitly saved to independent Grid.width and Editor Field.width', () => {
   const html = read('wwwroot/index.html');
   const live = read('wwwroot/js/runtime/live_view_design.js');
   assert.match(html, /id="saveFieldWidthsBtn"[^>]*hidden/);
   assert.match(html, /id="saveDetailFieldWidthsBtn"[^>]*hidden/);
   assert.match(live, /studioFieldWidthDrafts/);
   assert.match(live, /field\.width = entry\.width/);
-  assert.match(live, /delete field\.grid\.width/);
+  assert.match(live, /field\.grid\.width = entry\.width/);
+  assert.doesNotMatch(live, /delete field\.grid\.width/);
   assert.match(live, /fetch\(apiPath,\s*\{\s*method: 'POST'/s);
 });
 
