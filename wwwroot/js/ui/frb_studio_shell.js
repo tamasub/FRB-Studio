@@ -257,6 +257,14 @@
         </a>
         <nav class="frb-shell-nav" aria-label="FRB Studio modules">${nav}</nav>
         <div class="frb-shell-utility">
+          ${activePage === 'json-object' ? `
+          <div class="frb-pagebar-shortcuts frb-shell-shortcuts" data-frb-shortcuts hidden>
+            <button type="button" class="frb-pagebar-button frb-pagebar-shortcut-trigger frb-shell-shortcut-trigger" data-frb-shortcuts-trigger
+                    aria-haspopup="menu" aria-expanded="false" title="JSON Object Studio ショートカット" aria-label="JSON Object Studio ショートカット">
+              <span aria-hidden="true">↗</span>
+            </button>
+            <div class="frb-pagebar-shortcut-menu" data-frb-shortcuts-menu role="menu" hidden></div>
+          </div>` : ''}
           <a class="frb-shell-utility-link" data-frb-settings href="index.html?mode=settings" title="Studio設定を開く" aria-label="Studio設定を開く">
             <span class="frb-shell-utility-icon" aria-hidden="true">⚙</span>
             <span>設定</span>
@@ -272,30 +280,27 @@
     const description = options.description || page.description || '';
     const icon = options.icon || page.icon || '•';
     const showReset = options.showReset !== false;
-    const showHome = options.showHome !== false;
+    // JSON Object Studioだけは、既存Reset責務を青いアイコンに集約する。
+    // Homeは上部のFRB Studioリンクから遷移できるため、ここでは重複配置しない。
+    const iconResetsPage = pageId === 'json-object' && showReset;
+    const showHome = options.showHome !== false && pageId !== 'json-object';
 
     const pagebar = document.createElement('section');
     pagebar.className = 'frb-pagebar';
     pagebar.setAttribute('data-frb-pagebar', pageId || 'home');
     pagebar.innerHTML = `
       <div class="frb-pagebar-main">
-        <span class="frb-page-icon frb-icon-${htmlEscape(page.iconClass || pageId || 'default')}" aria-hidden="true">${htmlEscape(icon)}</span>
+        ${iconResetsPage
+          ? `<button type="button" class="frb-page-icon frb-pagebar-reset-icon frb-icon-${htmlEscape(page.iconClass || pageId || 'default')}" data-frb-reset aria-label="この画面の初期状態へ戻す" title="この画面の初期状態へ戻す">${htmlEscape(icon)}</button>`
+          : `<span class="frb-page-icon frb-icon-${htmlEscape(page.iconClass || pageId || 'default')}" aria-hidden="true">${htmlEscape(icon)}</span>`}
         <h1 class="frb-page-title">${htmlEscape(title)}</h1>
         ${description ? `<span class="frb-page-separator">›</span><span class="frb-page-description">${htmlEscape(description)}</span>` : ''}
       </div>
+      ${((pageId !== 'json-object') && (showHome || (showReset && !iconResetsPage))) ? `
       <div class="frb-pagebar-actions">
-        <div class="frb-pagebar-shortcuts" data-frb-shortcuts hidden>
-          <button type="button" class="frb-pagebar-button frb-pagebar-shortcut-trigger" data-frb-shortcuts-trigger
-                  aria-haspopup="menu" aria-expanded="false" title="JSON Object Studio ショートカット">
-            <span aria-hidden="true">↗</span>
-            <span>ショートカット</span>
-            <span class="frb-pagebar-shortcut-caret" aria-hidden="true">▾</span>
-          </button>
-          <div class="frb-pagebar-shortcut-menu" data-frb-shortcuts-menu role="menu" hidden></div>
-        </div>
         ${showHome ? '<button type="button" class="frb-pagebar-button" data-frb-home>⌂ ホームに戻る</button>' : ''}
-        ${showReset ? '<button type="button" class="frb-pagebar-button" data-frb-reset>↻ この画面の初期状態へ戻す</button>' : ''}
-      </div>`;
+        ${showReset && !iconResetsPage ? '<button type="button" class="frb-pagebar-button" data-frb-reset>↻ この画面の初期状態へ戻す</button>' : ''}
+      </div>` : ''}`;
     return pagebar;
   }
 
@@ -329,7 +334,7 @@
     document.body.prepend(pagebar);
     document.body.prepend(shell);
     syncStickyOffsets(shell, pagebar);
-    void refreshLaunchShortcuts(pagebar);
+    void refreshLaunchShortcuts(document);
 
     const homeButton = pagebar.querySelector('[data-frb-home]');
     if (homeButton) homeButton.addEventListener('click', () => location.assign('home.html'));

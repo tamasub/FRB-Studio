@@ -16,6 +16,17 @@ body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-page-title { f
 body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-page-icon {
   width:24px; height:24px; flex:0 0 24px; font-size:10.5px;
 }
+/* 左端の青いアイコンを画面リセット操作に変更（未保存確認は既存Guardへ委譲）。 */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-reset-icon {
+  appearance:none; padding:0; font-family:inherit; cursor:pointer;
+  transition:filter .12s ease, box-shadow .12s ease;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-reset-icon:hover {
+  filter:brightness(1.1);
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-reset-icon:focus-visible {
+  outline:2px solid #1d9bf0; outline-offset:3px;
+}
 body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-actions { gap:4px; flex:0 0 auto; }
 body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-button { padding:6px 7px; font-size:10px; }
 /* Provide breathing room between the page title and filename selectors. */
@@ -118,9 +129,19 @@ body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-json-status
 body.frb-page-json-object[data-studio-shell="minimal"] .studio-compact-source-bar,
 body.frb-page-json-object[data-studio-shell="minimal"] .studio-json-statusbar { display:none!important; }
 body.frb-page-json-object[data-studio-shell="minimal"] .frb-pagebar { display:none!important; }
-@media (max-width:1100px) {
-  body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar { flex-wrap:wrap; }
-  body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-actions { margin-left:auto; }
+/* JSON操作バーは標準デスクトップ幅で1行に固定。旧1100px強制折返しを撤廃。
+   幅740px以下では、操作不能な圧縮を避け従来通り段組みに戻す。 */
+@media (min-width:741px) {
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar {
+    flex-direction:row; flex-wrap:nowrap; align-items:center;
+    min-height:50px; padding-block:4px;
+  }
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-main {
+    flex-wrap:nowrap;
+  }
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar {
+    margin-left:12px;
+  }
 }
 @media (max-width:740px) {
   body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-main { flex-wrap:wrap; }
@@ -134,4 +155,188 @@ body.studio-settings-mode .studio-compact-source-bar .viewdef-maintenance-button
 body.studio-settings-mode .studio-compact-source-bar .file-tree-picker { display:none!important; }
 body.studio-settings-mode .studio-compact-source-bar input:disabled {
   opacity:1; color:#344054; background:#f7f8fa; cursor:default;
+}
+
+/* 2026-11-17 compact layout: align the JSON input/save group with the
+   right-edge shortcut action, leaving the JSON Object Studio title at left.
+   Auto margin absorbs spare width and still permits narrow-field shrinking. */
+@media (min-width:741px) {
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar {
+    margin-left:auto;
+  }
+}
+
+/* 2026-11-17: JSON summary card - align OUTPUT / mode / MD Viewer to the
+   right edge. The legacy <=920px .studio-tool-dock/.studio-tool-group rules
+   set width:100%, causing the visible actions to remain on the left even
+   when the card has spare space. Keep this override specific to JSON Studio. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .current-data-layer {
+  min-width: 0;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .studio-output-dock {
+  flex: 0 0 auto;
+  width: auto;
+  margin-left: auto;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .studio-output-dock .studio-tool-group {
+  width: auto;
+  flex-wrap: nowrap;
+}
+/* On very small windows prefer a second row to clipping the controls. */
+@media (max-width: 530px) {
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar {
+    flex-wrap: wrap;
+  }
+}
+
+/* 2026-11-17: JSON title/OUTPUT card - one-step smaller typography and icon.
+   Preserve the right-aligned OUTPUT layout. Scope to the normal JSON Studio
+   card, without changing Markdown/Diff/Home or editing/saving behavior. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar {
+  min-height: 52px;
+  padding: 5px 9px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .current-data-title {
+  font-size: 14px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .current-data-title:not(:empty) {
+  min-height: 36px;
+  padding: 2px 0 0 44px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .current-data-title:not(:empty)::before {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .current-data-subtitle {
+  font-size: 9px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .studio-output-dock .studio-tool-group {
+  min-height: 36px;
+  gap: 5px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .studio-output-dock .studio-tool-label {
+  font-size: 9px;
+  padding-inline: 6px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .markdown-export-control {
+  gap: 5px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .studio-output-dock .markdown-export-mode-select {
+  font-size: 10px;
+  height: 34px;
+  min-height: 34px;
+  padding: 4px 7px;
+  border-radius: 11px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .studio-output-dock .studio-mini-button-singleline {
+  font-size: 12px;
+  height: 34px;
+  min-height: 34px;
+  padding: 4px 8px;
+  border-radius: 11px;
+}
+
+
+/* 2026-11-17 compact plan phase-next:
+   - Remove the white summary/title row for JSON Object Studio.
+   - Move Markdown output controls next to Save.
+   - Move shortcut trigger to the top utility area as an icon-only action.
+   - Keep the page reset on the blue JSON icon and preserve existing behavior. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar {
+  display:none !important;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar {
+  justify-content:flex-start;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-main {
+  flex:1 1 auto;
+  min-width:0;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel {
+  gap:5px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-output-dock {
+  order:40;
+  flex:0 0 auto;
+  margin:0 0 0 4px;
+  padding:0;
+  min-width:0;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-output-dock .studio-tool-group {
+  display:flex;
+  align-items:center;
+  gap:5px;
+  min-height:36px;
+  padding:0;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-output-dock .studio-tool-label,
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .current-data-layer,
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .current-data-subtitle,
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .current-data-path {
+  display:none !important;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-output-dock .markdown-export-control {
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-output-dock .markdown-export-mode-select {
+  min-width:68px;
+  width:78px;
+  max-width:96px;
+  height:36px;
+  min-height:36px;
+  padding:4px 24px 4px 8px;
+  border-radius:10px;
+  font-size:10px;
+  color:#344054;
+  background:#f8faf9;
+  border:1px solid var(--frb-line);
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-output-dock .studio-mini-button-singleline {
+  min-width:0;
+  height:36px;
+  min-height:36px;
+  padding:4px 10px;
+  border-radius:10px;
+  font-size:12px;
+  white-space:nowrap;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-shell-utility {
+  gap:6px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-shell-shortcuts[hidden] {
+  display:none !important;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-shell-shortcuts {
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-shell-shortcut-trigger {
+  min-width:32px;
+  width:32px;
+  height:32px;
+  min-height:32px;
+  padding:0;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-shell-shortcut-trigger .frb-pagebar-shortcut-caret,
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-shell-shortcut-trigger span:not(:first-child) {
+  display:none !important;
+}
+@media (max-width:740px) {
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel {
+    gap:6px;
+  }
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-output-dock {
+    margin-left:0;
+  }
 }

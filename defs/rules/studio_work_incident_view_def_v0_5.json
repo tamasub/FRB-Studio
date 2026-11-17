@@ -24,7 +24,7 @@
                 "visible": false
               },
               "edit": {
-                "visible": true,
+                "visible": false,
                 "readonly": true
               },
               "width": 459
@@ -68,7 +68,7 @@
                 "visible": false
               },
               "edit": {
-                "visible": true
+                "visible": false
               },
               "width": 141
             },
@@ -81,7 +81,7 @@
                 "visible": false
               },
               "edit": {
-                "visible": true,
+                "visible": false,
                 "readonly": true
               },
               "width": 115
@@ -94,7 +94,7 @@
                 "visible": false
               },
               "edit": {
-                "visible": true
+                "visible": false
               },
               "width": 190
             },
@@ -118,7 +118,7 @@
                 "visible": false
               },
               "edit": {
-                "visible": true,
+                "visible": false,
                 "readonly": true
               }
             }

@@ -33,7 +33,7 @@
                 "width": 360
               },
               "edit": {
-                "visible": true,
+                "visible": false,
                 "readonly": true
               },
               "search": {
@@ -50,7 +50,7 @@
                 "width": 180
               },
               "edit": {
-                "visible": true,
+                "visible": false,
                 "readonly": true
               },
               "search": {
@@ -67,7 +67,7 @@
                 "width": 220
               },
               "edit": {
-                "visible": true,
+                "visible": false,
                 "readonly": true
               },
               "search": {
@@ -84,7 +84,7 @@
                 "width": 110
               },
               "edit": {
-                "visible": true,
+                "visible": false,
                 "readonly": false
               },
               "search": {
@@ -108,7 +108,7 @@
                 "width": 280
               },
               "edit": {
-                "visible": true,
+                "visible": false,
                 "readonly": true
               },
               "search": {
@@ -125,7 +125,7 @@
                 "width": 120
               },
               "edit": {
-                "visible": true,
+                "visible": false,
                 "readonly": true
               },
               "search": {
@@ -142,7 +142,7 @@
                 "width": 520
               },
               "edit": {
-                "visible": true,
+                "visible": false,
                 "readonly": true,
                 "height": 80
               },
@@ -160,7 +160,7 @@
                 "width": 220
               },
               "edit": {
-                "visible": true,
+                "visible": false,
                 "readonly": true
               },
               "search": {
@@ -177,7 +177,7 @@
                 "width": 520
               },
               "edit": {
-                "visible": true,
+                "visible": false,
                 "readonly": true,
                 "height": 90
               },
@@ -195,7 +195,7 @@
                 "width": 520
               },
               "edit": {
-                "visible": true,
+                "visible": false,
                 "readonly": true,
                 "height": 90
               },

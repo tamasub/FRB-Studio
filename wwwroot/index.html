@@ -195,12 +195,12 @@
     border-radius: 3px;
   }
 </style>
-  <link rel="stylesheet" href="css/frb-studio-shell.css?v=0185p10-json-output-align" />
+  <link rel="stylesheet" href="css/frb-studio-shell.css?v=compact-topbar-20261117-1" />
   <link rel="stylesheet" href="css/studio-presentation.css?v=studio-presentation-005-launcher-chrome&heading=007&fullSearchRow=20261016&darkContrast=20261018&launchLight=20261018&smartSearchHelpContrast=20261108" />
-  <link rel="stylesheet" href="css/studio-compact-json.css?v=20261117-clear-buttons-center-dots-1" />
+  <link rel="stylesheet" href="css/studio-compact-json.css?v=20261117-toolbar-merge-compact-1" />
 </head>
 <body>
-  <script src="js/ui/frb_studio_shell.js?v=0185p5"></script>
+  <script src="js/ui/frb_studio_shell.js?v=20261117-shell-shortcut-top-1"></script>
   <script>
     FrbStudioShell.mount({
       pageId: 'json-object',
@@ -349,7 +349,19 @@
     (function relocateStudioSourceControls() {
       const controls = document.getElementById('studioCompactSourceBar');
       const pagebarMain = document.querySelector('.frb-pagebar[data-frb-pagebar="json-object"] .frb-pagebar-main');
+      const outputDock = document.querySelector('.json-studio-main-toolbar .studio-output-dock');
+      const saveBtn = document.getElementById('saveBtn');
+      const titleToolbar = document.querySelector('.json-studio-main-toolbar');
+      const loaderPanel = controls ? controls.querySelector('.loader-panel') : null;
       if (pagebarMain && controls) pagebarMain.appendChild(controls);
+      if (loaderPanel && outputDock) {
+        loaderPanel.appendChild(outputDock);
+        outputDock.classList.add('studio-output-inline');
+      }
+      if (titleToolbar) {
+        titleToolbar.hidden = true;
+        titleToolbar.setAttribute('aria-hidden', 'true');
+      }
     })();
   </script>
 
