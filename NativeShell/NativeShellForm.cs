@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
+using System.IO.Pipes;
+using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -47,6 +49,18 @@ namespace FRBStudio.NativeShell
         private Timer _startupDeadline;
         private bool _startupRevealed;
         private readonly bool _startupSplashLight;
+        // Launch-owned session only. A random pipe capability prevents borrowing
+        // a standalone Studio process or accepting unauthenticated switch paths.
+        private readonly bool _launchPreview;
+        private readonly string _launchPreviewPipe;
+        private readonly int? _launchPreviewOwnerPid;
+        private bool _launchOwnerExitHandling;
+        // Independent of the docked Form HWND: Qt can destroy that HWND on
+        // console-close before the owner process signals its exit.
+        private System.Threading.SynchronizationContext _launchOwnerUiContext;
+        private const string LaunchCloseCommand = "@FRB_LAUNCH_CLOSE@";
+        private TaskCompletionSource<bool> _launchSwitchGuardResponse;
+        private string _launchSwitchGuardId;
 
         [DllImport("dwmapi.dll", PreserveSig = true)]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
@@ -136,10 +150,11 @@ namespace FRBStudio.NativeShell
             _status.ForeColor = dark ? Color.FromArgb(172, 188, 185) : Color.FromArgb(76, 96, 88);
             if (!launcher || !firstPresentation) return;
             Text = "FRB Launch — 設定";
+            if (_launchPreview) return; // Outer Launch splitter owns all embedded geometry.
             _status.Height = 20;
             // Preserve the existing compact bounds contract. A palette click
             // must never resize the native window or overwrite saved bounds.
-            if (NativeShellWindowBounds.TryLoad(out var bounds, launcher:true))
+            if (!_launchPreview && NativeShellWindowBounds.TryLoad(out var bounds, launcher:true))
             {
                 StartPosition = FormStartPosition.Manual;
                 Bounds = bounds;
@@ -331,8 +346,14 @@ namespace FRBStudio.NativeShell
             bool deferInitialNavigation = false,
             string initialMarkdownPath = null,
             string startupTheme = null,
-            string launchViewDefPath = null)
+            string launchViewDefPath = null,
+            bool launchPreview = false,
+            string launchPreviewPipe = null,
+            int? launchPreviewOwnerPid = null)
         {
+            _launchPreview = launchPreview;
+            _launchPreviewPipe = launchPreviewPipe;
+            _launchPreviewOwnerPid = launchPreviewOwnerPid;
             _startupSplashLight = string.Equals(startupTheme, "light", StringComparison.OrdinalIgnoreCase);
             _initialUri = initialUri;
             _initialPage = initialPage;
@@ -343,7 +364,7 @@ namespace FRBStudio.NativeShell
             _sharedEnvironment = sharedEnvironment;
             _deferInitialNavigation = deferInitialNavigation;
             // Child/popup windows continue to use the normal visible startup path.
-            _useStartupSplash = sharedEnvironment == null && !deferInitialNavigation;
+            _useStartupSplash = sharedEnvironment == null && !deferInitialNavigation && !_launchPreview;
             if (_useStartupSplash)
             {
                 Opacity = 0;
@@ -385,8 +406,361 @@ namespace FRBStudio.NativeShell
             };
             Shown += async (_, __) => {
                 ShowStartupSplash();
+                if (_launchPreviewPipe != null) StartLaunchPreviewPipe();
+                if (_launchPreviewOwnerPid.HasValue)
+                {
+                    _launchOwnerUiContext = System.Threading.SynchronizationContext.Current
+                        ?? new WindowsFormsSynchronizationContext();
+                    StartLaunchOwnerWatch();
+                }
                 await EnsureInitializedAsync();
             };
+        }
+
+        // One private pipe per Launch-owned NativeShell. Pipe operations never run
+        // on the UI thread; every WebView/dispatcher mutation is marshalled back.
+        private void StartLaunchPreviewPipe()
+        {
+            _ = Task.Run(async () => {
+                while (!IsDisposed && !Disposing)
+                {
+                    try
+                    {
+                        using (var pipe = new NamedPipeServerStream(_launchPreviewPipe,
+                            PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous))
+                        {
+                            await Task.Factory.FromAsync(pipe.BeginWaitForConnection,
+                                pipe.EndWaitForConnection, null);
+                            using (var reader = new StreamReader(pipe, new UTF8Encoding(false), false, 4096, true))
+                            using (var writer = new StreamWriter(pipe, new UTF8Encoding(false), 4096, true) { AutoFlush = true })
+                            {
+                                var requestedPath = await reader.ReadLineAsync();
+                                var result = await RouteLaunchPreviewSwitchAsync(requestedPath);
+                                await writer.WriteLineAsync(result);
+                                // ACK before closing; Launch is still reading this pipe.
+                                if (requestedPath == LaunchCloseCommand && result == "OK" && !IsDisposed)
+                                    BeginInvoke(new Action(Close));
+                            }
+                        }
+                    }
+                    catch (IOException) { /* A client disconnected; accept the next request. */ }
+                    catch (ObjectDisposedException) { break; }
+                    catch (Exception) { if (IsDisposed || Disposing) break; }
+                }
+            });
+        }
+
+        private Task<string> RouteLaunchPreviewSwitchAsync(string path)
+        {
+            var outcome = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+            try
+            {
+                if (IsDisposed || Disposing || !IsHandleCreated) return Task.FromResult("ERROR: Studio is unavailable");
+                BeginInvoke(new Action(async () => {
+                    try { outcome.TrySetResult(path == LaunchCloseCommand
+                        ? await ConfirmLaunchPreviewLeaveAsync()
+                        : await SwitchLaunchPreviewDocumentAsync(path)); }
+                    catch (Exception ex) { outcome.TrySetResult("ERROR: " + ex.Message.Replace('\n', ' ')); }
+                }));
+            }
+            catch (InvalidOperationException) { outcome.TrySetResult("ERROR: Studio window has closed"); }
+            return outcome.Task;
+        }
+
+        // User-visible validation for file switch, explicit Quit and abnormal
+        // parent loss. Never silently discard edited JSON/Markdown content.
+        private async Task<string> ConfirmLaunchPreviewLeaveAsync()
+        {
+            if (!_launchPreview) return "ERROR: Not a Launch preview session";
+            if (_launchSwitchGuardResponse != null) return "ERROR: Studio navigation is already in progress";
+            await EnsureInitializedAsync();
+            if (_webView.CoreWebView2 == null)
+                return "OK"; // Initialization failed: no live editor to save.
+            var id = Guid.NewGuid().ToString("N");
+            var guard = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _launchSwitchGuardId = id;
+            _launchSwitchGuardResponse = guard;
+            var script = @"(async function(){
+                let approved = false;
+                try {
+                    if (window.FrbJsonObjectUnsavedGuard?.confirmNavigationAway)
+                        approved = !!(await window.FrbJsonObjectUnsavedGuard.confirmNavigationAway('navigation'));
+                    else if (typeof confirmMarkdownNavigationAway === 'function')
+                        approved = !!(await confirmMarkdownNavigationAway());
+                    else approved = true;
+                } catch (_) { approved = false; }
+                if (approved) window.__frbLaunchPreviewSwitchApproved = true;
+                window.chrome.webview.postMessage({frb_launch_switch_guard: '" + id + @"', approved: approved});
+            })();";
+            try
+            {
+                await _webView.CoreWebView2.ExecuteScriptAsync(script);
+                var completed = await Task.WhenAny(guard.Task, Task.Delay(90000));
+                if (completed != guard.Task) return "ERROR: Unsaved confirmation timed out";
+                return await guard.Task ? "OK" : "CANCEL";
+            }
+            finally
+            {
+                _launchSwitchGuardId = null;
+                _launchSwitchGuardResponse = null;
+            }
+        }
+
+        // Diagnostics exist only for Launch-owned Studio processes. A residual
+        // NativeShell can be distinguished from a standalone Studio by this log.
+        private void TraceLaunchOwner(string stage)
+        {
+            if (!_launchPreviewOwnerPid.HasValue) return;
+            try
+            {
+                var folder = Path.Combine(Environment.GetFolderPath(
+                    Environment.SpecialFolder.LocalApplicationData), "FRBStudio");
+                Directory.CreateDirectory(folder);
+                File.AppendAllText(Path.Combine(folder, "launch_owner_watch.log"),
+                    DateTime.Now.ToString("o") + " StudioPID=" + Process.GetCurrentProcess().Id +
+                    " LaunchPID=" + _launchPreviewOwnerPid.Value + " " + stage + Environment.NewLine);
+            }
+            catch { /* Logging must not affect launch or unsaved data. */ }
+        }
+
+        // A console-window × can kill python without running Launcher.quit().
+        // Wait on the REAL process handle rather than polling a PID. Post back
+        // through an independent WinForms UI context: the embedded Form HWND
+        // may already have been destroyed with the Qt parent HWND.
+        private void StartLaunchOwnerWatch()
+        {
+            TraceLaunchOwner("OWNER_WATCH_STARTED");
+            _ = Task.Run(() => {
+                bool ownerExited = false;
+                try
+                {
+                    using (var owner = Process.GetProcessById(_launchPreviewOwnerPid.Value))
+                    {
+                        if (owner.Id == Process.GetCurrentProcess().Id) return;
+                        owner.WaitForExit();
+                        ownerExited = true;
+                    }
+                }
+                catch (ArgumentException) { ownerExited = true; } // Already gone
+                catch (InvalidOperationException) { ownerExited = true; }
+                catch (System.ComponentModel.Win32Exception) { /* Unknown ownership. */ }
+                if (!ownerExited) { TraceLaunchOwner("OWNER_WAIT_FAILED"); return; }
+                TraceLaunchOwner("OWNER_EXIT_DETECTED");
+                var ui = _launchOwnerUiContext;
+                if (ui == null) { TraceLaunchOwner("UI_CONTEXT_UNAVAILABLE"); return; }
+                try
+                {
+                    ui.Post(_ => {
+                        if (IsDisposed || Disposing)
+                        {
+                            TraceLaunchOwner("FORM_ALREADY_DISPOSED");
+                            return;
+                        }
+                        _ = OnLaunchOwnerExitedAsync();
+                    }, null);
+                }
+                catch (Exception ex)
+                {
+                    TraceLaunchOwner("OWNER_UI_POST_FAILED " + ex.GetType().Name);
+                }
+            });
+        }
+
+        private const int WindowStyleChild = 0x40000000;
+        private const int WindowStyleCaption = 0x00C00000;
+        private const int WindowStyleThickFrame = 0x00040000;
+        private const int WindowStyleSysMenu = 0x00080000;
+        private const int WindowStyleMinimize = 0x00020000;
+        private const int WindowStyleMaximize = 0x00010000;
+        private const int WindowStylePopup = unchecked((int)0x80000000);
+        private const int SwpFrameChanged = 0x0020;
+        private const int SwpShowWindow = 0x0040;
+        private const int SwpNoZOrder = 0x0004;
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern IntPtr SetParent(IntPtr child, IntPtr newParent);
+        [DllImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)]
+        private static extern int GetWindowLong(IntPtr window, int index);
+        [DllImport("user32.dll", EntryPoint = "SetWindowLongW", SetLastError = true)]
+        private static extern int SetWindowLong(IntPtr window, int index, int value);
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool SetWindowPos(IntPtr window, IntPtr insertAfter,
+            int x, int y, int width, int height, uint flags);
+
+        private void ExposeOrphanedLaunchStudio()
+        {
+            // Launch changed the native HWND to WS_CHILD during docking. Undo
+            // that before prompting: the Qt host may already be destroyed.
+            // The docked HWND may have been destroyed by Qt already. If this
+            // Form is still live, try to recreate it as an independent desktop
+            // window before checking dirty state. Never force-terminate it.
+            if (!IsHandleCreated && !IsDisposed && !Disposing)
+            {
+                try { ShowInTaskbar = true; Show(); }
+                catch (InvalidOperationException) { /* Guard below handles it. */ }
+            }
+            if (!IsHandleCreated) return;
+            var window = Handle;
+            var style = GetWindowLong(window, -16);
+            if ((style & WindowStyleChild) != 0)
+            {
+                SetParent(window, IntPtr.Zero);
+                var restored = (style & ~WindowStyleChild) | WindowStylePopup |
+                    WindowStyleCaption | WindowStyleThickFrame | WindowStyleSysMenu |
+                    WindowStyleMinimize | WindowStyleMaximize;
+                SetWindowLong(window, -16, restored);
+                SetWindowPos(window, IntPtr.Zero, 90, 90, 1100, 750,
+                    SwpNoZOrder | SwpFrameChanged | SwpShowWindow);
+            }
+            ShowInTaskbar = true;
+            Show();
+            WindowState = FormWindowState.Normal;
+            Activate();
+        }
+
+        // Abnormal parent exit is different from a voluntary JSON switch:
+        // never start a 90-second, possibly invisible confirmation dialog.
+        // Only a definitively CLEAN page may close automatically. Dirty or
+        // unknown pages remain accessible for manual save/recovery.
+        private async Task<bool?> ProbeLaunchPreviewDirtyAsync()
+        {
+            try
+            {
+                if (!IsHandleCreated || _webView.CoreWebView2 == null) return null;
+                const string script = @"(function(){
+                    try {
+                        if (window.FrbJsonObjectUnsavedGuard &&
+                            typeof window.FrbJsonObjectUnsavedGuard.hasUnsavedChanges === 'function')
+                            return !!window.FrbJsonObjectUnsavedGuard.hasUnsavedChanges();
+                        if (typeof hasUnsavedMarkdownNavigationState === 'function')
+                            return !!hasUnsavedMarkdownNavigationState();
+                        return null;
+                    } catch (_) { return null; }
+                })();";
+                var probe = _webView.CoreWebView2.ExecuteScriptAsync(script);
+                if (await Task.WhenAny(probe, Task.Delay(2500)) != probe) return null;
+                var value = await probe;
+                if (string.Equals(value, "false", StringComparison.Ordinal)) return false;
+                if (string.Equals(value, "true", StringComparison.Ordinal)) return true;
+            }
+            catch (Exception ex) { TraceLaunchOwner("DIRTY_PROBE_ERROR " + ex.GetType().Name); }
+            return null;
+        }
+
+        private async Task OnLaunchOwnerExitedAsync()
+        {
+            if (_launchOwnerExitHandling || IsDisposed || Disposing) return;
+            _launchOwnerExitHandling = true;
+            try
+            {
+                TraceLaunchOwner("OWNER_EXIT_HANDLER_ENTERED handle=" + IsHandleCreated);
+                ExposeOrphanedLaunchStudio();
+                var dirty = await ProbeLaunchPreviewDirtyAsync();
+                if (dirty == false && !IsDisposed && !Disposing)
+                {
+                    TraceLaunchOwner("CLEAN_AUTO_CLOSE");
+                    Close();
+                }
+                else
+                {
+                    // A destroyed HWND or an unresponsive WebView is UNKNOWN,
+                    // not clean. Preserve data instead of killing the process.
+                    TraceLaunchOwner(dirty == true ? "DIRTY_PRESERVED" : "UNKNOWN_PRESERVED");
+                    if (!IsDisposed && !Disposing)
+                        _status.Text = dirty == true
+                            ? "Launch終了。未保存の変更があるためStudioを保持しました。"
+                            : "Launch終了。編集状態を確認できないためStudioを保持しました。";
+                }
+            }
+            catch (Exception ex)
+            {
+                TraceLaunchOwner("OWNER_EXIT_HANDLER_ERROR " + ex.GetType().Name);
+                if (!IsDisposed && !Disposing)
+                    _status.Text = "Launch終了後、Studioを保持: " + ex.Message;
+            }
+        }
+
+        // A menu-settings handoff carries the same vetted flags as a normal
+        // --open-json startup.  Legacy path-only requests remain compatible.
+        private sealed class LaunchPreviewSwitchRequest
+        {
+            public string path { get; set; }
+            public string[] args { get; set; }
+        }
+
+        private static NativeLaunchOptions ParseLaunchPreviewSwitchRequest(string request)
+        {
+            if (string.IsNullOrWhiteSpace(request))
+                throw new ArgumentException("Absolute JSON/Markdown path required.");
+            var path = request;
+            var args = new string[0];
+            if (request.TrimStart().StartsWith("{", StringComparison.Ordinal))
+            {
+                var payload = new JavaScriptSerializer().Deserialize<LaunchPreviewSwitchRequest>(request);
+                if (payload == null) throw new ArgumentException("Invalid Launch switch request.");
+                path = payload.path;
+                args = payload.args ?? new string[0];
+            }
+            if (string.IsNullOrWhiteSpace(path) || !Path.IsPathRooted(path))
+                throw new ArgumentException("Absolute JSON/Markdown path required.");
+            var full = Path.GetFullPath(path);
+            var ext = Path.GetExtension(full);
+            if ((!ext.Equals(".json", StringComparison.OrdinalIgnoreCase) &&
+                 !ext.Equals(".md", StringComparison.OrdinalIgnoreCase)) || !File.Exists(full))
+                throw new FileNotFoundException("Launch JSON/Markdown document not found", full);
+            // Only the Launch-maintenance flags can be passed over the pipe.
+            // Disallow startup preview, arbitrary theme, shortcut, or other flags.
+            var accepted = new[] { "--launch-home=", "--launch-view-def=", "--launch-page-id=",
+                "--launch-item-id=", "--launch-new-category=" };
+            if (args.Length > 5) throw new ArgumentException("Too many Launch edit arguments.");
+            foreach (var argument in args)
+            {
+                if (string.IsNullOrWhiteSpace(argument) ||
+                    !System.Linq.Enumerable.Any(accepted, flag => argument.StartsWith(flag, StringComparison.OrdinalIgnoreCase)))
+                    throw new ArgumentException("Unsupported Launch edit argument.");
+            }
+            var startup = new List<string> { ext.Equals(".json", StringComparison.OrdinalIgnoreCase)
+                ? "--open-json=" + full : "--open-md=" + full };
+            startup.AddRange(args);
+            // Reuse canonical UserData/ViewDef validation from regular startup.
+            return NativeLaunchOptions.Parse(startup.ToArray());
+        }
+
+        private async Task<string> SwitchLaunchPreviewDocumentAsync(string request)
+        {
+            if (!_launchPreview || string.IsNullOrWhiteSpace(_launchPreviewPipe)) return "ERROR: Not a Launch preview session";
+            // Reject invalid maintenance context before touching the editor.
+            var options = ParseLaunchPreviewSwitchRequest(request);
+            var full = options.InitialJsonPath ?? options.InitialMarkdownPath;
+            await EnsureInitializedAsync();
+            if (_dispatcher == null || _webView.CoreWebView2 == null) return "ERROR: Studio is not ready";
+
+            // The switch and explicit Launch Quit share the same unsaved guard.
+            // A Cancel must preserve the document, view definition, and save grant.
+            var leave = await ConfirmLaunchPreviewLeaveAsync();
+            if (leave != "OK") return leave;
+            var id = Guid.NewGuid().ToString("N");
+            _dispatcher.SwitchLaunchPreviewDocument(full, options.LaunchViewDefPath);
+            // A reused shell may transition between the regular Studio and
+            // Launch-maintenance presets. Let the *new* page set the frame
+            // presentation; never retain a stale Launch-settings caption.
+            if (options.LaunchViewDefPath != null)
+            {
+                _presentationReceived = false;
+            }
+            else if (_launcherPresentation)
+            {
+                _presentationReceived = false;
+                _launcherPresentation = false;
+                Text = "FRB Studio / Native Shell";
+                Padding = new Padding(0);
+                _clientSurface.Padding = new Padding(0);
+                _status.Height = 24;
+            }
+            var page = options.InitialPage;
+            // Different URL each time: a same-file reselect also reloads.
+            _webView.CoreWebView2.Navigate(_allowedOrigin + "/" + page + "&launchSwitch=" + id);
+            return "OK";
         }
 
         // WebView2 JS handles Ctrl+Q when the page has focus.  WinForms must
@@ -444,7 +818,7 @@ namespace FRBStudio.NativeShell
                     !string.IsNullOrWhiteSpace(_initialWorkspaceRoot) && Directory.Exists(_initialWorkspaceRoot)
                         ? _initialWorkspaceRoot
                         : _appRoot);
-                _dispatcher = new NativeCommandDispatcher(_config, _workspace, _initialJsonPath, _initialMarkdownPath, _launchViewDefPath);
+                _dispatcher = new NativeCommandDispatcher(_config, _workspace, _initialJsonPath, _initialMarkdownPath, _launchViewDefPath, launchPreview:_launchPreview);
 
                 var webRoot = Path.Combine(_appRoot, "wwwroot");
                 if (!File.Exists(Path.Combine(webRoot, _config.StartPage)))
@@ -526,6 +900,13 @@ namespace FRBStudio.NativeShell
                 var message = rawMessage.Length <= 32768
                     ? new JavaScriptSerializer().DeserializeObject(rawMessage) as Dictionary<string, object>
                     : null;
+                if (message != null && message.TryGetValue("frb_launch_switch_guard", out var guardId)
+                    && guardId is string candidate && candidate == _launchSwitchGuardId
+                    && message.TryGetValue("approved", out var accepted) && accepted is bool approved)
+                {
+                    _launchSwitchGuardResponse?.TrySetResult(approved);
+                    return;
+                }
                 // Ctrl+Q from the trusted Studio main page closes this WinForms form
                 // through the same Close() / OnFormClosing path as the title-bar X.
                 // The page checks the unsaved guard before sending this request.

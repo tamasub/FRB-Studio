@@ -36,6 +36,7 @@
   const PROTOCOL_VERSION = '1.0';
   const pending = new Map();
   let requestSequence = 0;
+  let startupDocumentId = null;
   // NativeShell snapshots: raw-file SHA from the exact GET response.
   // They live in memory and are cleared only by a new GET or successful CAS save.
   const dataFileBaselines = new Map();
@@ -90,6 +91,8 @@
       global.clearTimeout(slot.timeoutId);
 
       if (response?.success) {
+        if (slot.command === 'startupJson.read')
+          startupDocumentId = String(response.result?.document_id || '');
         slot.resolve(response.result);
         return;
       }
@@ -303,7 +306,7 @@
         }
         if (method === 'POST') {
           const body = await parseJsonBody(input, init);
-          return jsonResponse(await invoke('startupJson.write', { content: prettyJson(body) }));
+          return jsonResponse(await invoke('startupJson.write', { content: prettyJson(body), document_id: startupDocumentId }));
         }
         return errorResponse(405, 'METHOD_NOT_ALLOWED', 'Only GET/POST are supported.');
       }

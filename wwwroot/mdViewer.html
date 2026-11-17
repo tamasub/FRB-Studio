@@ -6658,7 +6658,7 @@ function installMarkdownUnsavedNavigationGuard() {
 
   // Browser back / reload / window closeなど、Common Shell外の離脱にも最低限の標準警告を残す。
   window.addEventListener('beforeunload', (event) => {
-    if (markdownNavigationAwayConfirmed || !hasUnsavedMarkdownNavigationState()) return;
+    if (window.__frbLaunchPreviewSwitchApproved || markdownNavigationAwayConfirmed || !hasUnsavedMarkdownNavigationState()) return;
     event.preventDefault();
     event.returnValue = '';
   });

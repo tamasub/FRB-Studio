@@ -14,6 +14,9 @@ namespace FRBStudio.NativeShell
         public string StudioTheme { get; private set; }
         public string LaunchViewDefPath { get; private set; }
         public string LaunchHomePath { get; private set; }
+        public bool LaunchPreview { get; private set; }
+        public string LaunchPreviewPipe { get; private set; }
+        public int? LaunchPreviewOwnerPid { get; private set; }
 
         public static NativeLaunchOptions Parse(string[] args)
         {
@@ -25,6 +28,27 @@ namespace FRBStudio.NativeShell
             foreach (var raw in args)
             {
                 var arg = raw ?? string.Empty;
+                if (string.Equals(arg, "--launch-preview", StringComparison.OrdinalIgnoreCase))
+                {
+                    options.LaunchPreview = true;
+                    continue;
+                }
+                if (arg.StartsWith("--launch-preview-pipe=", StringComparison.OrdinalIgnoreCase))
+                {
+                    var token = arg.Substring("--launch-preview-pipe=".Length);
+                    if (!Guid.TryParseExact(token, "N", out var parsedToken))
+                        throw new ArgumentException("--launch-preview-pipe requires a 32-character GUID.");
+                    options.LaunchPreviewPipe = "frb_studio_launch_" + parsedToken.ToString("N");
+                    continue;
+                }
+                if (arg.StartsWith("--launch-preview-owner-pid=", StringComparison.OrdinalIgnoreCase))
+                {
+                    var value = arg.Substring("--launch-preview-owner-pid=".Length);
+                    if (!int.TryParse(value, out var pid) || pid <= 0)
+                        throw new ArgumentException("--launch-preview-owner-pid requires a positive process ID.");
+                    options.LaunchPreviewOwnerPid = pid;
+                    continue;
+                }
                 if (arg.StartsWith("--studio-theme=", StringComparison.OrdinalIgnoreCase))
                 {
                     var theme = arg.Substring("--studio-theme=".Length).Trim();
@@ -115,6 +139,10 @@ namespace FRBStudio.NativeShell
                     }
                 }
             }
+            if (options.LaunchPreviewOwnerPid.HasValue && (!options.LaunchPreview || options.LaunchPreviewPipe == null))
+                throw new ArgumentException("--launch-preview-owner-pid requires a Launch preview pipe.");
+            if (options.LaunchPreviewPipe != null && !options.LaunchPreview)
+                throw new ArgumentException("--launch-preview-pipe requires --launch-preview.");
             int launchTargets = (options.LaunchItemId != null ? 1 : 0)
                 + (options.LaunchNewCategoryPage != null ? 1 : 0)
                 + (options.LaunchPageId != null ? 1 : 0);

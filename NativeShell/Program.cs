@@ -37,7 +37,7 @@ namespace FRBStudio.NativeShell
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new NativeShellForm(initialPage: launchOptions.InitialPage, initialJsonPath: launchOptions.InitialJsonPath, initialMarkdownPath: launchOptions.InitialMarkdownPath, startupTheme: launchOptions.StudioTheme, launchViewDefPath: launchOptions.LaunchViewDefPath));
+            Application.Run(new NativeShellForm(initialPage: launchOptions.InitialPage, initialJsonPath: launchOptions.InitialJsonPath, initialMarkdownPath: launchOptions.InitialMarkdownPath, startupTheme: launchOptions.StudioTheme, launchViewDefPath: launchOptions.LaunchViewDefPath, launchPreview: launchOptions.LaunchPreview, launchPreviewPipe: launchOptions.LaunchPreviewPipe, launchPreviewOwnerPid: launchOptions.LaunchPreviewOwnerPid));
         }
     }
 }

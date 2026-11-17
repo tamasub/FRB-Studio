@@ -399,7 +399,7 @@
       document.addEventListener('click', guardNavigationClick, true);
 
       window.addEventListener('beforeunload', event => {
-        if (navigationAwayConfirmed || !hasUnsavedChanges()) return;
+        if (window.__frbLaunchPreviewSwitchApproved || navigationAwayConfirmed || !hasUnsavedChanges()) return;
         event.preventDefault();
         event.returnValue = '';
       });

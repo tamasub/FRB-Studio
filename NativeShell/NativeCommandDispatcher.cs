@@ -17,10 +17,11 @@ namespace FRBStudio.NativeShell
     internal sealed class NativeCommandDispatcher
     {
         private readonly NativeShellConfig _config;
-        private readonly string _startupJsonPath;
-        private readonly string _launchViewDefPath;
+        private string _startupJsonPath;
+        private readonly bool _strictLaunchPreviewDocumentGrant;
+        private string _launchViewDefPath;
         private string _launchViewDefSha;
-        private readonly string _startupMarkdownPath;
+        private string _startupMarkdownPath;
         private string _startupDocumentId;
         private readonly WorkspacePolicy _workspace;
         private readonly JavaScriptSerializer _serializer = new JavaScriptSerializer { MaxJsonLength = int.MaxValue };
@@ -34,9 +35,10 @@ namespace FRBStudio.NativeShell
         private readonly Dictionary<string, string> _persistedFolderGrantPaths = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         private readonly string _persistedFolderGrantStorePath;
 
-        public NativeCommandDispatcher(NativeShellConfig config, WorkspacePolicy workspace, string startupJsonPath = null, string startupMarkdownPath = null, string launchViewDefPath = null)
+        public NativeCommandDispatcher(NativeShellConfig config, WorkspacePolicy workspace, string startupJsonPath = null, string startupMarkdownPath = null, string launchViewDefPath = null, bool launchPreview = false)
         {
             _config = config;
+            _strictLaunchPreviewDocumentGrant = launchPreview;
             _startupJsonPath = startupJsonPath;
             _launchViewDefPath = launchViewDefPath;
             _startupMarkdownPath = startupMarkdownPath;
@@ -44,6 +46,27 @@ namespace FRBStudio.NativeShell
             var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             _persistedFolderGrantStorePath = Path.Combine(localAppData, "FRBStudio", "folder_grants.json");
             LoadPersistedFolderGrants();
+        }
+
+        // Called ONLY by the authenticated Launch-owned pipe on the WinForms UI thread.
+        // Save grants are revoked before the new page loads, preventing stale writes
+        // from ever reaching the newly selected JSON document.
+        internal void SwitchLaunchPreviewDocument(string path, string launchViewDefPath = null)
+        {
+            var full = Path.GetFullPath(path);
+            if (!File.Exists(full)) throw new FileNotFoundException("Launch document not found", full);
+            var ext = Path.GetExtension(full);
+            if (!ext.Equals(".json", StringComparison.OrdinalIgnoreCase)
+                && !ext.Equals(".md", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException("Launch preview accepts JSON or Markdown only.");
+            if (_startupDocumentId != null) _documentGrants.Remove(_startupDocumentId);
+            _startupDocumentId = null;
+            _startupJsonPath = ext.Equals(".json", StringComparison.OrdinalIgnoreCase) ? full : null;
+            _startupMarkdownPath = ext.Equals(".md", StringComparison.OrdinalIgnoreCase) ? full : null;
+            // Never carry a Launch maintenance ViewDef or write permission
+            // into an ordinary incident/Markdown session (or vice versa).
+            _launchViewDefPath = launchViewDefPath;
+            _launchViewDefSha = null;
         }
 
         // A generic read-only JSON adapter. JavaScript cannot select arbitrary filesystem paths.
@@ -179,7 +202,16 @@ namespace FRBStudio.NativeShell
                     return ReadStartupJson();
 
                 case "startupJson.write":
-                    ReadStartupJson(); // Revalidate the exact CLI-selected file before writing.
+                    // Every Launch-preview save is bound to the page's read grant.
+                    // Standalone Studio preserves the legacy API contract.
+                    if (_strictLaunchPreviewDocumentGrant || payload.ContainsKey("document_id"))
+                    {
+                        var writeDocumentId = RequiredString(payload, "document_id");
+                        if (_startupDocumentId == null ||
+                            !string.Equals(writeDocumentId, _startupDocumentId, StringComparison.Ordinal))
+                            throw new InvalidOperationException("STALE_STARTUP_DOCUMENT: reload before saving.");
+                    }
+                    ReadStartupJson(); // Revalidate the active granted file before writing.
                     if (SqliteDataAdapter.IsSqliteDocument(File.ReadAllText(Path.GetFullPath(_startupJsonPath))))
                         return _sqlite.Save(Path.GetFullPath(_startupJsonPath), RequiredString(payload, "content"));
                     var content = RequiredString(payload, "content");
