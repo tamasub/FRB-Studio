@@ -5,7 +5,7 @@
   "title": "FRB Studio App Settings Field Definitions",
   "status": "draft",
   "created_at": "2026-08-16",
-  "updated_at": "2026-08-16",
+  "updated_at": "2026-11-18",
   "target_document_type": "app_settings",
   "target_schema_version": "app_settings_v0_1",
   "definition_policy": {
@@ -19,9 +19,10 @@
   "design_notes": [
     "System Definitionのためユーザー領域 fielddefs/ には配置せず、wwwroot/config/app_settings/ でStudio本体が所有する。",
     "Phase 3ではDefinitionを用意するところまでとし、System Field Definitionの保存時Validation接続はPhase 4の責務とする。",
-    "Dataに存在することとSettings画面から変更可能であることは別。hosting/uiは現時点ではSettings Viewへ露出しない。"
+    "Dataに存在することとSettings画面から変更可能であることは別。hosting/uiは現時点ではSettings Viewへ露出しない。",
+    "ui.json_object_compact_font_enabled は JSON Object Studio の検索/一覧フォントを1段階小さくする切替。false に戻すと従来サイズ。"
   ],
-  "field_definition_count": 6,
+  "field_definition_count": 7,
   "field_definitions": [
     {
       "field_path": "$.launch_shortcuts[].id",
@@ -75,6 +76,14 @@
     {
       "field_path": "$.markdown.large_file_warning_bytes",
       "validation_type": "studio.integer.positive",
+      "constraint_overrides": {
+        "required": true,
+        "nullable": false
+      }
+    },
+    {
+      "field_path": "$.ui.json_object_compact_font_enabled",
+      "validation_type": "studio.boolean.standard",
       "constraint_overrides": {
         "required": true,
         "nullable": false

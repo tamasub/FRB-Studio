@@ -1,0 +1,656 @@
+/* 2026-11-17 Studio compact shell — only standard JSON Object view.
+   Launcher/minimal presentation keeps its own title/save placement. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-workspace {
+  display:block; grid-template-columns:none; width:100%; max-width:none;
+  padding:0 10px; margin:0; min-height:calc(100dvh - var(--frb-fixed-header-height, 122px));
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-source-pane { display:none!important; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-pane { width:100%; max-width:none; padding:8px 0 26px; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-main { flex:1 1 auto; min-width:0; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-page-description,
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-page-separator { display:none; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar { gap:8px; padding:5px 10px; min-height:56px; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-main { gap:6px; }
+/* Page identity uses the original common-shell typography/icon scale. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-page-title { font-size:16px; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-page-icon {
+  width:24px; height:24px; flex:0 0 24px; font-size:10.5px;
+}
+/* 左端の青いアイコンを画面リセット操作に変更（未保存確認は既存Guardへ委譲）。 */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-reset-icon {
+  appearance:none; padding:0; font-family:inherit; cursor:pointer;
+  transition:filter .12s ease, box-shadow .12s ease;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-reset-icon:hover {
+  filter:brightness(1.1);
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-reset-icon:focus-visible {
+  outline:2px solid #1d9bf0; outline-offset:3px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-actions { gap:4px; flex:0 0 auto; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-button { padding:6px 7px; font-size:10px; }
+/* Provide breathing room between the page title and filename selectors. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar {
+  min-width:0; margin-left:20px; flex:0 1 auto;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel {
+  display:flex!important; align-items:center; flex-wrap:nowrap; gap:5px;
+  padding:0; margin:0; border:0; background:transparent; box-shadow:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field {
+  display:flex; flex-direction:column; justify-content:center;
+  flex:0 1 190px; min-width:125px; width:190px; max-width:200px;
+  padding:2px 4px; margin:0; border-radius:7px; min-height:38px;
+  background:#f8fbff;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field:nth-of-type(2) { flex-basis:215px; min-width:146px; width:215px; max-width:225px; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .drop-label {
+  font-size:9px; line-height:1.05; margin:0 0 2px; padding:0 2px; white-space:nowrap;
+}
+/* Action buttons sit in the label row, above the filename input. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-label-row {
+  display:flex; align-items:center; justify-content:space-between; gap:2px;
+  min-height:19px; margin-bottom:1px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-label-text {
+  min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions {
+  display:inline-flex; align-items:center; justify-content:flex-end; flex:0 0 auto; gap:2px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions button {
+  position:static; inset:auto; margin:0; padding:0;
+  width:18px; min-width:18px; height:18px; min-height:18px;
+  flex:0 0 18px; transform:none; opacity:.9; pointer-events:auto;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:12px; line-height:18px;
+}
+/* The clear button remains hidden until a file is selected (existing contract). */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions button.combo-clear-button {
+  opacity:0; pointer-events:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions button.combo-clear-button.visible {
+  opacity:1; pointer-events:auto;
+}
+/* Keep disabled state visible even though relocated buttons have scoped styling. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions button.combo-folder-button:disabled {
+  opacity:.32; pointer-events:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions button.viewdef-maintenance-button {
+  opacity:.9; color:#335a7b; background:#e4edf5; border:1px solid #ccdae5;
+  /* Glyphのベースライン差で下寄りにならないよう、3点をCSSで中央描画。 */
+  font-size:0; line-height:0; letter-spacing:0; border-radius:9px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions button.viewdef-maintenance-button::before {
+  content:""; display:block; width:3px; height:3px; border-radius:50%;
+  background:currentColor; box-shadow:-5px 0 0 currentColor, 5px 0 0 currentColor;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions button.viewdef-maintenance-button:disabled {
+  opacity:.35; cursor:default;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions button:hover:not(:disabled),
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-header-actions button:active {
+  transform:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-input-wrap::after {
+  right:6px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.has-clear input {
+  padding-right:19px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-input-wrap { width:100%; min-width:0; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar input:not([type="file"]) { padding:2px 17px 2px 5px; height:19px; min-height:19px; font-size:10px; width:100%; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar #loadBtn,
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar #saveBtn {
+  flex:0 0 auto; width:58px; min-width:0; min-height:36px; padding:5px 6px;
+  white-space:nowrap; font-size:11px; line-height:1.2; border-radius:8px;
+}
+/* Collapse the title/fields only when the viewport is genuinely narrow.
+   Restore horizontal space to the input boxes before moving page actions. */
+@media (min-width:741px) and (max-width:980px) {
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar {
+    margin-left:14px;
+  }
+}
+/* Save can be in another placement for ViewDef-declared minimal presentation. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-json-statusbar {
+  position:fixed; bottom:0; left:0; right:0; z-index:200;
+  display:flex; align-items:center; gap:18px; min-height:22px;
+  padding:3px 12px; box-sizing:border-box; margin:0;
+  background:rgba(247,250,253,.97); border-top:1px solid #dbe4eb;
+  color:#435265; font-size:10px; box-shadow:0 -1px 3px rgba(20,30,45,.035);
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-json-status-item {
+  display:flex; align-items:center; gap:5px; min-width:0; max-width:50%;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-json-status-item b { flex:0 0 auto; color:#64748b; font-size:10px; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-json-status-item span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-json-statusbar [hidden] { display:none!important; }
+body.frb-page-json-object[data-studio-shell="minimal"] .studio-compact-source-bar,
+body.frb-page-json-object[data-studio-shell="minimal"] .studio-json-statusbar { display:none!important; }
+body.frb-page-json-object[data-studio-shell="minimal"] .frb-pagebar { display:none!important; }
+/* JSON操作バーは標準デスクトップ幅で1行に固定。旧1100px強制折返しを撤廃。
+   幅740px以下では、操作不能な圧縮を避け従来通り段組みに戻す。 */
+@media (min-width:741px) {
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar {
+    flex-direction:row; flex-wrap:nowrap; align-items:center;
+    min-height:50px; padding-block:4px;
+  }
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-main {
+    flex-wrap:nowrap;
+  }
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar {
+    margin-left:12px;
+  }
+}
+@media (max-width:740px) {
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-main { flex-wrap:wrap; }
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar { flex:1 1 100%; margin-left:0; }
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel { flex-wrap:wrap; }
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-json-statusbar { gap:7px; padding:3px 6px; }
+}
+/* Settings mode previously scoped these controls below the retired left rail. */
+body.studio-settings-mode .studio-compact-source-bar .combo-clear-button,
+body.studio-settings-mode .studio-compact-source-bar .viewdef-maintenance-button,
+body.studio-settings-mode .studio-compact-source-bar .file-tree-picker { display:none!important; }
+body.studio-settings-mode .studio-compact-source-bar input:disabled {
+  opacity:1; color:#344054; background:#f7f8fa; cursor:default;
+}
+
+/* 2026-11-17 compact layout: align the JSON input/save group with the
+   right-edge shortcut action, leaving the JSON Object Studio title at left.
+   Auto margin absorbs spare width and still permits narrow-field shrinking. */
+@media (min-width:741px) {
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar {
+    margin-left:auto;
+  }
+}
+
+/* 2026-11-17: JSON summary card - align OUTPUT / mode / MD Viewer to the
+   right edge. The legacy <=920px .studio-tool-dock/.studio-tool-group rules
+   set width:100%, causing the visible actions to remain on the left even
+   when the card has spare space. Keep this override specific to JSON Studio. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .current-data-layer {
+  min-width: 0;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .studio-output-dock {
+  flex: 0 0 auto;
+  width: auto;
+  margin-left: auto;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .studio-output-dock .studio-tool-group {
+  width: auto;
+  flex-wrap: nowrap;
+}
+/* On very small windows prefer a second row to clipping the controls. */
+@media (max-width: 530px) {
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar {
+    flex-wrap: wrap;
+  }
+}
+
+/* 2026-11-17: JSON title/OUTPUT card - one-step smaller typography and icon.
+   Preserve the right-aligned OUTPUT layout. Scope to the normal JSON Studio
+   card, without changing Markdown/Diff/Home or editing/saving behavior. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar {
+  min-height: 52px;
+  padding: 5px 9px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .current-data-title {
+  font-size: 14px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .current-data-title:not(:empty) {
+  min-height: 36px;
+  padding: 2px 0 0 44px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .current-data-title:not(:empty)::before {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .current-data-subtitle {
+  font-size: 9px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .studio-output-dock .studio-tool-group {
+  min-height: 36px;
+  gap: 5px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .studio-output-dock .studio-tool-label {
+  font-size: 9px;
+  padding-inline: 6px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .markdown-export-control {
+  gap: 5px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .studio-output-dock .markdown-export-mode-select {
+  font-size: 10px;
+  height: 34px;
+  min-height: 34px;
+  padding: 4px 7px;
+  border-radius: 11px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar .studio-output-dock .studio-mini-button-singleline {
+  font-size: 12px;
+  height: 34px;
+  min-height: 34px;
+  padding: 4px 8px;
+  border-radius: 11px;
+}
+
+
+/* 2026-11-17 compact plan phase-next:
+   - Remove the white summary/title row for JSON Object Studio.
+   - Move Markdown output controls next to Save.
+   - Move shortcut trigger to the top utility area as an icon-only action.
+   - Keep the page reset on the blue JSON icon and preserve existing behavior. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .json-studio-main-toolbar {
+  display:none !important;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar {
+  justify-content:flex-start;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-main {
+  flex:1 1 auto;
+  min-width:0;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel {
+  gap:5px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-output-dock {
+  order:40;
+  flex:0 0 auto;
+  margin:0 0 0 4px;
+  padding:0;
+  min-width:0;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-output-dock .studio-tool-group {
+  display:flex;
+  align-items:center;
+  gap:5px;
+  min-height:36px;
+  padding:0;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-output-dock .studio-tool-label,
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .current-data-layer,
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .current-data-subtitle,
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .current-data-path {
+  display:none !important;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-output-dock .markdown-export-control {
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-output-dock .markdown-export-mode-select {
+  min-width:68px;
+  width:78px;
+  max-width:96px;
+  height:36px;
+  min-height:36px;
+  padding:4px 24px 4px 8px;
+  border-radius:10px;
+  font-size:10px;
+  color:#344054;
+  background:#f8faf9;
+  border:1px solid var(--frb-line);
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-output-dock .studio-mini-button-singleline {
+  min-width:0;
+  height:36px;
+  min-height:36px;
+  padding:4px 10px;
+  border-radius:10px;
+  font-size:12px;
+  white-space:nowrap;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-shell-utility {
+  gap:6px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-shell-shortcuts[hidden] {
+  display:none !important;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-shell-shortcuts {
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+/* White top-bar shortcut: match the 20x20 colored module icon tiles,
+   NOT the 36x36 outer navigation buttons. Keep its existing click action. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-shell-shortcut-trigger {
+  min-width:20px;
+  width:20px;
+  height:20px;
+  min-height:20px;
+  padding:0;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+  border-radius:6px;
+  background:rgba(255,255,255,.96);
+  color:#173f62;
+  border:1px solid rgba(207,224,242,.95);
+  box-shadow:0 2px 8px rgba(18,54,85,.08);
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-shell-shortcut-trigger > span:first-child {
+  display:inline-grid;
+  place-items:center;
+  width:18px;
+  height:18px;
+  font-size:10.5px;
+  font-weight:900;
+  line-height:1;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-shell-shortcut-trigger .frb-pagebar-shortcut-caret,
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-shell-shortcut-trigger span:not(:first-child) {
+  display:none !important;
+}
+@media (max-width:740px) {
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel {
+    gap:6px;
+  }
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-output-dock {
+    margin-left:0;
+  }
+}
+
+
+/* 2026-11-18: Optional one-step smaller font for the main incident/search/grid area.
+   Guarded by app_settings.json > ui.json_object_compact_font_enabled so the
+   current size can be restored immediately by flipping the flag back to false. */
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) :is(#searchSection,#gridSection) {
+  font-size:12px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #searchSection .studio-full-text-search-label {
+  font-size:11px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #searchSection #studioFullTextSearchInput,
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #searchSection .field :is(input,select,textarea) {
+  font-size:12px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #searchSection .field label {
+  font-size:10px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #searchSection .button-row > button,
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #gridSection .grid-actions > button {
+  font-size:11px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #gridSection .grid-title-row h2 {
+  font-size:14px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #gridSection .count {
+  font-size:11px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #dataGrid th,
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #dataGrid td {
+  font-size:11px;
+}
+
+
+/* 2026-11-18: Apply the SAME opt-in compact typography to the JSON row editor.
+   The flag is ui.json_object_compact_font_enabled in app_settings.json;
+   false means all the original editor sizes continue to apply unchanged.
+   Keep input heights, section spacing, scrolling, and F7/F8/F12 actions intact. */
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #detailDialog {
+  font-size:12px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #detailDialog .dialog-title-row .app-kicker {
+  font-size:10px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #detailDialog #detailTitle {
+  font-size:14px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #detailDialog .field label {
+  font-size:10px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #detailDialog .field :is(input,select,textarea) {
+  font-size:12px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #detailDialog :is(.child-card h3,.detail-subgrid-header h3) {
+  font-size:13px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #detailDialog .detail-subgrid-meta {
+  font-size:11px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #detailDialog .detail-footer button {
+  font-size:11px;
+}
+
+/* 2026-11-18: only JSON path fields become two rows. Read/Save and
+   Markdown mode/Viewer remain horizontal groups at the right. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-main {
+  flex-wrap:nowrap;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar {
+  flex:1 1 0;
+  min-width:0;
+  margin-left:12px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel.studio-path-layout {
+  display:grid !important;
+  grid-template-columns:minmax(0, 1fr) 126px 194px;
+  grid-template-rows:64px;
+  grid-template-areas:"paths actions output";
+  gap:6px;
+  align-items:center;
+  width:100%;
+  min-width:0;
+  padding:0;
+  margin:0;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-path-fields {
+  grid-area:paths;
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:24px 24px;
+  gap:4px;
+  width:100%;
+  min-width:0;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-source-actions {
+  grid-area:actions;
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  gap:4px;
+  align-self:center;
+  width:126px;
+  min-width:0;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline {
+  display:grid;
+  grid-template-columns:80px minmax(0, 1fr);
+  align-items:center;
+  gap:6px;
+  width:100%;
+  max-width:none;
+  min-width:0;
+  min-height:24px;
+  height:24px;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-label-text {
+  display:block;
+  min-width:0;
+  margin:0;
+  padding:0 0 0 2px;
+  color:#5f7181;
+  font-size:11px;
+  font-weight:700;
+  line-height:1.2;
+  white-space:nowrap;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-wrap {
+  position:relative;
+  display:block;
+  width:100%;
+  min-width:0;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline input:not([type="file"]) {
+  width:100%;
+  height:24px;
+  min-height:24px;
+  padding:2px 56px 2px 10px;
+  border:1px solid #c8d7e5;
+  border-radius:10px;
+  background:#ffffff;
+  color:#415260;
+  font-size:11px;
+  line-height:1.2;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-actions-3 input {
+  padding-right:78px;
+}
+/* The old datalist triangle lived where the new inline buttons now sit. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-wrap::after {
+  content:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-actions {
+  position:absolute;
+  top:50%;
+  right:6px;
+  transform:translateY(-50%);
+  display:inline-flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:2px;
+  z-index:2;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-actions button {
+  position:static;
+  inset:auto;
+  margin:0;
+  width:20px;
+  min-width:20px;
+  height:20px;
+  min-height:20px;
+  padding:0;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:10px;
+  border:1px solid #d6e1ea;
+  background:#f4f8fb;
+  color:#3f698a;
+  font-size:12px;
+  line-height:1;
+  transform:none;
+  box-shadow:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-actions button.combo-clear-button {
+  opacity:0;
+  pointer-events:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-actions button.combo-clear-button.visible {
+  opacity:1;
+  pointer-events:auto;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-actions button:disabled {
+  opacity:.35;
+  pointer-events:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-actions button.viewdef-maintenance-button {
+  font-size:0;
+  line-height:0;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-actions button.viewdef-maintenance-button::before {
+  content:"";
+  display:block;
+  width:3px;
+  height:3px;
+  border-radius:50%;
+  background:currentColor;
+  box-shadow:-5px 0 0 currentColor, 5px 0 0 currentColor;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline input:focus {
+  border-color:#9fc2e2;
+  box-shadow:0 0 0 3px rgba(29,155,240,.10);
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-source-actions #loadBtn,
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-source-actions #saveBtn {
+  display:block;
+  width:61px;
+  min-width:61px;
+  height:28px;
+  min-height:28px;
+  padding:4px 6px;
+  font-size:11px;
+  border-radius:8px;
+}
+/* Markdown mode + Viewer remain horizontal on the right, as before the
+   two-row path-field change. Do not move these controls under the paths. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel.studio-path-layout > .studio-output-dock {
+  grid-area:output;
+  display:flex;
+  width:194px !important;
+  min-width:0;
+  max-width:194px;
+  margin:0 !important;
+  padding:0;
+  align-self:center;
+  justify-self:start;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel.studio-path-layout > .studio-output-dock .studio-tool-group {
+  display:block;
+  width:194px !important;
+  min-width:0;
+  min-height:0;
+  padding:0;
+  margin:0;
+  border:0;
+  background:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel.studio-path-layout > .studio-output-dock .markdown-export-control {
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  gap:4px;
+  width:194px;
+  min-width:0;
+  margin:0;
+  padding:0;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel.studio-path-layout > .studio-output-dock .markdown-export-mode-select,
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel.studio-path-layout > .studio-output-dock .studio-mini-button-singleline {
+  width:95px;
+  min-width:0;
+  max-width:95px;
+  height:28px;
+  min-height:28px;
+  margin:0;
+  box-sizing:border-box;
+  padding-block:3px;
+  border-radius:8px;
+}
+/* On narrow native windows, give the 2-field cluster its own full-width row.
+   The three columns within the cluster must still stay side by side. */
+@media (max-width:740px) {
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-main {
+    flex-wrap:wrap;
+  }
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar {
+    flex:1 1 100%;
+    margin-left:0;
+  }
+}
+
+/* 2026-11-18 / source field container: expectation image is the contract.
+   Only the pair of JSON selectors gets the rounded shared outer border.
+   Read/Save and Markdown actions stay in their existing right-side columns. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-path-fields {
+  box-sizing:border-box;
+  height:64px;
+  grid-template-rows:24px 24px;
+  gap:4px;
+  padding:5px 10px;
+  background:#fcfcfc;
+  border:1px solid #e0e3e4;
+  border-radius:11px;
+}

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -54,11 +54,18 @@ namespace FRBStudio.NativeShell
         private readonly bool _launchPreview;
         private readonly string _launchPreviewPipe;
         private readonly int? _launchPreviewOwnerPid;
+        // Explicit dock pop-out turns this Launch-owned preview into a normal
+        // desktop Studio. Its process must then survive Launch's exit.
+        private volatile bool _launchReleasedFromOwner;
         private bool _launchOwnerExitHandling;
         // Independent of the docked Form HWND: Qt can destroy that HWND on
         // console-close before the owner process signals its exit.
         private System.Threading.SynchronizationContext _launchOwnerUiContext;
         private const string LaunchCloseCommand = "@FRB_LAUNCH_CLOSE@";
+        private const string LaunchReleaseCommand = "@FRB_LAUNCH_RELEASE@";
+        private const string LaunchDockedCommand = "@FRB_LAUNCH_DOCKED@";
+        private Timer _launchDockTimeout;
+        private bool _launchDockRevealed;
         private TaskCompletionSource<bool> _launchSwitchGuardResponse;
         private string _launchSwitchGuardId;
 
@@ -331,6 +338,9 @@ namespace FRBStudio.NativeShell
             _startupSplash?.Close();
             _startupSplash?.Dispose();
             _startupSplash = null;
+            _launchDockTimeout?.Stop();
+            _launchDockTimeout?.Dispose();
+            _launchDockTimeout = null;
             if (_useStartupSplash)
                 NativeShellWindowBounds.TrySave(WindowState == FormWindowState.Normal ? Bounds : RestoreBounds, launcher:_launcherPresentation);
             base.OnFormClosing(e);
@@ -365,8 +375,11 @@ namespace FRBStudio.NativeShell
             _deferInitialNavigation = deferInitialNavigation;
             // Child/popup windows continue to use the normal visible startup path.
             _useStartupSplash = sharedEnvironment == null && !deferInitialNavigation && !_launchPreview;
-            if (_useStartupSplash)
+            if (_useStartupSplash || _launchPreview)
             {
+                // Launch-owned Studio stays entirely transparent until Qt's
+                // third-column host confirms SetParent via the private pipe.
+                // Ordinary standalone Studio still uses its existing splash.
                 Opacity = 0;
                 ShowInTaskbar = false;
             }
@@ -407,6 +420,19 @@ namespace FRBStudio.NativeShell
             Shown += async (_, __) => {
                 ShowStartupSplash();
                 if (_launchPreviewPipe != null) StartLaunchPreviewPipe();
+                if (_launchPreview)
+                {
+                    // Failure fallback: a lost host must not strand a hidden
+                    // document indefinitely. Normal docking stops this timer.
+                    _launchDockTimeout = new Timer { Interval = 45000 };
+                    _launchDockTimeout.Tick += (_, __) =>
+                    {
+                        _launchDockTimeout.Stop();
+                        if (!_launchDockRevealed && !_launchReleasedFromOwner)
+                            RevealUndockedLaunchPreview();
+                    };
+                    _launchDockTimeout.Start();
+                }
                 if (_launchPreviewOwnerPid.HasValue)
                 {
                     _launchOwnerUiContext = System.Threading.SynchronizationContext.Current
@@ -450,6 +476,43 @@ namespace FRBStudio.NativeShell
             });
         }
 
+        private string RevealLaunchPreviewAfterDock()
+        {
+            if (!_launchPreview || !_launchPreviewOwnerPid.HasValue)
+                return "ERROR: Not a Launch-owned preview";
+            if (_launchReleasedFromOwner)
+                return "ERROR: Session already released";
+            if (_launchDockRevealed) return "OK";
+            if (!IsHandleCreated ||
+                (GetWindowLong(Handle, -16) & WindowStyleChild) == 0 ||
+                GetParent(Handle) == IntPtr.Zero)
+                return "ERROR: Studio is not docked in the Launch host";
+            // No ShowInTaskbar switch here: that could recreate the HWND after
+            // Qt has attached it.  No Activate()/focus change either.
+            Opacity = 1;
+            _launchDockRevealed = true;
+            _launchDockTimeout?.Stop();
+            return "OK";
+        }
+
+        private void RevealUndockedLaunchPreview()
+        {
+            if (!_launchPreview || _launchDockRevealed || IsDisposed || Disposing)
+                return;
+            // Only a failed handoff reaches this path. Show the Studio on the
+            // desktop rather than silently hiding a potentially editable page.
+            var docked = IsHandleCreated &&
+                (GetWindowLong(Handle, -16) & WindowStyleChild) != 0;
+            Opacity = 1;
+            // Avoid changing ShowInTaskbar after Qt's SetParent: WinForms may
+            // recreate that HWND and tear it out of the third-column host.
+            if (!docked) ShowInTaskbar = true;
+            _launchDockRevealed = true;
+            _status.Text = docked
+                ? "Studioは第3列に収容されました（収容通知の確認は未完了）。"
+                : "Launchへの収容を確認できませんでした。単独ウィンドウで表示しています。";
+        }
+
         private Task<string> RouteLaunchPreviewSwitchAsync(string path)
         {
             var outcome = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -459,12 +522,32 @@ namespace FRBStudio.NativeShell
                 BeginInvoke(new Action(async () => {
                     try { outcome.TrySetResult(path == LaunchCloseCommand
                         ? await ConfirmLaunchPreviewLeaveAsync()
-                        : await SwitchLaunchPreviewDocumentAsync(path)); }
+                        : (path == LaunchReleaseCommand
+                            ? ReleaseLaunchPreviewOwnership()
+                            : (path == LaunchDockedCommand
+                                ? RevealLaunchPreviewAfterDock()
+                                : await SwitchLaunchPreviewDocumentAsync(path)))); }
                     catch (Exception ex) { outcome.TrySetResult("ERROR: " + ex.Message.Replace('\n', ' ')); }
                 }));
             }
             catch (InvalidOperationException) { outcome.TrySetResult("ERROR: Studio window has closed"); }
             return outcome.Task;
+        }
+
+        private string ReleaseLaunchPreviewOwnership()
+        {
+            // The private token identifies the owning Launch session; no file
+            // switch, save confirmation or editor close occurs on release.
+            if (!_launchPreview || !_launchPreviewOwnerPid.HasValue)
+                return "ERROR: Not a Launch-owned preview";
+            if (_launchSwitchGuardResponse != null)
+                return "ERROR: A Studio navigation is in progress";
+            _launchReleasedFromOwner = true;
+            _launchDockTimeout?.Stop();
+            // Pop-out is never permitted to inherit a transparent main form.
+            Opacity = 1;
+            TraceLaunchOwner("RELEASED_TO_DESKTOP");
+            return "OK";
         }
 
         // User-visible validation for file switch, explicit Quit and abnormal
@@ -546,6 +629,7 @@ namespace FRBStudio.NativeShell
                 catch (System.ComponentModel.Win32Exception) { /* Unknown ownership. */ }
                 if (!ownerExited) { TraceLaunchOwner("OWNER_WAIT_FAILED"); return; }
                 TraceLaunchOwner("OWNER_EXIT_DETECTED");
+                if (_launchReleasedFromOwner) return;  // Explicit pop-out.
                 var ui = _launchOwnerUiContext;
                 if (ui == null) { TraceLaunchOwner("UI_CONTEXT_UNAVAILABLE"); return; }
                 try
@@ -556,7 +640,8 @@ namespace FRBStudio.NativeShell
                             TraceLaunchOwner("FORM_ALREADY_DISPOSED");
                             return;
                         }
-                        _ = OnLaunchOwnerExitedAsync();
+                        if (!_launchReleasedFromOwner)
+                            _ = OnLaunchOwnerExitedAsync();
                     }, null);
                 }
                 catch (Exception ex)
@@ -577,6 +662,8 @@ namespace FRBStudio.NativeShell
         private const int SwpShowWindow = 0x0040;
         private const int SwpNoZOrder = 0x0004;
 
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern IntPtr GetParent(IntPtr window);
         [DllImport("user32.dll", SetLastError = true)]
         private static extern IntPtr SetParent(IntPtr child, IntPtr newParent);
         [DllImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)]
@@ -600,6 +687,8 @@ namespace FRBStudio.NativeShell
                 catch (InvalidOperationException) { /* Guard below handles it. */ }
             }
             if (!IsHandleCreated) return;
+            _launchDockTimeout?.Stop();
+            Opacity = 1;
             var window = Handle;
             var style = GetWindowLong(window, -16);
             if ((style & WindowStyleChild) != 0)
@@ -649,7 +738,7 @@ namespace FRBStudio.NativeShell
 
         private async Task OnLaunchOwnerExitedAsync()
         {
-            if (_launchOwnerExitHandling || IsDisposed || Disposing) return;
+            if (_launchReleasedFromOwner || _launchOwnerExitHandling || IsDisposed || Disposing) return;
             _launchOwnerExitHandling = true;
             try
             {
@@ -828,7 +917,12 @@ namespace FRBStudio.NativeShell
                 var userDataFolder = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     "FRBStudio",
-                    "WebView2");
+                    // A docked preview may be alive while the user starts a
+                    // second standalone Studio. Sharing a single WebView2
+                    // profile across differing host lifecycles can provoke
+                    // HRESULT 0x8007139F (incorrect state) at initialization.
+                    // Keep standalone's historical profile unchanged.
+                    _launchPreview ? "WebView2_LaunchPreview" : "WebView2");
                 Directory.CreateDirectory(userDataFolder);
 
                 var runtimeVersion = CoreWebView2Environment.GetAvailableBrowserVersionString();
@@ -871,7 +965,9 @@ namespace FRBStudio.NativeShell
             }
             catch (Exception ex)
             {
-                // Close the splash before opening a modal error dialog.
+                // An initialization failure must be visible even if the
+                // Launch-owned host could not be docked yet.
+                if (_launchPreview) RevealUndockedLaunchPreview();
                 RevealMainWindow();
                 _status.Text = "起動失敗: " + ex.Message;
                 MessageBox.Show(

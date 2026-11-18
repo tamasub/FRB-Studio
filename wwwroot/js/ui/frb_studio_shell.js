@@ -153,6 +153,21 @@
     });
   }
 
+  function parseBooleanSetting(value, fallback = false) {
+    if (value === true || value === false) return value;
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase();
+      if (normalized === 'true') return true;
+      if (normalized === 'false') return false;
+    }
+    return Boolean(fallback);
+  }
+
+  function applyUiSettings(settings) {
+    const compactMainFontEnabled = parseBooleanSetting(settings?.ui?.json_object_compact_font_enabled, false);
+    document.body.classList.toggle('frb-json-compact-range-font', compactMainFontEnabled);
+  }
+
   function renderLaunchShortcuts(host, settings) {
     if (!host) return;
     const trigger = host.querySelector('[data-frb-shortcuts-trigger]');
@@ -224,6 +239,7 @@
       const response = await fetch(APP_SETTINGS_URL, { cache: 'no-store' });
       if (!response.ok) throw new Error(`app_settings.json (${response.status})`);
       const settings = await response.json();
+      applyUiSettings(settings);
       renderLaunchShortcuts(host, settings);
       return {
         loaded: true,
@@ -231,6 +247,7 @@
       };
     } catch (err) {
       console.warn('FRB Studio shortcut menu load failed.', err);
+      applyUiSettings(null);
       host.hidden = true;
       return { loaded: false, count: 0, error: String(err?.message ?? err) };
     }

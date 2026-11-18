@@ -26,7 +26,8 @@
               "edit": {
                 "visible": true,
                 "readonly": true
-              }
+              },
+              "width": 339
             }
           ]
         },
@@ -66,7 +67,8 @@
               "search": {
                 "visible": true,
                 "operator": "contains"
-              }
+              },
+              "width": 202
             },
             {
               "field": "feature_area_cd",

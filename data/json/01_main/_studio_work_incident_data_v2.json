@@ -38806,7 +38806,7 @@
     {
       "work_item_id": "studio_work_0269",
       "phase": "studio-external-changeset-core-v0_1",
-      "title": "Studio共通Change Core／外部ChangeSet受入とPython連携",
+      "title": "Studio共通Change Core／外部ChangeSet受入とPython連携 xxyy",
       "incident_type": "enhancement",
       "category": "common_core_external_api",
       "priority": "high",

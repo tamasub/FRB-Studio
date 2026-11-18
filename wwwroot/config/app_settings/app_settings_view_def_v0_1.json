@@ -10,6 +10,13 @@
       "layout": "header-search-grid-detail",
       "sectionGroups": [
         {
+          "id": "ui",
+          "caption": "共通UI",
+          "sectionIds": [
+            "uiSettings"
+          ]
+        },
+        {
           "id": "launch",
           "caption": "JSON Object Studio",
           "sectionIds": [
@@ -25,6 +32,23 @@
         }
       ],
       "sections": [
+        {
+          "id": "uiSettings",
+          "caption": "共通UI",
+          "type": "form",
+          "dataPath": "ui",
+          "fields": [
+            {
+              "field": "json_object_compact_font_enabled",
+              "caption": "JSON Object Studio / 作業一覧フォントを小さくする",
+              "type": "boolean",
+              "edit": {
+                "visible": true,
+                "readonly": false
+              }
+            }
+          ]
+        },
         {
           "id": "launchShortcuts",
           "caption": "起動ショートカット",

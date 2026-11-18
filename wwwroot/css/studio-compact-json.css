@@ -317,16 +317,32 @@ body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-shell-shortcut
   display:flex;
   align-items:center;
 }
+/* White top-bar shortcut: match the 20x20 colored module icon tiles,
+   NOT the 36x36 outer navigation buttons. Keep its existing click action. */
 body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-shell-shortcut-trigger {
-  min-width:32px;
-  width:32px;
-  height:32px;
-  min-height:32px;
+  min-width:20px;
+  width:20px;
+  height:20px;
+  min-height:20px;
   padding:0;
   display:inline-flex;
   align-items:center;
   justify-content:center;
   gap:0;
+  border-radius:6px;
+  background:rgba(255,255,255,.96);
+  color:#173f62;
+  border:1px solid rgba(207,224,242,.95);
+  box-shadow:0 2px 8px rgba(18,54,85,.08);
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-shell-shortcut-trigger > span:first-child {
+  display:inline-grid;
+  place-items:center;
+  width:18px;
+  height:18px;
+  font-size:10.5px;
+  font-weight:900;
+  line-height:1;
 }
 body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-shell-shortcut-trigger .frb-pagebar-shortcut-caret,
 body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-shell-shortcut-trigger span:not(:first-child) {
@@ -339,4 +355,302 @@ body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-shell-shortcut
   body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-output-dock {
     margin-left:0;
   }
+}
+
+
+/* 2026-11-18: Optional one-step smaller font for the main incident/search/grid area.
+   Guarded by app_settings.json > ui.json_object_compact_font_enabled so the
+   current size can be restored immediately by flipping the flag back to false. */
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) :is(#searchSection,#gridSection) {
+  font-size:12px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #searchSection .studio-full-text-search-label {
+  font-size:11px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #searchSection #studioFullTextSearchInput,
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #searchSection .field :is(input,select,textarea) {
+  font-size:12px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #searchSection .field label {
+  font-size:10px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #searchSection .button-row > button,
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #gridSection .grid-actions > button {
+  font-size:11px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #gridSection .grid-title-row h2 {
+  font-size:14px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #gridSection .count {
+  font-size:11px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #dataGrid th,
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #dataGrid td {
+  font-size:11px;
+}
+
+
+/* 2026-11-18: Apply the SAME opt-in compact typography to the JSON row editor.
+   The flag is ui.json_object_compact_font_enabled in app_settings.json;
+   false means all the original editor sizes continue to apply unchanged.
+   Keep input heights, section spacing, scrolling, and F7/F8/F12 actions intact. */
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #detailDialog {
+  font-size:12px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #detailDialog .dialog-title-row .app-kicker {
+  font-size:10px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #detailDialog #detailTitle {
+  font-size:14px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #detailDialog .field label {
+  font-size:10px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #detailDialog .field :is(input,select,textarea) {
+  font-size:12px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #detailDialog :is(.child-card h3,.detail-subgrid-header h3) {
+  font-size:13px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #detailDialog .detail-subgrid-meta {
+  font-size:11px;
+}
+body.frb-page-json-object.frb-json-compact-range-font:not([data-studio-shell="minimal"]) #detailDialog .detail-footer button {
+  font-size:11px;
+}
+
+/* 2026-11-18: only JSON path fields become two rows. Read/Save and
+   Markdown mode/Viewer remain horizontal groups at the right. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-main {
+  flex-wrap:nowrap;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar {
+  flex:1 1 0;
+  min-width:0;
+  margin-left:12px;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel.studio-path-layout {
+  display:grid !important;
+  grid-template-columns:minmax(0, 1fr) 126px 194px;
+  grid-template-rows:64px;
+  grid-template-areas:"paths actions output";
+  gap:6px;
+  align-items:center;
+  width:100%;
+  min-width:0;
+  padding:0;
+  margin:0;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-path-fields {
+  grid-area:paths;
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:24px 24px;
+  gap:4px;
+  width:100%;
+  min-width:0;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-source-actions {
+  grid-area:actions;
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  gap:4px;
+  align-self:center;
+  width:126px;
+  min-width:0;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline {
+  display:grid;
+  grid-template-columns:80px minmax(0, 1fr);
+  align-items:center;
+  gap:6px;
+  width:100%;
+  max-width:none;
+  min-width:0;
+  min-height:24px;
+  height:24px;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-label-text {
+  display:block;
+  min-width:0;
+  margin:0;
+  padding:0 0 0 2px;
+  color:#5f7181;
+  font-size:11px;
+  font-weight:700;
+  line-height:1.2;
+  white-space:nowrap;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-wrap {
+  position:relative;
+  display:block;
+  width:100%;
+  min-width:0;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline input:not([type="file"]) {
+  width:100%;
+  height:24px;
+  min-height:24px;
+  padding:2px 56px 2px 10px;
+  border:1px solid #c8d7e5;
+  border-radius:10px;
+  background:#ffffff;
+  color:#415260;
+  font-size:11px;
+  line-height:1.2;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-actions-3 input {
+  padding-right:78px;
+}
+/* The old datalist triangle lived where the new inline buttons now sit. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-wrap::after {
+  content:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-actions {
+  position:absolute;
+  top:50%;
+  right:6px;
+  transform:translateY(-50%);
+  display:inline-flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:2px;
+  z-index:2;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-actions button {
+  position:static;
+  inset:auto;
+  margin:0;
+  width:20px;
+  min-width:20px;
+  height:20px;
+  min-height:20px;
+  padding:0;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:10px;
+  border:1px solid #d6e1ea;
+  background:#f4f8fb;
+  color:#3f698a;
+  font-size:12px;
+  line-height:1;
+  transform:none;
+  box-shadow:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-actions button.combo-clear-button {
+  opacity:0;
+  pointer-events:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-actions button.combo-clear-button.visible {
+  opacity:1;
+  pointer-events:auto;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-actions button:disabled {
+  opacity:.35;
+  pointer-events:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-actions button.viewdef-maintenance-button {
+  font-size:0;
+  line-height:0;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline .combo-input-actions button.viewdef-maintenance-button::before {
+  content:"";
+  display:block;
+  width:3px;
+  height:3px;
+  border-radius:50%;
+  background:currentColor;
+  box-shadow:-5px 0 0 currentColor, 5px 0 0 currentColor;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .combo-field.combo-field-inline input:focus {
+  border-color:#9fc2e2;
+  box-shadow:0 0 0 3px rgba(29,155,240,.10);
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-source-actions #loadBtn,
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-source-actions #saveBtn {
+  display:block;
+  width:61px;
+  min-width:61px;
+  height:28px;
+  min-height:28px;
+  padding:4px 6px;
+  font-size:11px;
+  border-radius:8px;
+}
+/* Markdown mode + Viewer remain horizontal on the right, as before the
+   two-row path-field change. Do not move these controls under the paths. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel.studio-path-layout > .studio-output-dock {
+  grid-area:output;
+  display:flex;
+  width:194px !important;
+  min-width:0;
+  max-width:194px;
+  margin:0 !important;
+  padding:0;
+  align-self:center;
+  justify-self:start;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel.studio-path-layout > .studio-output-dock .studio-tool-group {
+  display:block;
+  width:194px !important;
+  min-width:0;
+  min-height:0;
+  padding:0;
+  margin:0;
+  border:0;
+  background:none;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel.studio-path-layout > .studio-output-dock .markdown-export-control {
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  gap:4px;
+  width:194px;
+  min-width:0;
+  margin:0;
+  padding:0;
+}
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel.studio-path-layout > .studio-output-dock .markdown-export-mode-select,
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .loader-panel.studio-path-layout > .studio-output-dock .studio-mini-button-singleline {
+  width:95px;
+  min-width:0;
+  max-width:95px;
+  height:28px;
+  min-height:28px;
+  margin:0;
+  box-sizing:border-box;
+  padding-block:3px;
+  border-radius:8px;
+}
+/* On narrow native windows, give the 2-field cluster its own full-width row.
+   The three columns within the cluster must still stay side by side. */
+@media (max-width:740px) {
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .frb-pagebar-main {
+    flex-wrap:wrap;
+  }
+  body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar {
+    flex:1 1 100%;
+    margin-left:0;
+  }
+}
+
+/* 2026-11-18 / source field container: expectation image is the contract.
+   Only the pair of JSON selectors gets the rounded shared outer border.
+   Read/Save and Markdown actions stay in their existing right-side columns. */
+body.frb-page-json-object:not([data-studio-shell="minimal"]) .studio-compact-source-bar .studio-path-fields {
+  box-sizing:border-box;
+  height:64px;
+  grid-template-rows:24px 24px;
+  gap:4px;
+  padding:5px 10px;
+  background:#fcfcfc;
+  border:1px solid #e0e3e4;
+  border-radius:11px;
 }

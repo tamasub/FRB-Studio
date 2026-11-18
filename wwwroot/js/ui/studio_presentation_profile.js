@@ -273,9 +273,15 @@
     if (save && config.savePlacement === 'heading') widgets.headingActions.append(save);
     else if (save && config.savePlacement === 'footer') widgets.actions.append(save);
     else if (save && original) {
-      const dock = original.querySelector('.studio-viewer-dock');
-      if (dock) original.insertBefore(save, dock);
-      else original.append(save);
+      // Standard JSON topbar owns a dedicated right-side Read/Save group.
+      // Preserve that group when ViewDef re-applies its presentation profile.
+      const sourceActions = original.querySelector('.studio-source-actions');
+      if (sourceActions) sourceActions.append(save);
+      else {
+        const dock = original.querySelector('.studio-viewer-dock');
+        if (dock) original.insertBefore(save, dock);
+        else original.append(save);
+      }
     }
     renderHeadingMenu(doc, widgets, config, def);
     // Keep the overflow to the right of the single canonical Save button.

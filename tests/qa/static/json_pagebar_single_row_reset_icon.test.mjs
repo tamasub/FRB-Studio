@@ -57,7 +57,8 @@ function createShell(pageId) {
   doc.createElement = tag => { const e = new FakeEl(tag); elements.push(e); return e; };
   context.window.FrbStudioShell.mount({ pageId, pageTitle: 'JSON Object Studio', icon: '{}', resetConfirmMessage: 'リセットしますか？' });
   const pagebar = elements.find(e => e.tag === 'section');
-  return { html: pagebar.innerHTML, pagebar, navigations, eventNames, get dialogCount() { return dialogCount; } };
+  const shell = elements.find(e => e.tag === 'header');
+  return { html: pagebar.innerHTML, pagebar, shell, navigations, eventNames, get dialogCount() { return dialogCount; } };
 }
 
 test('JSON Object Studio: old Home/Reset buttons gone, blue icon becomes keyboard-accessible Reset', () => {
@@ -66,7 +67,9 @@ test('JSON Object Studio: old Home/Reset buttons gone, blue icon becomes keyboar
   assert.doesNotMatch(actual.html, /この画面の初期状態へ戻す<\/button>/);
   assert.match(actual.html, /<button[^>]+class="frb-page-icon frb-pagebar-reset-icon frb-icon-json"[^>]+data-frb-reset[^>]+aria-label="この画面の初期状態へ戻す"/);
   assert.match(actual.html, /type="button"/);
-  assert.match(actual.html, /data-frb-shortcuts-trigger/);
+  // The shortcut trigger now lives in the navy top bar, not the pagebar.
+  assert.doesNotMatch(actual.html, /data-frb-shortcuts-trigger/);
+  assert.match(actual.shell.innerHTML, /data-frb-shortcuts-trigger/);
   assert.match(guardJs, /#loadBtn, #maintainViewDefBtn, \[data-frb-home\], \[data-frb-reset\]/);
   actual.pagebar.events['data-frb-reset']();
   assert.deepEqual(actual.eventNames, ['frb-studio:reset-request']);
@@ -85,4 +88,23 @@ test('JSON pagebar does not wrap above 740px; smaller viewports retain responsiv
   assert.match(compactCss, /@media \(min-width:741px\) \{[\s\S]*?\.frb-pagebar \{[\s\S]*?flex-wrap:nowrap/);
   assert.match(compactCss, /\.frb-pagebar-main \{[\s\S]*?flex-wrap:nowrap/);
   assert.match(compactCss, /@media \(max-width:740px\)/);
+});
+
+
+test('top-bar white shortcut icon matches the colored navigation tile size', () => {
+  const css = compactCss.match(/body\.frb-page-json-object:not\(\[data-studio-shell="minimal"\]\) \.frb-shell-shortcut-trigger \{([^}]*)\}/)?.[1] || '';
+  assert.match(css, /min-width:\s*20px/);
+  assert.match(css, /width:\s*20px/);
+  assert.match(css, /height:\s*20px/);
+  assert.match(css, /min-height:\s*20px/);
+});
+
+test('compact font flag also scopes editor typography and preserves regular mode', () => {
+  const settings = JSON.parse(fs.readFileSync('wwwroot/config/app_settings.json', 'utf8'));
+  assert.equal(settings.ui.json_object_compact_font_enabled, true);
+  assert.match(shellJs, /classList\.toggle\('frb-json-compact-range-font', compactMainFontEnabled\)/);
+  for (const selector of ['#detailDialog #detailTitle', '#detailDialog .field label', '#detailDialog .field :is(input,select,textarea)', '#detailDialog .detail-footer button']) {
+    assert.ok(compactCss.includes(`.frb-json-compact-range-font:not([data-studio-shell="minimal"]) ${selector}`), `${selector} is under the compact font flag`);
+  }
+  assert.doesNotMatch(compactCss, /body\.frb-page-markdown\.frb-json-compact-range-font/);
 });

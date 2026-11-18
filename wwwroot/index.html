@@ -197,7 +197,7 @@
 </style>
   <link rel="stylesheet" href="css/frb-studio-shell.css?v=compact-topbar-20261117-1" />
   <link rel="stylesheet" href="css/studio-presentation.css?v=studio-presentation-005-launcher-chrome&heading=007&fullSearchRow=20261016&darkContrast=20261018&launchLight=20261018&smartSearchHelpContrast=20261108" />
-  <link rel="stylesheet" href="css/studio-compact-json.css?v=20261117-toolbar-merge-compact-1" />
+  <link rel="stylesheet" href="css/studio-compact-json.css?v=20261118-json-path-vertical-compact-1" />
 </head>
 <body>
   <script src="js/ui/frb_studio_shell.js?v=20261117-shell-shortcut-top-1"></script>
@@ -213,36 +213,36 @@
   <!-- Source controls are relocated into the Common Shell pagebar once at startup.
        Their original IDs are retained so existing load/save/unsaved-guard contracts survive. -->
   <div id="studioCompactSourceBar" class="studio-compact-source-bar" aria-label="JSON読み込み・保存">
-    <section class="loader-panel" aria-label="JSON読み込み">
-      <label class="combo-field has-clear" title="DATA JSONを選択">
-        <span class="drop-label combo-label-row">
-          <span class="combo-label-text">DATA JSON</span>
-          <span class="combo-header-actions">
-            <button id="openDataFolderBtn" class="combo-folder-button" type="button" aria-label="DATA JSONの場所をExplorerで開く" title="DATA JSONの場所をExplorerで開く" disabled>📁</button>
-            <button id="clearDataNameBtn" class="combo-clear-button" type="button" aria-label="DATA JSONの選択をクリア" title="DATA JSONの選択をクリア">×</button>
+    <section class="loader-panel studio-path-layout" aria-label="JSON読み込み">
+      <div class="studio-path-fields" aria-label="JSONパス選択">
+        <label class="combo-field combo-field-inline has-clear" title="DATA JSONを選択">
+          <span class="drop-label combo-label-text">DATA JSON</span>
+          <span class="combo-input-wrap combo-input-actions-2">
+            <input id="dataNameInput" name="frb_data_combo_009" list="dataNameList" placeholder="dataを選択" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="latin" enterkeyhint="search" data-studio-ime-policy="latin-filename" style="ime-mode: inactive;" />
+            <span class="combo-input-actions">
+              <button id="openDataFolderBtn" class="combo-folder-button" type="button" aria-label="DATA JSONの場所をExplorerで開く" title="DATA JSONの場所をExplorerで開く" disabled>📁</button>
+              <button id="clearDataNameBtn" class="combo-clear-button" type="button" aria-label="DATA JSONの選択をクリア" title="DATA JSONの選択をクリア">📂</button>
+            </span>
           </span>
-        </span>
-        <span class="combo-input-wrap">
-          <input id="dataNameInput" name="frb_data_combo_009" list="dataNameList" placeholder="dataを選択" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="latin" enterkeyhint="search" data-studio-ime-policy="latin-filename" style="ime-mode: inactive;" />
-        </span>
-        <datalist id="dataNameList"></datalist>
-      </label>
-      <label class="combo-field has-clear" title="画面定義JSONを選択">
-        <span class="drop-label combo-label-row">
-          <span class="combo-label-text">画面定義JSON</span>
-          <span class="combo-header-actions">
-            <button id="maintainViewDefBtn" class="viewdef-maintenance-button" type="button" aria-label="選択中ViewDefをメンテナンス" title="選択中ViewDefをメンテナンス" disabled>…</button>
-            <button id="openDefFolderBtn" class="combo-folder-button" type="button" aria-label="画面定義JSONの場所をExplorerで開く" title="画面定義JSONの場所をExplorerで開く" disabled>📁</button>
-            <button id="clearDefNameBtn" class="combo-clear-button" type="button" aria-label="画面定義JSONの選択をクリア" title="画面定義JSONの選択をクリア">×</button>
+          <datalist id="dataNameList"></datalist>
+        </label>
+        <label class="combo-field combo-field-inline has-clear" title="画面定義JSONを選択">
+          <span class="drop-label combo-label-text">画面定義JSON</span>
+          <span class="combo-input-wrap combo-input-actions-3">
+            <input id="defNameInput" name="frb_def_combo_009" list="defNameList" placeholder="defsを選択" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="latin" enterkeyhint="search" data-studio-ime-policy="latin-filename" style="ime-mode: inactive;" />
+            <span class="combo-input-actions">
+              <button id="maintainViewDefBtn" class="viewdef-maintenance-button" type="button" aria-label="選択中ViewDefをメンテナンス" title="選択中ViewDefをメンテナンス" disabled>…</button>
+              <button id="openDefFolderBtn" class="combo-folder-button" type="button" aria-label="画面定義JSONの場所をExplorerで開く" title="画面定義JSONの場所をExplorerで開く" disabled>📁</button>
+              <button id="clearDefNameBtn" class="combo-clear-button" type="button" aria-label="画面定義JSONの選択をクリア" title="画面定義JSONの選択をクリア">📂</button>
+            </span>
           </span>
-        </span>
-        <span class="combo-input-wrap">
-          <input id="defNameInput" name="frb_def_combo_009" list="defNameList" placeholder="defsを選択" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="latin" enterkeyhint="search" data-studio-ime-policy="latin-filename" style="ime-mode: inactive;" />
-        </span>
-        <datalist id="defNameList"></datalist>
-      </label>
-      <button id="loadBtn" type="button" class="primary-button">読込</button>
-      <button id="saveBtn" type="button" class="ghost-button" disabled>保存</button>
+          <datalist id="defNameList"></datalist>
+        </label>
+      </div>
+      <div class="studio-source-actions" aria-label="読込保存操作">
+        <button id="loadBtn" type="button" class="primary-button">読込</button>
+        <button id="saveBtn" type="button" class="ghost-button" disabled>保存</button>
+      </div>
       <!-- Removed visual Drop zones. Keep native file inputs for the established
            code paths that reset/read them; no Drop targets are installed. -->
       <input id="dataFile" type="file" accept=".json,application/json" hidden tabindex="-1" />
@@ -492,7 +492,7 @@
   <script src="js/runtime/detail_save.js?v=sqlite-error-message-20261017&detailFooter=20261016-fixed&detailTitle=20261018b&launchEditor=20261018&relatedAutoApply=20261117-groups&changeGate=studio-work-0269-step5"></script>
   <script src="js/runtime/studio_json_round_trip.js?v=studio-json-round-trip-018353"></script>
   <script src="js/core/viewdef_context_contract.js?v=context-grid-preview-0165-6"></script>
-  <script src="js/ui/studio_presentation_profile.js?v=studio-presentation-006-launcher-save-top&heading=007&launchLight=20261018&persistTheme=20261019"></script>
+  <script src="js/ui/studio_presentation_profile.js?v=20261118-json-save-dock-1"></script>
   <script src="js/runtime/json_load_diagnostics.js?v=20261021-load-failure"></script>
   <script src="js/runtime/load_runtime.js?v=viewdef-search-initial-018125&live=018132&startup=20261010&launch=20261018&faststart=20261018&clear=20261117"></script>
   <script src="js/actions/action_registry.js?v=01887-test-run-post-json-api-fix&resource=018124"></script>
