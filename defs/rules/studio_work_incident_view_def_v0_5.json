@@ -202,7 +202,8 @@
                 "architecture_audit"
               ],
               "grid": {
-                "visible": true
+                "visible": true,
+                "width": 103
               },
               "edit": {
                 "visible": true

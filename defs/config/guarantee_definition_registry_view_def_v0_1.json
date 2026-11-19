@@ -285,7 +285,8 @@
               },
               "search": {
                 "visible": true
-              }
+              },
+              "width": 446
             },
             {
               "field": "guarantee",
@@ -302,7 +303,7 @@
               "search": {
                 "visible": true
               },
-              "width": 450
+              "width": 677
             },
             {
               "field": "observable_result",
@@ -318,7 +319,8 @@
               },
               "search": {
                 "visible": true
-              }
+              },
+              "width": 682
             },
             {
               "field": "scope_status",
@@ -343,7 +345,8 @@
               },
               "search": {
                 "visible": true
-              }
+              },
+              "width": 669
             },
             {
               "field": "structural_expected_reason",
@@ -359,7 +362,8 @@
               },
               "search": {
                 "visible": true
-              }
+              },
+              "width": 697
             },
             {
               "field": "scope_note",
