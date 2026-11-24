@@ -45,7 +45,7 @@
                 "visible": false
               },
               "edit": {
-                "visible": true,
+                "visible": false,
                 "readonly": true
               },
               "width": 220
@@ -59,7 +59,7 @@
                 "visible": false
               },
               "edit": {
-                "visible": true,
+                "visible": false,
                 "readonly": true
               },
               "width": 427
@@ -73,7 +73,7 @@
                 "visible": false
               },
               "edit": {
-                "visible": true,
+                "visible": false,
                 "readonly": true
               }
             },
@@ -86,7 +86,7 @@
                 "visible": false
               },
               "edit": {
-                "visible": true,
+                "visible": false,
                 "readonly": true
               },
               "width": 366
@@ -119,7 +119,7 @@
                 "visible": false
               },
               "edit": {
-                "visible": true
+                "visible": false
               },
               "search": {
                 "visible": true,
@@ -136,7 +136,7 @@
                 "visible": false
               },
               "edit": {
-                "visible": true,
+                "visible": false,
                 "readonly": true
               },
               "width": 346
@@ -189,7 +189,7 @@
                 "visible": false
               },
               "edit": {
-                "visible": true,
+                "visible": false,
                 "readonly": true
               }
             },
@@ -401,7 +401,7 @@
                 "readonly": true
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "between"
               },
               "width": 80
@@ -419,7 +419,7 @@
                 "readonly": true
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "contains"
               },
               "width": 115
@@ -437,7 +437,7 @@
                 "readonly": true
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "contains"
               },
               "width": 80
@@ -456,7 +456,7 @@
                 "readonly": true
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "contains"
               }
             },
@@ -499,7 +499,7 @@
                 "visible": true
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "equals"
               },
               "width": 239
@@ -515,7 +515,7 @@
                 "visible": true
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "contains"
               },
               "width": 300
@@ -536,7 +536,7 @@
                 "visible": true
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "equals"
               },
               "width": 168
@@ -559,7 +559,7 @@
                 "readonly": true
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "equals"
               },
               "defaultValue": "未確認",
@@ -585,7 +585,7 @@
                 "visible": false
               },
               "search": {
-                "visible": true,
+                "visible": false,
                 "operator": "equals"
               },
               "defaultValue": "未承認",

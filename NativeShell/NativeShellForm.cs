@@ -896,6 +896,26 @@ namespace FRBStudio.NativeShell
             return _webView.CoreWebView2;
         }
 
+        private static string ResolveWebView2ProfileName(bool launchPreview, string launchPreviewPipe)
+        {
+            if (!launchPreview) return "WebView2";
+
+            // The private Launch pipe is a validated 32-hex GUID and is
+            // unique for every new Launch-owned NativeShell session. Its
+            // profile is allowed to survive an explicit desktop pop-out;
+            // the next Launch preview then gets a different profile.
+            const string prefix = "frb_studio_launch_";
+            if (!string.IsNullOrEmpty(launchPreviewPipe)
+                && launchPreviewPipe.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+                && Guid.TryParseExact(launchPreviewPipe.Substring(prefix.Length), "N", out var token))
+                return "WebView2_LaunchPreview_" + token.ToString("N");
+
+            // A manually launched preview without a pipe is also isolated.
+            // Popup child forms receive _sharedEnvironment and continue to
+            // use their opener's existing profile instead of creating one.
+            return "WebView2_LaunchPreview_" + Guid.NewGuid().ToString("N");
+        }
+
         private async Task InitializeAsync()
         {
             try
@@ -917,12 +937,12 @@ namespace FRBStudio.NativeShell
                 var userDataFolder = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     "FRBStudio",
-                    // A docked preview may be alive while the user starts a
-                    // second standalone Studio. Sharing a single WebView2
-                    // profile across differing host lifecycles can provoke
-                    // HRESULT 0x8007139F (incorrect state) at initialization.
+                    // A popped-out Launch preview remains alive as an independent
+                    // Studio while Launch can start another preview. The two
+                    // processes must not share one WebView2 user-data folder:
+                    // concurrent profiles can fail with HRESULT 0x8007139F.
                     // Keep standalone's historical profile unchanged.
-                    _launchPreview ? "WebView2_LaunchPreview" : "WebView2");
+                    ResolveWebView2ProfileName(_launchPreview, _launchPreviewPipe));
                 Directory.CreateDirectory(userDataFolder);
 
                 var runtimeVersion = CoreWebView2Environment.GetAvailableBrowserVersionString();

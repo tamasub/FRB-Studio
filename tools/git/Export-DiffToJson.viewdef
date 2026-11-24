@@ -1,0 +1,105 @@
+{
+  "schema_version": "frb_commander_viewdef_v0.1",
+  "view_type": "frb_commander",
+  "title": "Git差分をJSON出力",
+  "description": "Export-DiffToJson.ps1 用の選択経路。メニューUIはスクリプトには不要。",
+  "script": {
+    "file": "Export-DiffToJson.ps1"
+  },
+  "steps": [
+    {
+      "id": "source",
+      "label": "比較方法",
+      "input": "single_choice",
+      "required": true,
+      "choices": [
+        {
+          "value": "working_tree",
+          "label": "未ステージ差分",
+          "hint": "作業ツリー",
+          "args": []
+        },
+        {
+          "value": "staged",
+          "label": "ステージ済み差分",
+          "hint": "git add済み",
+          "args": [
+            "-Mode",
+            "Staged"
+          ]
+        },
+        {
+          "value": "head",
+          "label": "HEADとの差分",
+          "hint": "ステージ済みと未ステージ",
+          "args": [
+            "-Mode",
+            "Head"
+          ]
+        },
+        {
+          "value": "commit_range",
+          "label": "コミット範囲",
+          "hint": "main..HEAD等",
+          "args": [
+            "-Range",
+            "${range}"
+          ]
+        },
+        {
+          "value": "file_pair",
+          "label": "2ファイル比較",
+          "hint": "任意の2ファイル",
+          "args": [
+            "-Mode",
+            "FilePair",
+            "-FromFile",
+            "${from_file}",
+            "-ToFile",
+            "${to_file}"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "range",
+      "label": "コミット範囲",
+      "input": "text",
+      "required": true,
+      "visible_when": {
+        "source": "commit_range"
+      }
+    },
+    {
+      "id": "from_file",
+      "label": "比較元",
+      "input": "file_path",
+      "required": true,
+      "visible_when": {
+        "source": "file_pair"
+      },
+      "selector": {
+        "type": "keyboard_ex.file",
+        "initial_location": {
+          "type": "workspace_root"
+        }
+      }
+    },
+    {
+      "id": "to_file",
+      "label": "比較先",
+      "input": "file_path",
+      "required": true,
+      "visible_when": {
+        "source": "file_pair"
+      },
+      "selector": {
+        "type": "keyboard_ex.file",
+        "initial_location": {
+          "type": "parent_of",
+          "selection": "from_file"
+        }
+      }
+    }
+  ]
+}
