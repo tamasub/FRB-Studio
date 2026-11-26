@@ -252,6 +252,22 @@
       "violation_action": "",
       "source_decision_log_ids": [],
       "notes": ""
+    },
+    {
+      "sort_order": 140,
+      "item_id": "decision_axis_minimal_effort_to_put_into_words",
+      "item_type": "DECISION_AXIS",
+      "title": "協働における言語化コストの最小化",
+      "statement": "協働における言語化の最小化原則（Draft）\n- 言語化したほうが価値のあることは、言語化する。\n- 直接操作したほうが効率的なことは、直接操作する。\n- 判断の理由が重要な場合は、判断ログに残す。\n- 結果だけで十分な場合は、構造化された結果を共有する。",
+      "reason": "",
+      "scope": "document",
+      "priority": "high",
+      "status": "DRAFT",
+      "evaluation_guidance": "",
+      "verification_method": "",
+      "violation_action": "",
+      "source_decision_log_ids": [],
+      "notes": ""
     }
   ],
   "rules": [

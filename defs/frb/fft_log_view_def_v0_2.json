@@ -47,6 +47,10 @@
                 "visible": true,
                 "readonly": false,
                 "height": 90
+              },
+              "width": 469,
+              "layout": {
+                "height": 87
               }
             }
           ]

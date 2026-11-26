@@ -25,6 +25,7 @@ test('loopback host serves ONE Editor, rejects unauthorized save, and commits ex
  const header={'X-FRB-Option-Token':info.token};
  const html=await fetch(url+'/');assert.equal(html.status,200);
  const script=await (await fetch(url+'/editor.js')).text();assert.ok(script.includes('class GenericEditor'));
+ const contract=await fetch(url+'/field_contract.mjs');assert.equal(contract.status,200);assert.match(contract.headers.get('content-type'),/javascript/);assert.match(await contract.text(),/export function matchesVisibility/);
  assert.equal((await fetch(url+'/api/options')).status,403);
  const doc=await (await fetch(url+'/api/compose?id=webview',{headers:header})).json();
  assert.deepEqual(Object.keys(doc.edited),['remember_login','new_tab_url']);

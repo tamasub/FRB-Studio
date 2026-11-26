@@ -135,3 +135,190 @@ test('Combo/select keeps standard width by default but supports explicit and Liv
   assert.match(live, /if \(ctx === 'search'\) return STUDIO_STANDARD_FIELD_WIDTH_PX/);
 });
 
+
+// 2026-11-26: explicit Editor row breaks and fixed multiline height.
+import vm from 'node:vm';
+function layoutRuntime(raw) {
+  const resolved = structuredClone(raw);
+  let saved = null;
+  const context = vm.createContext({
+    document: { readyState: 'loading', addEventListener() {}, getElementById: () => null },
+    mainView: () => resolved.views[0],
+    lastLoadedDefName: 'sample.json',
+    // Re-rendering would drop unsaved Header/Detail edits. It is not needed.
+    renderHeader() { throw Error('unexpected Header redraw'); },
+    renderGrid() { throw Error('unexpected Grid redraw'); },
+    renderDetailForRow() { throw Error('unexpected Detail redraw'); },
+    fetch: async (url, options) => {
+      assert.equal(url, '/api/defs/sample.json');
+      if (options.method === 'POST') { saved = JSON.parse(options.body); return { ok: true }; }
+      return { ok: true, json: async () => structuredClone(saved ?? raw) };
+    }
+  });
+  vm.runInContext(read('wwwroot/js/runtime/live_view_design.js'), context);
+  return { context, resolved, getSaved: () => saved };
+}
+
+test('Layout schema separates fixed multiline height and explicit row break from legacy width and edit.height', () => {
+  const schema = JSON.parse(read('data/json/00_rules/frb_view_def_schema_v0_9.json'));
+  const layout = schema.$defs.field.properties.layout.properties;
+  assert.equal(layout.breakBefore.type, 'boolean');
+  assert.equal(layout.height.minimum, 40);
+  assert.equal(layout.height.maximum, 1600);
+  assert.equal(schema.$defs.editOptions.properties.height.minimum, 0);
+});
+
+test('Editor width, break and height drafts merge and save together; Grid width, edit.height and layout placement remain independent', async () => {
+  const raw = { views: [{ id: 'v', sections: [{ id: 'g', type: 'grid', fields: [{ field: 'text', type: 'textarea', width: 220, grid: { width: 100 }, edit: { height: 90 }, layout: { placement: 'detailBody' } }] }] }] };
+  const { context: c, resolved, getSaved } = layoutRuntime(raw);
+  const sec = resolved.views[0].sections[0];
+  const field = sec.fields[0];
+  assert.equal(c.studioResolvedFieldLayout(field, sec).height, null);
+  c.studioSetLiveFieldWidth(field, 310, sec, 'detail.resize');
+  c.studioSetLiveFieldLayoutDraft(field, sec, 'editor', { breakBefore: true });
+  c.studioSetLiveFieldLayoutDraft(field, sec, 'editor', { height: 160 });
+  c.studioSetLiveFieldWidth(field, 140, sec, 'grid.resize');
+  assert.equal(c.studioResolvedFieldWidth(field, 'detail', sec), 310);
+  assert.equal(c.studioResolvedFieldWidth(field, 'grid', sec), 140);
+  assert.equal(c.studioResolvedFieldLayout(field, sec).breakBefore, true);
+  assert.equal(c.studioResolvedFieldLayout(field, sec).height, 160);
+  assert.equal(await c.saveStudioLiveFieldWidths(), true);
+  const saved = getSaved().views[0].sections[0].fields[0];
+  assert.equal(saved.width, 310);
+  assert.equal(saved.grid.width, 140);
+  assert.equal(saved.edit.height, 90);
+  assert.deepEqual(saved.layout, { placement: 'detailBody', breakBefore: true, height: 160 });
+  assert.equal(c.studioResolvedFieldLayout(field, sec).height, 160);
+  assert.equal(c.studioResolvedFieldLayout(field, sec).breakBefore, true);
+  c.studioSetLiveFieldLayoutDraft(field, sec, 'editor', { breakBefore: false });
+  await c.saveStudioLiveFieldWidths();
+  assert.equal(getSaved().views[0].sections[0].fields[0].layout.breakBefore, false);
+  assert.equal(getSaved().views[0].sections[0].fields[0].layout.height, 160);
+});
+
+test('Loading another document discards layout drafts; existing default heights are not silently converted to fixed heights', () => {
+  const raw = { views: [{ id: 'v', sections: [{ id: 'g', type: 'grid', fields: [{ field: 'text', type: 'textarea', edit: { height: 90 } }] }] }] };
+  const { context: c, resolved } = layoutRuntime(raw);
+  const sec = resolved.views[0].sections[0];
+  const field = sec.fields[0];
+  c.studioSetLiveFieldLayoutDraft(field, sec, 'editor', { breakBefore: true, height: 170 });
+  c.studioResetLiveFieldWidths();
+  assert.equal(c.studioResolvedFieldLayout(field, sec).height, null);
+  assert.equal(c.studioResolvedFieldLayout(field, sec).breakBefore, false);
+  assert.equal(c.studioNormalizeFieldHeight(3), 40);
+  assert.equal(c.studioNormalizeFieldHeight(1900), 1600);
+  assert.equal(c.studioNormalizeFieldHeight(''), null);
+});
+
+test('Header and Detail use layout controls; Search and Grid do not; group placement retains the existing grid', () => {
+  const live = read('wwwroot/js/runtime/live_view_design.js');
+  const controls = read('wwwroot/js/renderers/field_controls.js');
+  const detail = read('wwwroot/js/runtime/detail_save.js');
+  const css = read('wwwroot/styles.css');
+  assert.match(live, /!\['header', 'detail'\]\.includes\(context\)/);
+  assert.match(live, /:scope > textarea, :scope > \.markdown-textarea-display/);
+  assert.match(controls, /studioInstallFieldLayoutControls\(wrap, field, prefix, widthSection\)/);
+  assert.match(controls, /studioSyncFieldRowBreaks\(form\)/);
+  assert.match(detail, /studioSyncFieldRowBreaks\(grid\)/);
+  assert.match(detail, /studioSyncFieldRowBreaks\(form\)/);
+  assert.match(css, /\.detail-fieldset-grid > \.studio-field-break-before \{ grid-column-start: 1; \}/);
+  assert.match(css, /height: var\(--studio-field-height\) !important/);
+});
+
+test('Separator declaration is independent of explicit break and height; save and remove preserve other layout values', async () => {
+  const schema = JSON.parse(read('data/json/00_rules/frb_view_def_schema_v0_9.json'));
+  assert.equal(schema.$defs.field.properties.layout.properties.separatorBefore.type, 'boolean');
+  const raw = { views: [{ id: 'v', sections: [{ id: 'g', type: 'grid', fields: [{ field: 'body', type: 'textarea', layout: { breakBefore: true, height: 180 } }] }] }] };
+  const { context: c, resolved, getSaved } = layoutRuntime(raw);
+  const sec = resolved.views[0].sections[0], field = sec.fields[0];
+  assert.equal(c.studioResolvedFieldLayout(field, sec).separatorBefore, false);
+  c.studioSetLiveFieldLayoutDraft(field, sec, 'editor', { separatorBefore: true });
+  c.studioSetLiveFieldWidth(field, 350, sec, 'detail.resize');
+  assert.equal(await c.saveStudioLiveFieldWidths(), true);
+  assert.deepEqual(getSaved().views[0].sections[0].fields[0].layout, { breakBefore: true, height: 180, separatorBefore: true });
+  c.studioSetLiveFieldLayoutDraft(field, sec, 'editor', { separatorBefore: false });
+  assert.equal(await c.saveStudioLiveFieldWidths(), true);
+  assert.deepEqual(getSaved().views[0].sections[0].fields[0].layout, { breakBefore: true, height: 180, separatorBefore: false });
+  assert.equal(getSaved().views[0].sections[0].fields[0].width, 350);
+});
+
+test('Layout keyboard owns only the exact hovered boundary; ignores IME, modifiers, stale markers and foreign dialogs; consumes held keys', () => {
+  const { context: c } = layoutRuntime({ views: [] });
+  const actions = [], dialogs = [];
+  c.document.body = { classList: { contains: () => false } };
+  c.document.querySelectorAll = () => dialogs;
+  c.studioNextLayoutField = () => 'following field';
+  c.studioSetLayoutBoundary = (...args) => actions.push(args);
+  c.handle = { isConnected: true, matches: () => true, closest: () => null };
+  const activate = kind => vm.runInContext(`studioHoveredLayoutBoundary = {handle, kind: '${kind}', wrap: 'source'}`, c);
+  const press = (key, extra={}) => {
+    let prevented = false, stopped = false;
+    c.studioHandleLayoutBoundaryKey({key, preventDefault(){prevented=true}, stopImmediatePropagation(){stopped=true}, ...extra});
+    return prevented && stopped;
+  };
+  assert.equal(press('Enter'), false);
+  activate('vertical');
+  assert.equal(press('Enter', {isComposing:true}), false);
+  assert.equal(press('Enter', {shiftKey:true}), false);
+  c.handle.matches = () => false;
+  assert.equal(press('Backspace'), false);
+  c.handle.matches = () => true;
+  dialogs.push({}); assert.equal(press('Enter'), false); dialogs.pop();
+  assert.equal(press('Enter'), true);
+  assert.deepEqual(actions.pop(), ['following field', 'breakBefore', true]);
+  assert.equal(press('Backspace'), true);
+  assert.deepEqual(actions.pop(), ['following field', 'breakBefore', false]);
+  activate('horizontal');
+  assert.equal(press('Delete'), true);
+  assert.deepEqual(actions.pop(), ['source', 'separatorBefore', false]);
+  c.handle.isConnected = false;
+  assert.equal(press('Delete', {repeat:true}), true);
+  assert.equal(press('Enter'), false);
+  assert.equal(actions.length, 0);
+});
+
+test('No permanent break marker; horizontal separator is full row in flex and FieldSet grids', () => {
+  const live = read('wwwroot/js/runtime/live_view_design.js');
+  const css = read('wwwroot/styles.css');
+  assert.doesNotMatch(live, /studio-field-break-toggle/);
+  assert.doesNotMatch(css, /studio-field-break-toggle/);
+  assert.match(live, /window\.addEventListener\('keydown', studioHandleLayoutBoundaryKey, true\)/);
+  assert.match(live, /handle\.addEventListener\('contextmenu'/);
+  assert.match(css, /\.detail-fieldset-grid > \.studio-field-layout-separator \{ grid-column: 1 \/ -1; \}/);
+  assert.match(css, /\.studio-field-layout-separator:hover::before/);
+});
+
+test('Hover-only mouse action toggles the following explicit break without resizing or touching the separator', () => {
+  const { context: c } = layoutRuntime({ views: [] });
+  const actions = [], events = {}, handleEvents = {}, classes = new Set();
+  const button = {
+    classList: { toggle(name, on) { if (on) classes.add(name); else classes.delete(name); } },
+    setAttribute() {}, addEventListener(name, fn) { events[name] = fn; }
+  };
+  const handle = { appendChild(child) { assert.equal(child, button); }, addEventListener(name, fn) { handleEvents[name] = fn; }, matches() { return true; } };
+  const wrap = { querySelector() { return button; } };
+  let broken = false, hasNext = true, resizing = false;
+  const next = { classList: { contains(name) { assert.equal(name, 'studio-field-break-before'); return broken; } } };
+  c.document.createElement = tag => { assert.equal(tag, 'button'); return button; };
+  c.document.body = { classList: { contains: () => resizing } };
+  c.studioNextLayoutField = () => hasNext ? next : null;
+  c.studioSetLayoutBoundary = (...args) => { actions.push(args); broken = args[2]; };
+  c.studioInstallBreakMouseAction(handle, wrap);
+  assert.equal(button.type, 'button'); assert.equal(button.tabIndex, -1); assert.equal(button.hidden, true);
+  handleEvents.mouseenter(); assert.equal(button.hidden, false); assert.match(button.title, /Enter/);
+  let prevented = 0, stopped = 0;
+  const event = { button: 0, preventDefault() { prevented++; }, stopPropagation() { stopped++; } };
+  events.mousedown(event); assert.equal(actions.length, 0);
+  events.click(event); assert.deepEqual(actions.pop(), [next, 'breakBefore', true]);
+  c.studioRefreshBreakMouseAction(wrap); assert.equal(classes.has('studio-break-mouse-remove'), true); assert.match(button.title, /Delete/);
+  events.click(event); assert.deepEqual(actions.pop(), [next, 'breakBefore', false]);
+  c.studioRefreshBreakMouseAction(wrap); assert.equal(classes.has('studio-break-mouse-remove'), false);
+  resizing = true; events.click(event); resizing = false;
+  handle.matches = () => false; events.click(event); handle.matches = () => true;
+  hasNext = false; handleEvents.mouseenter(); assert.equal(button.hidden, true); events.click(event);
+  events.contextmenu(event); assert.equal(actions.length, 0); assert.equal(prevented, stopped);
+  const css = read('wwwroot/styles.css');
+  assert.match(css, /\.studio-field-resize-handle > \.studio-break-mouse-action \{[^}]*visibility: hidden; pointer-events: none/s);
+  assert.match(css, /\.studio-field-resize-handle:hover > \.studio-break-mouse-action:not\(\[hidden\]\) \{[^}]*visibility: visible; pointer-events: auto/s);
+  assert.match(css, /\.studio-break-mouse-remove > \.studio-break-mouse-trash \{ display: block; \}/);
+});

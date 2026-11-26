@@ -4,6 +4,7 @@
 import { readFile, mkdir, rename, open, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
+import { pathParts as contractPathParts, fieldsFromViewDef } from './web/field_contract.mjs';
 
 // Launch owns its ViewDefs and registry. Studio supplies only the shared engine.
 const launchRootFrom = systemRoot => path.resolve(systemRoot, '..');
@@ -34,15 +35,8 @@ async function jsonFile(file, { absent=null }={}) {
 }
 
 function pathParts(field) {
-  const s = String(field ?? '');
-  if (!/^[A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)*$/.test(s)) {
-    throw new OptionSettingsError(`対応していないViewDef Field: ${s}`, 'BAD_VIEWDEF');
-  }
-  const parts = s.split('.');
-  if (parts.some(p => ['__proto__', 'prototype', 'constructor'].includes(p))) {
-    throw new OptionSettingsError(`禁止されたViewDef Field: ${s}`, 'BAD_VIEWDEF');
-  }
-  return parts;
+  try { return contractPathParts(field); }
+  catch (err) { throw new OptionSettingsError(err.message,'BAD_VIEWDEF'); }
 }
 function getPath(obj, parts) {
   let at = obj;
@@ -69,11 +63,9 @@ function isInformationField(field) {
   return field.type === 'textarea' && field.readonly === true && field.edit?.readonly === true && typeof field.defaultValue === 'string';
 }
 function viewDefFields(viewDef) {
-  const views = viewDef?.views;
-  if (!Array.isArray(views) || views.length !== 1) throw new OptionSettingsError('ViewDefは単一Viewで指定してください', 'BAD_VIEWDEF');
-  const forms = (views[0].sections ?? []).filter(s => s.type === 'form' && s.dataPath === '$');
-  if (!forms.length) throw new OptionSettingsError('ルートFormのViewDefが必要です', 'BAD_VIEWDEF');
-  const fields = forms.flatMap(s => s.fields ?? []).filter(f => f?.edit?.visible !== false);
+  let fields;
+  try { fields=fieldsFromViewDef(viewDef); }
+  catch (err) { throw new OptionSettingsError(err.message,'BAD_VIEWDEF'); }
   const names = new Set();
   for (const field of fields) {
     pathParts(field.field);

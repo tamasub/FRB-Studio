@@ -685,8 +685,22 @@
         "layout": {
           "type": "object",
           "additionalProperties": true,
-          "description": "Detail Dialog内の配置制御。例: {\"placement\":\"detailFooter\"} で子配列表示後に描画する。",
+          "description": "Editor（Header / Detail）の配置制御。Grid / Searchには適用しない。placementでDetail Footerを指定できる。",
           "properties": {
+            "breakBefore": {
+              "type": "boolean",
+              "description": "trueの場合、項目の前で明示的に改行する。falseまたは省略で通常配置。"
+            },
+            "separatorBefore": {
+              "type": "boolean",
+              "description": "trueの場合、項目の前に全幅の横境界線を表示する。breakBeforeとは独立。"
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 40,
+              "maximum": 1600,
+              "description": "複数行入力欄の固定表示高さ(px)。省略時は既存の自動高さ・edit.heightを使用。"
+            },
             "placement": {
               "type": "string",
               "enum": [

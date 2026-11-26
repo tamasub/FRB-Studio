@@ -10,6 +10,7 @@ const STUDIO_MAX_FIELD_WIDTH_PX = 1200;
 const STUDIO_FIELD_WIDTH_FULL = 'FULL';
 
 let studioFieldWidthDrafts = new Map();
+let studioFieldLayoutSaving = false;
 
 function studioNormalizeFieldWidth(value) {
   if (value == null || value === '') return null;
@@ -126,11 +127,11 @@ function studioRefreshFieldWidthSaveButtons() {
   const dirty = studioFieldWidthDrafts.size > 0;
   studioFieldWidthSaveButtons().forEach(button => {
     button.classList.toggle('hidden', !dirty);
-    button.disabled = !dirty;
+    button.disabled = !dirty || studioFieldLayoutSaving;
     button.dataset.widthDirty = dirty ? 'true' : 'false';
     button.title = dirty
-      ? `${studioFieldWidthDrafts.size}項目の幅変更をViewDefへ保存`
-      : '項目幅の変更はありません';
+      ? `${studioFieldWidthDrafts.size}項目のレイアウト変更をViewDefへ保存`
+      : 'レイアウトの変更はありません';
   });
 }
 
@@ -144,16 +145,276 @@ function studioSetLiveFieldWidth(field, width, section, source='live') {
   const normalized = studioNormalizeFieldWidth(width);
   if (!normalized) return null;
   const context = String(source ?? '').startsWith('grid.') ? 'grid' : 'editor';
+  studioSetLiveFieldLayoutDraft(field, section, context, { width: normalized }, source);
+  return normalized;
+}
+
+// One draft per Field/context: width, row break and height must merge, not replace.
+function studioSetLiveFieldLayoutDraft(field, section, context, patch, source='live') {
+  if (!field?.field || !section) return;
   const key = studioFieldWidthKey(section, field.field, context);
   studioFieldWidthDrafts.set(key, {
+    ...studioFieldWidthDrafts.get(key),
     context,
-    width: normalized,
     fieldName: String(field.field),
     section: studioFieldWidthSectionDescriptor(section),
-    source: String(source ?? 'live')
+    source: String(source),
+    ...patch
   });
   studioRefreshFieldWidthSaveButtons();
-  return normalized;
+}
+
+const STUDIO_MIN_FIELD_HEIGHT_PX = 40;
+const STUDIO_MAX_FIELD_HEIGHT_PX = 1600;
+
+function studioNormalizeFieldHeight(value) {
+  if (value == null || value === '') return null;
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return Math.max(STUDIO_MIN_FIELD_HEIGHT_PX, Math.min(STUDIO_MAX_FIELD_HEIGHT_PX, Math.round(n)));
+}
+
+function studioResolvedFieldLayout(field, section) {
+  const draft = studioFieldWidthDrafts.get(studioFieldWidthKey(section, field.field, 'editor'));
+  return {
+    breakBefore: draft?.breakBefore ?? (field.layout?.breakBefore === true),
+    separatorBefore: draft?.separatorBefore ?? (field.layout?.separatorBefore === true),
+    height: studioNormalizeFieldHeight(draft?.height ?? field.layout?.height)
+  };
+}
+
+// Layout operations are addressed to the following visible Field, never to Data.
+// Metadata stays outside the DOM data-input contract and is collected with the field.
+const studioLayoutFields = new WeakMap();
+let studioHoveredLayoutBoundary = null;
+const studioLayoutConsumedKeys = new Set();
+
+function studioNextLayoutField(wrap) {
+  let next = wrap.nextElementSibling;
+  while (next?.classList.contains('studio-field-row-break') ||
+         next?.classList.contains('studio-field-layout-separator')) next = next.nextElementSibling;
+  // Do not cross a semantic FieldSet or a footer boundary.
+  return next && studioLayoutFields.has(next) ? next : null;
+}
+
+function studioSetLayoutBoundary(wrap, property, enabled) {
+  const meta = studioLayoutFields.get(wrap);
+  if (!meta || !wrap.isConnected) return;
+  const className = property === 'breakBefore' ? 'studio-field-break-before' : 'studio-field-separator-before';
+  if (wrap.classList.contains(className) === enabled) return;
+  wrap.classList.toggle(className, enabled);
+  studioSetLiveFieldLayoutDraft(meta.field, meta.section, 'editor', { [property]: enabled }, `${meta.context}.${property}`);
+  studioSyncFieldRowBreaks(wrap.parentElement);
+}
+
+// The icon belongs to the vertical handle, not the field's input or data.
+// Keeping it a child preserves :hover while the pointer moves onto the icon.
+function studioRefreshBreakMouseAction(wrap) {
+  const button = wrap.querySelector(':scope > .studio-field-resize-handle > .studio-break-mouse-action');
+  if (!button) return;
+  const next = studioNextLayoutField(wrap);
+  button.hidden = !next;
+  const removing = !!next?.classList.contains('studio-field-break-before');
+  button.classList.toggle('studio-break-mouse-remove', removing);
+  button.title = removing ? '改行を解除（Delete / Backspace）' : '改行を追加（Enter）';
+  button.setAttribute('aria-label', button.title);
+}
+
+function studioInstallBreakMouseAction(handle, wrap) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.tabIndex = -1;
+  button.className = 'studio-break-mouse-action';
+  button.hidden = true;
+  // Static SVG keeps the trash icon crisp and the same blue as the handle.
+  button.innerHTML = '<span aria-hidden="true" class="studio-break-mouse-return">↵</span>' +
+    '<svg class="studio-break-mouse-trash" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4h11M6 4V2h4v2M4 4l.7 10h6.6L12 4M6.5 6.5v5M9.5 6.5v5"/></svg>';
+  handle.appendChild(button);
+  // The icon must not start a resize or move focus away from a Data input.
+  button.addEventListener('mousedown', event => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
+  button.addEventListener('contextmenu', event => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
+  button.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.button !== 0 || !handle.matches(':hover') ||
+        document.body.classList.contains('studio-field-width-resizing') ||
+        document.body.classList.contains('studio-field-height-resizing')) return;
+    const next = studioNextLayoutField(wrap);
+    if (next) studioSetLayoutBoundary(next, 'breakBefore', !next.classList.contains('studio-field-break-before'));
+  });
+  handle.addEventListener('mouseenter', () => studioRefreshBreakMouseAction(wrap));
+}
+
+function studioBindLayoutBoundary(handle, kind, wrap) {
+  const boundary = { handle, kind, wrap };
+  handle.addEventListener('mouseenter', () => { studioHoveredLayoutBoundary = boundary; });
+  handle.addEventListener('mouseleave', () => {
+    if (studioHoveredLayoutBoundary === boundary) studioHoveredLayoutBoundary = null;
+  });
+  if (kind === 'vertical') {
+    handle.addEventListener('contextmenu', event => {
+      const next = studioNextLayoutField(wrap);
+      if (!next) return;
+      event.preventDefault();
+      event.stopPropagation();
+      studioSetLayoutBoundary(next, 'separatorBefore', true);
+    });
+  }
+}
+
+function studioHandleLayoutBoundaryKey(event) {
+  // A held key must not fall through to text editing after its marker disappears.
+  if (event.repeat && studioLayoutConsumedKeys.has(event.key)) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    return;
+  }
+  if (event.defaultPrevented || event.isComposing || event.keyCode === 229 ||
+      event.ctrlKey || event.altKey || event.metaKey || event.shiftKey ||
+      !['Enter', 'Delete', 'Backspace'].includes(event.key)) return;
+  const boundary = studioHoveredLayoutBoundary;
+  // Exact handle hover, not merely a hovered field. Never steal input from
+  // another modal, a resize drag, an IME, or a stale/detached handle.
+  if (!boundary?.handle.isConnected || !boundary.handle.matches(':hover')) return;
+  if (document.body.classList.contains('studio-field-width-resizing') ||
+      document.body.classList.contains('studio-field-height-resizing')) return;
+  const dialog = boundary.handle.closest('dialog');
+  if ([...document.querySelectorAll('dialog[open]')].some(item => item !== dialog)) return;
+  const next = boundary.kind === 'vertical' ? studioNextLayoutField(boundary.wrap) : boundary.wrap;
+  // An active boundary owns these keys even at the end of a field group.
+  // No adjacent field means no layout change, not an accidental Data apply.
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  if (event.repeat) return;
+  studioLayoutConsumedKeys.add(event.key);
+  if (!next || (boundary.kind === 'horizontal' && event.key === 'Enter')) return;
+  if (boundary.kind === 'horizontal') studioSetLayoutBoundary(next, 'separatorBefore', false);
+  else studioSetLayoutBoundary(next, 'breakBefore', event.key === 'Enter');
+}
+
+// Capture before Studio's ordinary document-level Enter/F12 input handling.
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('keydown', studioHandleLayoutBoundaryKey, true);
+  window.addEventListener('keyup', event => { studioLayoutConsumedKeys.delete(event.key); }, true);
+  window.addEventListener('blur', () => { studioHoveredLayoutBoundary = null; studioLayoutConsumedKeys.clear(); });
+}
+
+// Markers are layout-only, never Fields or Data inputs. Real Fields stay direct
+// children so existing alignment guides and editor selectors work.
+function studioSyncFieldRowBreaks(container) {
+  if (!container) return;
+  for (const marker of container.querySelectorAll(':scope > .studio-field-row-break, :scope > .studio-field-layout-separator')) marker.remove();
+  const grid = container.classList.contains('detail-fieldset-grid');
+  let previous = null;
+  for (const child of [...container.children]) {
+    if (child.classList.contains('studio-field-separator-before')) {
+      const marker = document.createElement('div');
+      marker.className = 'studio-field-layout-separator';
+      marker.setAttribute('aria-hidden', 'true');
+      marker.title = 'Delete / Backspace で境界線を削除';
+      studioBindLayoutBoundary(marker, 'horizontal', child);
+      container.insertBefore(marker, child);
+    } else if (!grid && child.classList.contains('studio-field-break-before') &&
+        previous?.classList.contains('field') &&
+        !previous.classList.contains('studio-field-width-full')) {
+      const marker = document.createElement('div');
+      marker.className = 'studio-field-row-break';
+      marker.setAttribute('aria-hidden', 'true');
+      container.insertBefore(marker, child);
+    }
+    previous = child;
+  }
+  for (const child of container.children) {
+    if (studioLayoutFields.has(child)) studioRefreshBreakMouseAction(child);
+  }
+}
+
+function studioApplyFieldHeight(control, height) {
+  control.classList.add('studio-layout-fixed-height');
+  control.style.setProperty('--studio-field-height', `${height}px`);
+}
+
+function studioInstallFieldLayoutControls(wrap, field, context='detail', section=null) {
+  if (!wrap || !field?.field || !section || !['header', 'detail'].includes(context)) return;
+  const layout = studioResolvedFieldLayout(field, section);
+  const footer = context === 'detail' && typeof isDetailFooterField === 'function' && isDetailFooterField(field);
+  if (!footer) {
+    wrap.classList.add('studio-live-layout-field');
+    studioLayoutFields.set(wrap, { field, section, context });
+    wrap.classList.toggle('studio-field-break-before', layout.breakBefore);
+    wrap.classList.toggle('studio-field-separator-before', layout.separatorBefore);
+    // Reuse the existing resize handle. Fixed-width controls (radio/boolean,
+    // chat etc.) still need a boundary, but must not gain width-resize behavior.
+    let handle = wrap.querySelector(':scope > .studio-field-resize-handle');
+    if (!handle) {
+      handle = document.createElement('span');
+      handle.className = 'studio-field-resize-handle studio-layout-only-handle';
+      handle.setAttribute('aria-hidden', 'true');
+      wrap.appendChild(handle);
+    }
+    handle.title = (handle.classList.contains('studio-layout-only-handle') ? '' : 'ドラッグ：幅調整 / ') +
+      'Enter：改行 / Delete・Backspace：改行解除 / 右クリック：境界線挿入';
+    studioBindLayoutBoundary(handle, 'vertical', wrap);
+    studioInstallBreakMouseAction(handle, wrap);
+  }
+
+  // Reading View and raw textarea share the same explicit outer control height.
+  // Do not reinterpret the legacy edit.height minimum-height contract.
+  const control = wrap.querySelector(':scope > textarea, :scope > .markdown-textarea-display');
+  if (!control) return;
+  if (layout.height) studioApplyFieldHeight(control, layout.height);
+  wrap.classList.add('studio-live-height-field');
+  control.classList.add('studio-live-height-control');
+  const handle = document.createElement('span');
+  handle.className = 'studio-field-height-handle';
+  handle.setAttribute('role', 'separator');
+  handle.setAttribute('aria-orientation', 'horizontal');
+  handle.title = '上下にドラッグして高さを調整';
+  wrap.appendChild(handle);
+  handle.addEventListener('mousedown', event => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const startY = event.clientY;
+    const startHeight = control.getBoundingClientRect().height;
+    let moved = false;
+    let height = studioNormalizeFieldHeight(startHeight);
+    document.body.classList.add('studio-field-height-resizing');
+    studioShowFieldHeightTip(height, event.clientX, event.clientY, wrap);
+    const onMove = e => {
+      if (Math.abs(e.clientY - startY) < 1 && !moved) return;
+      moved = true;
+      height = studioNormalizeFieldHeight(Math.max(1, startHeight + e.clientY - startY));
+      studioApplyFieldHeight(control, height);
+      studioShowFieldHeightTip(height, e.clientX, e.clientY, wrap);
+    };
+    const finish = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      window.removeEventListener('blur', finish);
+      document.body.classList.remove('studio-field-height-resizing');
+      studioHideFieldWidthTip();
+      if (moved) studioSetLiveFieldLayoutDraft(field, section, 'editor', { height }, `${context}.height`);
+    };
+    const onUp = e => { onMove(e); finish(); };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    window.addEventListener('blur', finish, { once: true });
+  });
+}
+
+function studioShowFieldHeightTip(height, clientX, clientY, sourceElement) {
+  const tip = studioEnsureFieldWidthTip(sourceElement);
+  tip.textContent = `${height}px`;
+  tip.style.left = `${Math.round(clientX) + 14}px`;
+  tip.style.top = `${Math.round(clientY) + 14}px`;
+  tip.classList.remove('hidden');
 }
 
 function studioFindRawTargetView(defObj, currentViewId='') {
@@ -208,15 +469,20 @@ function studioApplyWidthEntry(field, entry) {
     }
     field.grid.width = entry.width;
   } else {
-    field.width = entry.width;
+    if (entry.width !== undefined) field.width = entry.width;
+    if (entry.breakBefore !== undefined || entry.separatorBefore !== undefined || entry.height !== undefined) {
+      if (!field.layout || typeof field.layout !== 'object' || Array.isArray(field.layout)) field.layout = {};
+      if (entry.breakBefore !== undefined) field.layout.breakBefore = entry.breakBefore;
+      if (entry.separatorBefore !== undefined) field.layout.separatorBefore = entry.separatorBefore;
+      if (entry.height !== undefined) field.layout.height = entry.height;
+    }
   }
 }
 
-function studioApplySavedWidthsToCurrentResolvedView() {
-  if (!studioFieldWidthDrafts.size || typeof mainView !== 'function') return;
+function studioApplySavedWidthsToCurrentResolvedView(entries=studioFieldWidthDrafts) {
+  if (!entries.size || typeof mainView !== 'function') return;
   const currentView = mainView();
-  const sections = Array.isArray(currentView?.sections) ? currentView.sections : [];
-  studioFieldWidthDrafts.forEach(entry => {
+  entries.forEach(entry => {
     const section = studioFindRawTargetSection(currentView, entry.section);
     const field = section?.fields?.find(item => String(item?.field ?? '') === entry.fieldName);
     if (!field) return;
@@ -226,6 +492,10 @@ function studioApplySavedWidthsToCurrentResolvedView() {
 
 async function saveStudioLiveFieldWidths() {
   if (!studioFieldWidthDrafts.size) return true;
+  if (studioFieldLayoutSaving) return false;
+  const liveDrafts = studioFieldWidthDrafts;
+  const entries = new Map(liveDrafts);
+  const currentViewId = String((typeof mainView === 'function' ? mainView()?.id : '') ?? '');
 
   const rawName = String(
     (typeof lastLoadedDefName !== 'undefined' && lastLoadedDefName)
@@ -235,64 +505,68 @@ async function saveStudioLiveFieldWidths() {
   const apiPath = studioViewDefApiPath(rawName);
   if (!apiPath) {
     const message = '現在のViewDefは直接保存できません。Coreのdefs配下ViewDefを選択してください。';
-    if (typeof setStatus === 'function') setStatus(message, { kind: 'warn', title: '項目幅保存' });
+    if (typeof setStatus === 'function') setStatus(message, { kind: 'warn', title: 'レイアウト保存' });
     return false;
   }
 
-  const read = await fetch(apiPath, { cache: 'no-store' });
-  if (!read.ok) throw new Error(`ViewDef読込に失敗しました (${read.status})`);
-  const rawDef = await read.json();
+  studioFieldLayoutSaving = true;
+  studioRefreshFieldWidthSaveButtons();
+  try {
+    const read = await fetch(apiPath, { cache: 'no-store' });
+    if (!read.ok) throw new Error(`ViewDef読込に失敗しました (${read.status})`);
+    const rawDef = await read.json();
 
-  const currentViewId = String((typeof mainView === 'function' ? mainView()?.id : '') ?? '');
-  const rawView = studioFindRawTargetView(rawDef, currentViewId);
-  const notFound = [];
+    const rawView = studioFindRawTargetView(rawDef, currentViewId);
+    const notFound = [];
 
-  studioFieldWidthDrafts.forEach(entry => {
-    const section = studioFindRawTargetSection(rawView, entry.section);
-    const field = section?.fields?.find(item => String(item?.field ?? '') === entry.fieldName);
-    if (!field) {
-      notFound.push(`${entry.section?.id || entry.section?.caption || entry.section?.type}:${entry.fieldName}`);
-      return;
+    entries.forEach(entry => {
+      const section = studioFindRawTargetSection(rawView, entry.section);
+      const field = section?.fields?.find(item => String(item?.field ?? '') === entry.fieldName);
+      if (!field) {
+        notFound.push(`${entry.section?.id || entry.section?.caption || entry.section?.type}:${entry.fieldName}`);
+        return;
+      }
+
+      studioApplyWidthEntry(field, entry);
+    });
+
+    if (notFound.length) {
+      throw new Error(`ViewDef内の保存対象Fieldを解決できません: ${notFound.join(', ')}`);
     }
 
-    studioApplyWidthEntry(field, entry);
-  });
+    const write = await fetch(apiPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(rawDef)
+    });
+    if (!write.ok) {
+      const text = await write.text().catch(() => '');
+      throw new Error(`ViewDefレイアウトの保存に失敗しました (${write.status}) ${text}`);
+    }
 
-  if (notFound.length) {
-    throw new Error(`ViewDef内の保存対象Fieldを解決できません: ${notFound.join(', ')}`);
-  }
+    const count = entries.size;
+    if (studioFieldWidthDrafts === liveDrafts) {
+      studioApplySavedWidthsToCurrentResolvedView(entries);
+      // A layout edit made while the request was in flight remains dirty.
+      for (const [key, entry] of entries) {
+        if (liveDrafts.get(key) === entry) liveDrafts.delete(key);
+      }
+    }
 
-  const write = await fetch(apiPath, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(rawDef)
-  });
-  if (!write.ok) {
-    const text = await write.text().catch(() => '');
-    throw new Error(`ViewDef項目幅の保存に失敗しました (${write.status}) ${text}`);
-  }
+    // The live controls already reflect the saved layout. Re-rendering here
+    // would discard unapplied Header/Detail text edits and conditional drafts.
 
-  studioApplySavedWidthsToCurrentResolvedView();
-  const count = studioFieldWidthDrafts.size;
-  studioFieldWidthDrafts.clear();
-  studioRefreshFieldWidthSaveButtons();
-
-  if (typeof renderHeader === 'function') renderHeader();
-  if (typeof renderGrid === 'function') renderGrid();
-  if (document.getElementById('detailDialog')?.open && typeof renderDetailForRow === 'function') {
-    const row = (typeof detailMode !== 'undefined' && detailMode === 'new')
-      ? (typeof draftRow !== 'undefined' ? draftRow : null)
-      : (typeof currentRows !== 'undefined' && typeof selectedIndex !== 'undefined' ? currentRows[selectedIndex] : null);
-    if (row) renderDetailForRow(row);
+    if (typeof invalidateDefinitionTargetViewDefCache === 'function') {
+      invalidateDefinitionTargetViewDefCache(rawName);
+    }
+    if (typeof setStatus === 'function') {
+      setStatus(`レイアウトをViewDefへ保存しました: ${count}項目`, { kind: 'success', title: 'Live View Design', toast: false });
+    }
+    return true;
+  } finally {
+    studioFieldLayoutSaving = false;
+    studioRefreshFieldWidthSaveButtons();
   }
-
-  if (typeof invalidateDefinitionTargetViewDefCache === 'function') {
-    invalidateDefinitionTargetViewDefCache(rawName);
-  }
-  if (typeof setStatus === 'function') {
-    setStatus(`項目幅をViewDefへ保存しました: ${count}項目`, { kind: 'success', title: 'Live View Design', toast: false });
-  }
-  return true;
 }
 
 function studioInstallFieldWidthSaveButtons() {
@@ -306,7 +580,7 @@ function studioInstallFieldWidthSaveButtons() {
       } catch (error) {
         console.error('Live View Design width save failed:', error);
         if (typeof setStatus === 'function') {
-          setStatus(`項目幅を保存できません: ${error.message}`, { kind: 'error', title: '項目幅保存' });
+          setStatus(`レイアウトを保存できません: ${error.message}`, { kind: 'error', title: 'レイアウト保存' });
         }
       }
     });
@@ -514,6 +788,7 @@ function studioInstallFieldResizeHandle(wrap, field, context='detail', section=n
       wrap.style.flex = `0 0 ${width}px`;
       wrap.dataset.studioFieldWidth = String(width);
       wrap.dataset.studioFieldWidthMode = 'FIXED';
+      studioSyncFieldRowBreaks(wrap.parentElement);
       studioShowFieldWidthTip(width, moveEvent.clientX, moveEvent.clientY, wrap);
       studioUpdateFieldAlignmentGuide(wrap);
     };
@@ -527,7 +802,11 @@ function studioInstallFieldResizeHandle(wrap, field, context='detail', section=n
       if (!moved) return;
       const width = studioNormalizeFieldWidth(startWidth + (upEvent.clientX - startX));
       if (!width) return;
+      wrap.style.width = `${width}px`;
+      wrap.style.flex = `0 0 ${width}px`;
+      wrap.dataset.studioFieldWidth = String(width);
       studioSetLiveFieldWidth(field, width, section, `${context}.resize`);
+      studioSyncFieldRowBreaks(wrap.parentElement);
     };
 
     document.addEventListener('mousemove', onMove);

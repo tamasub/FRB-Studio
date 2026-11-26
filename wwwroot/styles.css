@@ -4373,7 +4373,6 @@ button.viewdef-maintenance-button:disabled {
   transition: opacity .12s ease, border-color .12s ease;
 }
 
-.studio-live-width-field:hover > .studio-field-resize-handle,
 .studio-field-resize-handle:hover {
   opacity: 1;
   border-color: rgba(79, 70, 229, .88);
@@ -4726,3 +4725,69 @@ body.frb-page-json-object[data-studio-density="compact"] .field .studio-boolean-
 }
 .field .studio-boolean-reset:disabled { opacity: .38; cursor: default; }
 .field .studio-boolean-reset:not(:disabled):hover { background: var(--readonly, #f1f5f9); }
+
+
+/* Live View Design: explicit row break and textarea height. */
+.studio-live-layout-field, .studio-live-height-field { position: relative; }
+/* No permanent design icon. Keep the button inside the hovered handle's hit area. */
+.studio-field-resize-handle > .studio-break-mouse-action {
+  position: absolute; right: -2px; top: -17px; height: 19px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 2px;
+  padding: 0 4px; border: 1px solid #a5b4fc; border-radius: 4px;
+  background: var(--panel, #fff); color: #4f46e5; cursor: pointer;
+  visibility: hidden; pointer-events: none; line-height: 1;
+  font-size: 13px; box-sizing: border-box; transform: none;
+}
+.studio-field-resize-handle:hover > .studio-break-mouse-action:not([hidden]) {
+  visibility: visible; pointer-events: auto;
+}
+.studio-field-resize-handle > .studio-break-mouse-action:hover { transform: none; background: #eef2ff; }
+.studio-field-resize-handle > .studio-break-mouse-action[hidden] { display: none; }
+.studio-break-mouse-return { font-size: 16px; line-height: 1; }
+.studio-break-mouse-trash { display: none; width: 13px; height: 13px; }
+.studio-break-mouse-remove > .studio-break-mouse-trash { display: block; }
+body.studio-field-width-resizing .studio-field-resize-handle > .studio-break-mouse-action,
+body.studio-field-height-resizing .studio-field-resize-handle > .studio-break-mouse-action {
+  visibility: hidden; pointer-events: none;
+}
+.studio-layout-only-handle { cursor: default; }
+.studio-field-layout-separator {
+  flex: 0 0 100%; width: 100%; min-width: 0; height: 10px;
+  position: relative; box-sizing: border-box; cursor: default;
+}
+.studio-field-layout-separator::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 4px;
+  border-top: 1px solid var(--line, #cbd5e1); pointer-events: none;
+}
+.studio-field-layout-separator:hover::before { border-top: 2px solid #4f46e5; }
+.detail-fieldset-grid > .studio-field-layout-separator { grid-column: 1 / -1; }
+#headerForm { --studio-break-gap: 5px; }
+#detailForm { --studio-break-gap: 9px; }
+.studio-field-row-break {
+  flex: 0 0 100%; width: 100%; height: 0; min-height: 0;
+  margin-top: calc(-1 * var(--studio-break-gap, 9px));
+  pointer-events: none;
+}
+.detail-fieldset-grid > .studio-field-break-before { grid-column-start: 1; }
+.studio-field-height-handle {
+  position: absolute; bottom: -3px; left: 6px; right: 10px;
+  height: 8px; z-index: 4; cursor: row-resize; opacity: 0;
+  border-bottom: 2px solid #818cf8;
+}
+.studio-live-height-field:hover > .studio-field-height-handle,
+.studio-field-height-handle:hover { opacity: 1; }
+.field > textarea.studio-live-height-control { resize: none !important; }
+/* Explicit layout height overrides legacy Header compact height and edit.height
+   minimum. Use a scrollable control, not a fixed field or row height. */
+.field > .studio-layout-fixed-height,
+#headerSection #headerForm .field > textarea.studio-layout-fixed-height,
+#detailDialog #detailForm .field > textarea.studio-layout-fixed-height {
+  box-sizing: border-box;
+  height: var(--studio-field-height) !important;
+  min-height: var(--studio-field-height) !important;
+  max-height: var(--studio-field-height) !important;
+  overflow: auto !important;
+}
+body.studio-field-height-resizing, body.studio-field-height-resizing * {
+  cursor: row-resize !important; user-select: none !important;
+}

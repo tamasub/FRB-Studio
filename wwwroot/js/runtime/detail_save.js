@@ -182,6 +182,7 @@ function createDetailFieldSet(fieldSet, fields, row, gd) {
   fields.forEach(field => {
     grid.appendChild(createInput(field, getByPath(row, field.field), 'detail', false, row, gd));
   });
+  if (typeof studioSyncFieldRowBreaks === 'function') studioSyncFieldRowBreaks(grid);
   group.appendChild(grid);
   return group;
 }
@@ -216,6 +217,7 @@ function renderDetailBodyFields(form, row, gd) {
     if (groupedFields.length) form.appendChild(createDetailFieldSet(fieldSet, groupedFields, row, gd));
     renderedSets.add(fieldSet);
   });
+  if (typeof studioSyncFieldRowBreaks === 'function') studioSyncFieldRowBreaks(form);
 }
 
 // Detached detail state preserves edits hidden by visibleWhen without committing canonical data.

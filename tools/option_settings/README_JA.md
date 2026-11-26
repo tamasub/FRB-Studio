@@ -61,3 +61,14 @@ Windows GUI（Qt／WebEngine）、Node未インストールの配布PC、Setup/U
 - 説明はStudio既存ViewDefの `type: textarea` + `readonly: true` + `edit.readonly: true` + `defaultValue` を使用。直前のselectの右に「？」を出し、開閉できる。
 - 説明テキストは読み取り専用のViewDefデータで、System設定JSONにもUser JSONにも保存しない。
 - 旧 `FRB_Studio/defs/launch/options/` と `tools/option_settings/options_registry.json` のコピーは参照しない。新配置が確認できたら旧コピーを削除する。
+
+## 2026-11-26 ネスト項目と複数表示条件
+
+- Generic Editor と Composer は `web/field_contract.mjs` の共通定義解決を使用する。
+- Form の `dataPath` は `$` または `$.object.child` を指定できる。`field` はその Form に対するドット区切り相対パス。複数の Form は定義順に同じ画面へ描画する。
+- 例：ルート Form の `field: "auto_update.startup_delay_seconds"` と、`dataPath: "$.auto_update"` の Form の `field: "startup_delay_seconds"` は同じデータパスを指す。両方を同時に公開することはできない（重複検証）。配列添字・任意式は対象外。
+- `visibleWhen` の既存単一条件（`field` / `equals`、`in` 等）を維持し、`{"all":[{"field":"enabled","equals":true},{"field":"update_mode","equals":"auto"}]}` でAND条件を指定できる。条件の参照先は常にルート基準（`$.` は省略可能）。
+- 条件付き非表示は所有権を変更しない。有効な入力値は非表示になっても保存・再読込で保持される。保存時は公開されたすべての値を従来どおり型・範囲検証する（不正な値を非表示によって通過させない）。恒久的な `edit.visible:false` とは別の意味。
+- 読み取り専用の説明も表示条件の対象。直前の選択欄と連動する「？」の開閉状態と表示条件を分離する。
+- System JSON / User JSON / EffectiveOptions の階層構造を維持する。共通エンジンに Launch 固有の表示条件を追加しない。
+- 今回は Option Settings 共通エディターのみ。Studio 本体の詳細エディターおよび Batch Commander は未変更。

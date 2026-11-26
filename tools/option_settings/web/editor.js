@@ -1,3 +1,4 @@
+import { fieldsFromViewDef, matchesVisibility } from './field_contract.mjs';
 // ONE Generic Editor. Every option tab sends a different Studio ViewDef + JSON.
 const root = document;
 const qs = new URLSearchParams(location.search);
@@ -20,13 +21,8 @@ async function api(url,options={}) {
   if(!response.ok)throw new Error(result.message||result.error||`HTTP ${response.status}`);
   return result;
 }
-const fieldsFromViewDef=viewDef=>(viewDef.views?.[0]?.sections||[])
-  .filter(s=>s.type==='form'&&s.dataPath==='$')
-  .flatMap(s=>s.fields||[])
-  .filter(field=>field.edit?.visible!==false);
-
 class GenericEditor {
-  constructor(){this.id=null;this.original=null;this.revision=null;this.dirty=false;this.inputs=new Map();}
+  constructor(){this.id=null;this.original=null;this.revision=null;this.dirty=false;this.inputs=new Map();this.helpFields=[];}
   status(text,bad=false) { el('status').textContent=text; el('status').classList.toggle('error',bad); }
   async open(id) {
     if(this.dirty && !confirm('未保存の編集内容を破棄して設定を切り替えますか？'))return;
@@ -34,7 +30,7 @@ class GenericEditor {
       this.status('読み込み中…');
       const doc=await api(`/api/compose?id=${encodeURIComponent(id)}`);
       this.id=id;this.original=doc.edited;this.revision=doc.revision;this.dirty=false;
-      this.inputs.clear();el('fields').replaceChildren();el('form-title').textContent=doc.caption+'の設定';
+      this.inputs.clear();this.helpFields=[];el('fields').replaceChildren();el('form-title').textContent=doc.caption+'の設定';
       const fields=fieldsFromViewDef(doc.viewDef);
       for(const field of fields)this.buildField(field,atPath(doc.edited,field.field));
       this.refreshConditionalVisibility();
@@ -48,20 +44,14 @@ class GenericEditor {
   // The field's value stays in the edit model while temporarily hidden,
   // so switching index_mode does not discard previously entered folders.
   refreshConditionalVisibility() {
-    for (const {field, input, wrap} of this.inputs.values()) {
-      const cond=field.visibleWhen ?? field.visible_when;
-      if (!cond || typeof cond!=='object' || Array.isArray(cond)) continue;
-      const source=String(cond.field ?? cond.sourceField ?? cond.source_field ?? '').trim();
-      if (!source) continue;
-      const actual=this.inputs.has(source)
-        ? this.inputs.get(source).input.value
-        : atPath(this.original,source);
-      let visible=true;
-      if (Array.isArray(cond.in)) visible=cond.in.map(String).includes(String(actual??''));
-      else if (Array.isArray(cond.values)) visible=cond.values.map(String).includes(String(actual??''));
-      else if (cond.equals!=null) visible=String(actual??'')===String(cond.equals);
-      else if (cond.value!=null) visible=String(actual??'')===String(cond.value);
-      wrap.hidden=!visible;
+    const read=source=>this.inputs.has(source)
+      ? this.inputs.get(source).input.value : atPath(this.original,source);
+    const visible=field=>matchesVisibility(field.visibleWhen??field.visible_when,read);
+    for (const {field,wrap} of this.inputs.values()) wrap.hidden=!visible(field);
+    for (const help of this.helpFields) {
+      const allowed=visible(help.field) && !help.anchor?.hidden;
+      help.wrap.hidden=!allowed || !help.open;
+      if(help.button) help.button.hidden=!allowed;
     }
   }
   buildField(field,value) {
@@ -78,6 +68,7 @@ class GenericEditor {
       // is toggled by an adjacent ? button, without adding ViewDef schema keys.
       const previous=el('fields').lastElementChild;
       const select=previous?.querySelector('select');
+      const state={field,wrap,anchor:select?previous:null,button:null,open:!select};
       if(select) {
         const row=root.createElement('div');row.className='field-control-row';
         select.replaceWith(row);row.appendChild(select);
@@ -85,8 +76,10 @@ class GenericEditor {
         help.textContent='?';help.title=helpLabel.textContent;help.setAttribute('aria-label',helpLabel.textContent);
         help.setAttribute('aria-expanded','false');
         row.appendChild(help);wrap.hidden=true;
-        help.addEventListener('click',()=>{wrap.hidden=!wrap.hidden;help.setAttribute('aria-expanded',String(!wrap.hidden));});
+        state.button=help;
+        help.addEventListener('click',()=>{state.open=!state.open;this.refreshConditionalVisibility();help.setAttribute('aria-expanded',String(state.open));});
       }
+      this.helpFields.push(state);
       el('fields').appendChild(wrap);
       return;
     }

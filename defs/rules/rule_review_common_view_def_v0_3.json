@@ -1056,7 +1056,10 @@
                 "operator": "contains"
               },
               "defaultValue": "",
-              "width": "FULL"
+              "width": "FULL",
+              "layout": {
+                "height": 53
+              }
             },
             {
               "field": "heading_markdown",

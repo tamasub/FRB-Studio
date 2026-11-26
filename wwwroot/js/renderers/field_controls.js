@@ -1130,6 +1130,7 @@ function createInput(field, value, prefix, readonlyOverride=false, row=null, gd=
     if (typeof studioApplyFieldContainerWidth === 'function') {
       studioApplyFieldContainerWidth(chatWrap, field, prefix, widthSection);
     }
+    if (typeof studioInstallFieldLayoutControls === 'function') studioInstallFieldLayoutControls(chatWrap, field, prefix, widthSection);
     return chatWrap;
   }
 
@@ -1164,6 +1165,7 @@ function createInput(field, value, prefix, readonlyOverride=false, row=null, gd=
   if (typeof studioInstallFieldResizeHandle === 'function') {
     studioInstallFieldResizeHandle(wrap, field, prefix, widthSection);
   }
+  if (typeof studioInstallFieldLayoutControls === 'function') studioInstallFieldLayoutControls(wrap, field, prefix, widthSection);
   return wrap;
 }
 
@@ -1188,6 +1190,7 @@ function renderHeader() {
     .forEach(field => {
       form.appendChild(createInput(field, getByPath(sourceData, (def.dataPath === '$' ? '$.' : def.dataPath + '.') + field.field), 'header'));
     });
+  if (typeof studioSyncFieldRowBreaks === 'function') studioSyncFieldRowBreaks(form);
   // v0.18.78-empty-primary-section-hide:
   // 基本情報の対象Fieldが0件なら、空カードを表示しない。
   // Main Contextが実際に描画される場合は、それ自体が意味のあるHeader内容なので表示を維持する。

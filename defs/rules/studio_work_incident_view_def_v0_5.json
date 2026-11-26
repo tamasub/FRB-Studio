@@ -295,7 +295,11 @@
                 "visible": false,
                 "operator": "equals"
               },
-              "width": 417
+              "width": 417,
+              "layout": {
+                "breakBefore": true,
+                "separatorBefore": true
+              }
             },
             {
               "field": "follow_up_status",
@@ -323,7 +327,10 @@
                 "operator": "equals"
               },
               "display_note": "follow_up_actionsの検索用代表状態。既存項目の要否未評価はUNASSESSED。個別action更新時は集約規則に従って同期する。",
-              "width": 120
+              "width": 120,
+              "layout": {
+                "breakBefore": false
+              }
             },
             {
               "field": "verification_status",
@@ -347,7 +354,10 @@
                 "visible": false,
                 "operator": "equals"
               },
-              "display_note": "人間が作業結果や内容を確認した状態を記録する。作業ステータスとは別に、tamasub確認用として扱う。"
+              "display_note": "人間が作業結果や内容を確認した状態を記録する。作業ステータスとは別に、tamasub確認用として扱う。",
+              "layout": {
+                "breakBefore": false
+              }
             },
             {
               "field": "context_def_status",
@@ -370,7 +380,10 @@
                 "operator": "equals"
               },
               "display_note": "v0.16.3: 未完了作業に投入したContextDef素案の状態。",
-              "width": 95
+              "width": 95,
+              "layout": {
+                "breakBefore": true
+              }
             },
             {
               "field": "context_def_updated_at",
@@ -386,7 +399,10 @@
                 "visible": false
               },
               "display_note": "ContextDef素案を最後に更新した日。",
-              "width": 185
+              "width": 185,
+              "layout": {
+                "breakBefore": false
+              }
             },
             {
               "field": "owner",

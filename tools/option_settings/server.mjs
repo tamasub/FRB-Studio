@@ -33,10 +33,10 @@ const server=http.createServer(async (req,res)=>{
     // every JSON API against local cross-origin websites and other processes.
     const host=String(req.headers.host||'').split(':')[0].toLowerCase();
     if (!['127.0.0.1','localhost'].includes(host)) return json(res,403,{error:'HOST_DENIED'});
-    if (req.method==='GET' && ['/','/index.html','/editor.js','/editor.css'].includes(u.pathname)) {
+    if (req.method==='GET' && ['/','/index.html','/editor.js','/editor.css','/field_contract.mjs'].includes(u.pathname)) {
       const name=u.pathname==='/'?'index.html':u.pathname.slice(1);
       const content=await readFile(path.join(here,'web',name));
-      const kind=name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':'text/html';
+      const kind=(/\.m?js$/.test(name))?'text/javascript':name.endsWith('.css')?'text/css':'text/html';
       res.writeHead(200,{'Content-Type':kind+'; charset=utf-8','Cache-Control':'no-store'});res.end(content);return;
     }
     if (req.headers['x-frb-option-token']!==token) return json(res,403,{error:'TOKEN_DENIED'});
