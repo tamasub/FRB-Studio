@@ -164,7 +164,7 @@
                 "visible": false,
                 "operator": "contains"
               },
-              "width": 317
+              "width": 333
             },
             {
               "field": "title",
@@ -295,7 +295,7 @@
                 "visible": false,
                 "operator": "equals"
               },
-              "width": 417,
+              "width": 421,
               "layout": {
                 "breakBefore": true,
                 "separatorBefore": true
@@ -329,7 +329,8 @@
               "display_note": "follow_up_actionsの検索用代表状態。既存項目の要否未評価はUNASSESSED。個別action更新時は集約規則に従って同期する。",
               "width": 120,
               "layout": {
-                "breakBefore": false
+                "breakBefore": false,
+                "separatorBefore": false
               }
             },
             {
@@ -356,7 +357,8 @@
               },
               "display_note": "人間が作業結果や内容を確認した状態を記録する。作業ステータスとは別に、tamasub確認用として扱う。",
               "layout": {
-                "breakBefore": false
+                "breakBefore": false,
+                "separatorBefore": true
               }
             },
             {
@@ -382,7 +384,7 @@
               "display_note": "v0.16.3: 未完了作業に投入したContextDef素案の状態。",
               "width": 95,
               "layout": {
-                "breakBefore": true
+                "breakBefore": false
               }
             },
             {
