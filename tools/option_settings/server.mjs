@@ -7,6 +7,13 @@ import { fileURLToPath } from 'node:url';
 import { optionsCatalog,composeOptions,saveOptions } from './options_core.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
+const editorRoot = path.resolve(here, '../../components/generic_editor');
+// Keep the existing browser URLs; only the physical asset ownership changes.
+const staticFiles = new Map([
+  ['/', path.join(here, 'web', 'index.html')],
+  ['/index.html', path.join(here, 'web', 'index.html')],
+  ...['editor.js','editor.css','field_contract.mjs'].map(name => ['/'+name, path.join(editorRoot, name)]),
+]);
 const opts = {};
 for (let i=2;i<process.argv.length;i+=2) {
   const key=process.argv[i],value=process.argv[i+1];
@@ -33,9 +40,10 @@ const server=http.createServer(async (req,res)=>{
     // every JSON API against local cross-origin websites and other processes.
     const host=String(req.headers.host||'').split(':')[0].toLowerCase();
     if (!['127.0.0.1','localhost'].includes(host)) return json(res,403,{error:'HOST_DENIED'});
-    if (req.method==='GET' && ['/','/index.html','/editor.js','/editor.css','/field_contract.mjs'].includes(u.pathname)) {
-      const name=u.pathname==='/'?'index.html':u.pathname.slice(1);
-      const content=await readFile(path.join(here,'web',name));
+    if (req.method==='GET' && staticFiles.has(u.pathname)) {
+      const asset=staticFiles.get(u.pathname);
+      const name=path.basename(asset);
+      const content=await readFile(asset);
       const kind=(/\.m?js$/.test(name))?'text/javascript':name.endsWith('.css')?'text/css':'text/html';
       res.writeHead(200,{'Content-Type':kind+'; charset=utf-8','Cache-Control':'no-store'});res.end(content);return;
     }

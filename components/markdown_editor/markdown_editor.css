@@ -1,0 +1,43 @@
+.frb-markdown-editor{--frb-bg:#fff;--frb-fg:#28313e;--frb-muted:#8a8792;--frb-accent:#7954b3;--frb-code:#f1f2f6;--frb-selection:#e3d9fa; height:100%;min-height:140px;color:var(--frb-fg);background:var(--frb-bg);}
+.frb-markdown-editor[data-theme=dark]{--frb-bg:#202229;--frb-fg:#e4e6ec;--frb-muted:#a4a6b0;--frb-accent:#b69aec;--frb-code:#2a2d36;--frb-selection:#4b3c66;}
+.frb-markdown-editor .CodeMirror{height:100%;font:16px/1.7 system-ui,"Yu Gothic UI",Meiryo,sans-serif;background:var(--frb-bg);color:var(--frb-fg);}
+.frb-markdown-editor .CodeMirror-lines{padding:14px 16px 22px;}
+.frb-markdown-editor .CodeMirror pre.CodeMirror-line,.frb-markdown-editor .CodeMirror pre.CodeMirror-line-like{padding:0 3px;}
+.frb-markdown-editor .CodeMirror-cursor{border-left:2px solid var(--frb-accent);}
+.frb-markdown-editor .CodeMirror-selected,.frb-markdown-editor .CodeMirror-focused .CodeMirror-selected{background:var(--frb-selection);}
+.frb-markdown-editor .frb-heading-1{font-size:1.65em;font-weight:750;line-height:1.45;}
+.frb-markdown-editor .frb-heading-2{font-size:1.36em;font-weight:720;line-height:1.5;}
+.frb-markdown-editor .frb-heading-3{font-size:1.18em;font-weight:700;}
+.frb-markdown-editor .frb-heading-4,.frb-markdown-editor .frb-heading-5,.frb-markdown-editor .frb-heading-6{font-weight:700;}
+.frb-markdown-editor .frb-strong{font-weight:750;}
+.frb-markdown-editor .frb-em{font-style:italic;}
+.frb-markdown-editor .frb-strike{text-decoration:line-through;}
+.frb-markdown-editor .frb-code,.frb-markdown-editor .frb-fenced{font-family:Consolas,"Cascadia Mono",monospace;background:var(--frb-code);}
+.frb-markdown-editor .frb-fenced{line-height:1.6;}
+.frb-markdown-editor .frb-syntax,.frb-markdown-editor .frb-marker{color:var(--frb-muted);font-weight:400;}
+.frb-markdown-editor .frb-marker{display:inline-block;min-width:1ch;text-align:center;color:var(--frb-accent);}
+.frb-markdown-editor .frb-invisible-fence{color:transparent!important;}
+.frb-markdown-editor .frb-disabled{opacity:.7;}
+/* CodeMirror sets font and background on pre with higher specificity than a plain class. */
+.frb-markdown-editor .CodeMirror pre.frb-heading-1{font-size:1.65em;font-weight:750;line-height:1.45;}
+.frb-markdown-editor .CodeMirror pre.frb-heading-2{font-size:1.36em;font-weight:720;line-height:1.5;}
+.frb-markdown-editor .CodeMirror pre.frb-heading-3{font-size:1.18em;font-weight:700;}
+.frb-markdown-editor .CodeMirror pre.frb-heading-4,.frb-markdown-editor .CodeMirror pre.frb-heading-5,.frb-markdown-editor .CodeMirror pre.frb-heading-6{font-weight:700;}
+.frb-markdown-editor .CodeMirror pre.frb-fenced{font-family:Consolas,"Cascadia Mono",monospace;background:var(--frb-code);line-height:1.6;}
+/* v0.2 additional source-preserving previews */
+.frb-markdown-editor .frb-link{color:var(--frb-accent);text-decoration:underline;text-underline-offset:2px;}
+.frb-markdown-editor .frb-task{width:1em;height:1em;vertical-align:middle;margin:0 3px 0 0;accent-color:var(--frb-accent);cursor:pointer;}
+.frb-markdown-editor .frb-task:disabled{cursor:default;}
+.frb-markdown-editor .frb-color-swatch{display:inline-block;width:.85em;height:.85em;vertical-align:middle;margin:0 3px;border:1px solid var(--frb-muted);border-radius:3px;}
+.frb-markdown-editor .CodeMirror pre.frb-rule{background:linear-gradient(var(--frb-muted),var(--frb-muted)) center / 100% 1px no-repeat;}
+.frb-markdown-editor .CodeMirror pre.frb-note-info,.frb-markdown-editor .CodeMirror pre.frb-note-warn,.frb-markdown-editor .CodeMirror pre.frb-note-alert{border-left:3px solid var(--frb-note-color);padding-left:8px;background:color-mix(in srgb,var(--frb-note-color) 10%,var(--frb-bg));}
+.frb-markdown-editor .frb-note-info{--frb-note-color:#4084b8;}.frb-markdown-editor .frb-note-warn{--frb-note-color:#b58b35;}.frb-markdown-editor .frb-note-alert{--frb-note-color:#c65b5b;}
+.frb-markdown-editor .frb-note-boundary .frb-marker{color:var(--frb-note-color);font-weight:650;}
+.frb-markdown-editor .frb-table-wrap{display:inline-block;max-width:100%;vertical-align:top;white-space:normal;overflow-x:auto;}
+.frb-markdown-editor .frb-table{border-collapse:collapse;font:inherit;margin:3px 0;}
+.frb-markdown-editor .frb-table th,.frb-markdown-editor .frb-table td{border:1px solid var(--frb-muted);padding:5px 11px;min-width:60px;cursor:text;white-space:pre-wrap;overflow-wrap:anywhere;}
+.frb-markdown-editor .frb-table th{background:var(--frb-code);font-weight:700;}
+.frb-markdown-editor .CodeMirror pre.frb-table-source{font-family:Consolas,"Cascadia Mono",monospace;background:var(--frb-code);}
+.frb-markdown-editor .frb-html-preview{display:inline-block;max-width:100%;min-width:180px;vertical-align:top;white-space:normal;border:1px solid var(--frb-muted);border-radius:5px;padding:7px 10px;}
+.frb-markdown-editor .frb-html-preview details{padding-right:36px;}.frb-markdown-editor .frb-html-preview summary{cursor:pointer;font-weight:600;}.frb-markdown-editor .frb-block-edit{float:right;font:11px/1.5 system-ui,sans-serif;padding:2px 5px;border:1px solid var(--frb-muted);background:var(--frb-bg);color:var(--frb-muted);border-radius:3px;cursor:pointer;}
+.frb-markdown-editor .frb-html-preview dl{margin:0 36px 0 0;}.frb-markdown-editor .frb-html-preview dt{font-weight:650;}.frb-markdown-editor .frb-html-preview dd{margin-left:1.4em;}.frb-markdown-editor .frb-html-preview pre.frb-detail-code{background:var(--frb-code);padding:4px 7px;font-family:Consolas,monospace;white-space:pre-wrap;}

@@ -4,7 +4,7 @@
 import { readFile, mkdir, rename, open, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
-import { pathParts as contractPathParts, fieldsFromViewDef } from './web/field_contract.mjs';
+import { pathParts as contractPathParts, fieldsFromViewDef } from '../../components/generic_editor/field_contract.mjs';
 
 // Launch owns its ViewDefs and registry. Studio supplies only the shared engine.
 const launchRootFrom = systemRoot => path.resolve(systemRoot, '..');
